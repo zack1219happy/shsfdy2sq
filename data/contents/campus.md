@@ -7,4 +7,4 @@ icon: fas fa-map-marked-alt
 
 关于上海中学校园内的各场所与建筑。
 
-建议从[校园地图](/campus/map)开始。
+建议从[校园地图](./map)开始。
