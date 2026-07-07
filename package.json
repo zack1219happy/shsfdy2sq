@@ -1,0 +1,39 @@
+{
+  "name": "shsg8c1wiki",
+  "version": "1.0.0",
+  "private": true,
+  "description": "上中初二 Wiki - 班级知识库",
+  "scripts": {
+    "dev": "next dev",
+    "predev": "node scripts/copy-data-dev.js",
+    "build": "next build",
+    "export": "cross-env EXPORT=true next build && node scripts/copy-static.js",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^7.3.0",
+    "gray-matter": "^4.0.3",
+    "highlight.js": "^11.11.1",
+    "katex": "^0.17.0",
+    "markdown-it": "^14.3.0",
+    "markdown-it-anchor": "^9.2.0",
+    "markdown-it-highlightjs": "^4.3.0",
+    "markdown-it-texmath": "^1.0.0",
+    "next": "^16.2.10",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.5",
+    "@types/katex": "^0.16.8",
+    "@types/markdown-it": "^14.1.2",
+    "@types/node": "^20.12.0",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "cross-env": "^10.1.0",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.2.10",
+    "typescript": "^5.4.0"
+  }
+}
