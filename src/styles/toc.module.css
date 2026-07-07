@@ -1,0 +1,118 @@
+.toc {
+  position: fixed;
+  right: 24px;
+  top: 84px;
+  width: 240px;
+  background: var(--color-toc-bg);
+  border-radius: 6px;
+  padding: 16px 12px;
+  font-size: 0.85rem;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  z-index: 500;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.title {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.navBtns {
+  display: flex;
+  gap: 2px;
+}
+
+.navBtn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-light);
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  transition: all 0.15s;
+}
+.navBtn:hover {
+  color: var(--color-primary);
+  background: var(--color-active-bg);
+}
+
+/* 编辑模式切换按钮 */
+.editToggle {
+  position: relative;
+  margin-right: 2px;
+}
+.editToggle::after {
+  content: '';
+  position: absolute;
+  right: -4px;
+  top: 6px;
+  bottom: 6px;
+  width: 1px;
+  background: var(--color-border);
+}
+
+/* 编辑模式激活状态 */
+.editActive {
+  color: var(--color-primary) !important;
+  background: rgba(74, 108, 247, 0.12) !important;
+}
+.editActive:hover {
+  background: rgba(74, 108, 247, 0.18) !important;
+}
+
+.list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.list li {
+  margin: 6px 0;
+}
+
+.list a {
+  color: var(--color-text-muted);
+  text-decoration: none;
+  display: block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.1s;
+}
+
+.list a:hover {
+  color: var(--color-primary);
+  background: var(--color-active-bg);
+}
+
+.active {
+  color: var(--color-primary) !important;
+  font-weight: 500;
+  background: var(--color-active-bg);
+}
+
+.h2 {
+  padding-left: 0;
+}
+
+.h3 {
+  padding-left: 16px;
+}
+
+.emptyHint {
+  color: var(--color-text-light);
+  font-size: 0.8rem;
+  padding: 4px 8px;
+}
+
+@media (max-width: 1600px) {
+  .toc {
+    display: none;
+  }
+}
