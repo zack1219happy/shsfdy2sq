@@ -22,3 +22,6 @@ next-env.d.ts
 
 # generated copies of data/ (copy-data-dev.js → dev server)
 public/data/
+
+# playwright MCP tool artifacts
+.playwright-mcp/
