@@ -18,38 +18,44 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | **Markdown** | markdown-it + markdown-it-anchor |
 | **公式** | markdown-it-texmath + KaTeX（构建时渲染） |
 | **代码高亮** | highlight.js（markdown-it highlight 回调） |
-| **元数据** | gray-matter (frontmatter) + `_meta.json` |
+| **元数据** | gray-matter (frontmatter) |
 | **部署** | GitHub Actions → GitHub Pages |
 
-## 架构
+// 架构
 
 ```
 shsg8c1wiki/
 ├── .github/workflows/deploy.yml   # GitHub Actions → GitHub Pages 自动部署
 ├── next.config.js                  # EXPORT=true 时启用静态导出
 ├── scripts/
-│   └── copy-static.js              # postbuild: 将运行时文件复制到 out/
+│   ├── copy-static.js              # postbuild: 将 data/ 复制到 out/data/
+│   └── copy-data-dev.js            # predev: 将 data/ 复制到 public/data/
 ├── data/                           # 内容源文件（单一数据源）
-│   ├── wiki-data.json              # 导航树结构（id/title/type/path/icon/children）
-│   ├── announcement.md             # 公告（客户端 fetch，构建时复制到 out/）
-│   └── contents/                   # 页面内容按 category/article/ 组织
-│       ├── home/index.md + _meta.json + _assets/
-│       └── meme/{laowang,dingji,...}/index.md
+│   ├── announcement.md             # 公告（客户端 fetch）
+│   └── contents/                   # 页面内容，按分类直接放 .md 文件
+│       ├── home.md                 # 首页
+│       ├── campus.md               # 校园分类页
+│       ├── campus/dormitory.md     # 具体页面
+│       ├── campus/gym.md
+│       └── people/                 # 人物分类，每人一个 .md 文件
+│           ├── chen-wenyi.md
+│           └── ...
 ├── src/
 │   ├── app/
-│   │   ├── layout.tsx              # 根布局：Sidebar + 内容区 + BottomBar
+│   │   ├── layout.tsx              # 根布局：Sidebar + 内容区
 │   │   ├── page.tsx                # 首页（SSG）
 │   │   ├── not-found.tsx           # 404
 │   │   └── [...slug]/page.tsx      # 捕获全部路径的 SSG 页面
 │   ├── components/
-│   │   ├── Sidebar.tsx             # 客户端：树形导航 + 折叠/拖拽 + 公告
+│   │   ├── Sidebar.tsx             # 客户端：树形导航 + 折叠 + 公告
 │   │   ├── Breadcrumb.tsx          # 服务端：面包屑导航
 │   │   ├── TableOfContents.tsx     # 客户端：右侧目录 + IntersectionObserver
-│   │   ├── AttributeBox.tsx        # 服务端：_meta.json 属性表
-│   │   ├── BottomBar.tsx           # 客户端：底部栏 + 法律/隐私弹窗
-│   │   └── Modal.tsx               # 客户端：通用弹窗（ESC 关闭）
+│   │   ├── AttributeBox.tsx        # 服务端：frontmatter 属性表
+│   │   ├── ImageModal.tsx          # 客户端：点击图片放大查看
+│   │   ├── PageShell.tsx           # 页面骨架
+│   │   └── WikiContent.tsx         # 统一 Markdown/LaTeX 渲染
 │   ├── lib/
-│   │   ├── navigation.ts           # wiki-data.json 加载/查找/面包屑
+│   │   ├── navigation.ts           # 文件系统扫描自动生成导航树
 │   │   └── content.ts              # markdown-it 渲染管线 + KaTeX + 图片处理
 │   ├── styles/                     # CSS Modules
 │   └── types/
@@ -61,12 +67,12 @@ shsg8c1wiki/
 
 ```
 GitHub Pages URL                        Next.js 路径        内容文件
-/shsg8c1wiki/                           /                   data/contents/home/index.md
-/shsg8c1wiki/meme/                      /meme               data/contents/meme/index.md
-/shsg8c1wiki/meme/laowang/             /meme/laowang        data/contents/meme/laowang/index.md
+/shsg8c1wiki/                           /                   data/contents/home.md
+/shsg8c1wiki/people/                    /people             data/contents/people.md
+/shsg8c1wiki/people/laowang            /people/laowang     data/contents/people/chen-wenyi.md
 ```
 
-- `generateStaticParams()` 遍历 `wiki-data.json` 的所有节点生成静态路径
+- `navigation.ts` 扫描 `data/contents/` 下所有 `.md` 文件自动生成路由
 - `[...slug]/page.tsx` 中 `params` 是 Promise，需要 `await`
 
 ### 渲染管线
@@ -81,7 +87,7 @@ Markdown 源文件
   → fixImagePaths（相对路径 → /{basePath}/data/contents/{slug}/）
   → addImageCaptions（alt 文字 → <figure><figcaption>）
 
-_meta.json 属性值
+_meta.json 属性值（已弃用，改用 frontmatter）
   → renderInlineLatex() 处理 $...$
   → convertMdLink() 处理 [text](url)
 ```
@@ -90,21 +96,18 @@ _meta.json 属性值
 
 ### 添加新页面
 
-1. 创建目录和文件：`data/contents/{category}/{page-name}/index.md`
-2. 在 `data/wiki-data.json` 的 `sidebar` 中添加节点：
+直接在 `data/contents/` 下创建 `.md` 文件，添加 frontmatter：
 
-```json
-{
-  "id": "page-name",
-  "title": "页面标题",
-  "type": "page",
-  "path": "contents/category/page-name/index.md",
-  "icon": "fas fa-file-alt"
-}
+```markdown
+---
+title: 页面标题
+icon: fas fa-file-alt
+---
+
+正文内容...
 ```
 
-文件夹类型：`{"type": "folder", "children": [...]}`
-可选：`path` 让文件夹自身也有内容页。
+导航树由 `navigation.ts` 自动扫描 `data/contents/` 下所有 `.md` 文件生成，不需要手动注册。
 
 ### 属性表（_meta.json）
 
@@ -127,8 +130,8 @@ _meta.json 属性值
 ### Markdown 特性
 
 - LaTeX: `$E = mc^2$`（行内）、`$$\int_a^b$$`（块级）
-- 代码块：` ```python ` 自动高亮
-- 内部链接：`[标题](/meme/laowang)`（原 `#/meme/laowang` 也会自动转换）
+- 代码块：` ```python ` 自动高亮 + 复制按钮
+- 内部链接：`[标题](/people/chen-wenyi)` 或 `[[标题]]` Wiki 链接
 
 ## 构建与部署
 
