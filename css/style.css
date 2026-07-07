@@ -1,0 +1,783 @@
+/* ============================================
+   上中初二 Wiki - 主样式表
+   ============================================ */
+
+/* ---------- 全局重置 ---------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Helvetica Neue', sans-serif;
+    background-color: #ffffff;
+    color: #1a1a1a;
+    line-height: 1.6;
+}
+
+/* ---------- 侧边栏 ---------- */
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 280px;
+    height: 100vh;
+    background: #fafbfc;
+    border-right: 1px solid #eaecef;
+    transition: transform 0.2s ease;
+    z-index: 1000;
+    overflow-y: auto;
+    font-size: 14px;
+    scroll-behavior: smooth;
+    padding-bottom: 50px;
+    box-sizing: border-box;
+}
+
+.sidebar.collapsed {
+    transform: translateX(-100%);
+}
+
+/* 滚动条 */
+.sidebar::-webkit-scrollbar {
+    width: 4px;
+}
+.sidebar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+.sidebar::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+/* 侧边栏头部 */
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    border-bottom: 1px solid #eaecef;
+    background: #fafbfc;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+.sidebar-header h1 {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+/* 侧边栏按钮 */
+.toggle-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 6px;
+    color: #6c7078;
+}
+.toggle-btn:hover {
+    background: #eaecef;
+}
+
+/* 浮动打开按钮（侧边栏收起时显示） */
+.sidebar-toggle-float {
+    position: fixed;
+    left: 16px;
+    top: 16px;
+    z-index: 1001;
+    background: #ffffff;
+    border: 1px solid #eaecef;
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 1rem;
+    color: #3b3f46;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s;
+    display: none;
+}
+.sidebar-toggle-float:hover {
+    background: #f0f2f5;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+.sidebar.collapsed ~ .sidebar-toggle-float {
+    display: block;
+}
+
+/* ---------- 树形菜单 ---------- */
+.sidebar-tree {
+    list-style: none;
+    padding: 8px 4px;
+}
+
+.tree-node {
+    margin: 1px 0;
+    user-select: none;
+}
+
+.tree-node-content {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.15s ease, padding-left 0.2s ease;
+    color: #3b3f46;
+    font-size: 0.85rem;
+}
+.tree-node-content:hover {
+    background-color: #eaecef;
+}
+.tree-node-content.active {
+    background-color: #e8f0fe;
+    color: #1a73e8;
+}
+
+/* 展开/折叠按钮 */
+.tree-expand-icon {
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 4px;
+    cursor: pointer;
+    background: transparent;
+    transition: background-color 0.15s;
+}
+.tree-expand-icon:hover {
+    background-color: #d0d5db;
+}
+.tree-expand-icon:hover i {
+    color: #1a1a1a;
+}
+.tree-expand-icon i {
+    font-size: 0.7rem;
+    color: #8a8f99;
+    transition: transform 0.25s ease;
+    display: inline-block;
+}
+.tree-expand-icon i.rotated {
+    transform: rotate(90deg);
+}
+
+/* 文件夹/页面图标 */
+.tree-icon {
+    width: 18px;
+    text-align: center;
+    font-size: 0.85rem;
+    color: #6c7078;
+    flex-shrink: 0;
+}
+.tree-node-content.active .tree-icon {
+    color: #1a73e8;
+}
+
+/* 标题文字 */
+.tree-title {
+    flex: 1;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 占位符（无子菜单时对齐用） */
+.spacer {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+/* 子菜单容器 */
+.tree-children {
+    list-style: none;
+    margin-left: 0;
+    max-height: 0;
+    overflow-y: hidden;
+    transition: max-height 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.tree-children.expanded {
+    max-height: 500px;
+    transition: max-height 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.tree-children .tree-node {
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity 0.12s ease, transform 0.12s ease;
+}
+.tree-children.expanded .tree-node {
+    opacity: 1;
+    transform: translateY(0);
+}
+/* 逐项延迟展开 */
+.tree-children.expanded .tree-node:nth-child(1) { transition-delay: 0.01s; }
+.tree-children.expanded .tree-node:nth-child(2) { transition-delay: 0.02s; }
+.tree-children.expanded .tree-node:nth-child(3) { transition-delay: 0.03s; }
+.tree-children.expanded .tree-node:nth-child(4) { transition-delay: 0.04s; }
+.tree-children.expanded .tree-node:nth-child(5) { transition-delay: 0.05s; }
+/* 收起时无延迟 */
+.tree-children:not(.expanded) .tree-node {
+    transition-delay: 0s !important;
+}
+
+/* ---------- 侧边栏拖拽手柄 ---------- */
+.sidebar-resize-handle {
+    position: fixed;
+    left: 280px;
+    top: 0;
+    width: 4px;
+    height: 100vh;
+    background: transparent;
+    cursor: ew-resize;
+    z-index: 1002;
+    transition: background 0.2s;
+}
+.sidebar-resize-handle:hover {
+    background: #1a73e8;
+}
+body.resizing {
+    user-select: none;
+    cursor: ew-resize;
+}
+
+/* ---------- 侧边栏公告栏 ---------- */
+.sidebar-announcement {
+    margin-top: 20px;
+    padding: 12px 16px;
+    border-top: 1px solid #eaecef;
+    background: #fafbfc;
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+}
+.announcement-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: #1a73e8;
+}
+.announcement-header i {
+    font-size: 0.9rem;
+}
+.announcement-refresh {
+    margin-left: auto;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #8a8f99;
+    padding: 4px 6px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+.announcement-refresh:hover {
+    background: #eaecef;
+    color: #1a73e8;
+}
+.announcement-content {
+    color: #3b3f46;
+    line-height: 1.5;
+    word-break: break-word;
+}
+.announcement-content p {
+    margin: 0 0 8px 0;
+}
+.announcement-content ul, 
+.announcement-content ol {
+    margin: 8px 0;
+    padding-left: 20px;
+}
+.announcement-loading {
+    color: #8a8f99;
+    font-style: italic;
+}
+.announcement-error {
+    color: #e74c3c;
+    font-size: 0.8rem;
+}
+.sidebar-announcement h1 {
+    font-size: 1.1rem;
+    margin: 8px 0 4px 0;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+/* ---------- 主内容区域 ---------- */
+.main-content {
+    flex: 1;
+    margin-left: 280px;
+    transition: margin-left 0.2s ease;
+    min-height: 100vh;
+    min-width: 0;
+    background: #ffffff;
+    margin-bottom: 50px;
+}
+.sidebar.collapsed ~ .main-content {
+    margin-left: 0;
+}
+
+/* 内容区宽度限制 */
+.content-header {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 32px 24px 16px 24px;
+}
+.content-header h2 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.wiki-content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 24px 64px 24px;
+}
+
+/* 内容上浮动画 */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.wiki-body {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: #2c2f36;
+}
+.wiki-body.animate-in {
+    animation: fadeInUp 0.2s ease-out;
+    animation-fill-mode: both;
+}
+.wiki-body p {
+    margin-bottom: 1rem;
+}
+.wiki-body a {
+    color: #1a73e8;
+    text-decoration: none;
+}
+.wiki-body a:hover {
+    text-decoration: underline;
+}
+
+/* 图片样式 */
+.wiki-body img {
+    transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1), 
+                box-shadow 0.3s ease,
+                filter 0.2s ease;
+    cursor: pointer;
+    border-radius: 8px;
+}
+.wiki-body img:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+    filter: brightness(1.02);
+}
+
+/* 图片图注 */
+.image-figure {
+    margin: 1.5rem 0;
+    text-align: center;
+}
+.image-figure img {
+    max-width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.image-figure figcaption {
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: #5e636c;
+    line-height: 1.4;
+}
+
+/* 面包屑导航 */
+.breadcrumb {
+    font-size: 0.85rem;
+    color: #5e636c;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px dashed #eaecef;
+}
+.breadcrumb-link {
+    color: #1a73e8;
+    text-decoration: none;
+}
+.breadcrumb-link:hover {
+    text-decoration: underline;
+}
+.breadcrumb-current {
+    font-weight: 500;
+    color: #1a1a1a;
+}
+.breadcrumb-sep {
+    margin: 0 4px;
+    color: #8a8f99;
+}
+
+/* 属性框 */
+.attribute-box {
+    background: #f6f8fa;
+    border: 1px solid #eaecef;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    font-size: 0.9rem;
+}
+.attribute-box table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.attribute-box th {
+    text-align: left;
+    font-weight: 600;
+    width: 30%;
+    vertical-align: top;
+    padding: 6px 12px 6px 0;
+    color: #3b3f46;
+}
+.attribute-box td {
+    padding: 6px 0;
+    color: #5e636c;
+}
+/* 重置属性框内的表格样式，不继承通用表格样式 */
+.attribute-box table,
+.attribute-box th,
+.attribute-box td {
+    border: none !important;
+    background: transparent !important;
+    padding: 6px 12px 6px 0 !important;
+    width: auto !important;
+    margin: 0 !important;
+    font-size: 0.9rem !important;
+}
+.attribute-box tr:nth-child(even) {
+    background: transparent !important;
+}
+.attribute-box th {
+    font-weight: 600;
+    width: 30%;
+    vertical-align: top;
+}
+/* ---------- 三栏布局（右侧目录） ---------- */
+.wiki-wrapper {
+    display: flex;
+    flex-wrap: nowrap;
+    width: 100%;              /* 占满父容器宽度 */
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px 40px 20px;
+    gap: 40px;
+}
+.right-toc {
+    width: 260px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 20px;
+    align-self: start;
+    background: #fafbfc;
+    border-left: 1px solid #eaecef;
+    padding: 16px 0 16px 20px;
+    font-size: 0.85rem;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+}
+.toc-title {
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #1a1a1a;
+}
+.toc-list {
+    list-style: none;
+    padding-left: 0;
+}
+.toc-list li {
+    margin: 6px 0;
+}
+.toc-list a {
+    color: #5e636c;
+    text-decoration: none;
+    display: block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.1s;
+}
+.toc-list a:hover {
+    color: #1a73e8;
+    background: #e8f0fe;
+}
+.toc-list a.active {
+    color: #1a73e8;
+    font-weight: 500;
+    background: #e8f0fe;
+}
+.toc-list .toc-h2 {
+    padding-left: 0;
+}
+.toc-list .toc-h3 {
+    padding-left: 16px;
+}
+
+/* ---------- 底部固定栏 ---------- */
+.bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #f8f9fa;
+    border-top: 1px solid #eaecef;
+    z-index: 1002;
+    font-size: 0.7rem;
+    color: #5e636c;
+    padding: 6px 0;
+}
+.bottom-bar-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px 16px;
+    padding: 8px 20px;
+}
+.bottom-bar a {
+    color: #5e636c;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+.bottom-bar a:hover {
+    color: #1a73e8;
+}
+.separator {
+    color: #d0d5db;
+}
+
+/* ---------- 404页面 ---------- */
+.not-found {
+    text-align: center;
+    padding: 60px 40px;
+}
+.not-found h3 {
+    font-size: 1.5rem;
+    color: #8a8f99;
+    margin-bottom: 16px;
+}
+.not-found a {
+    display: inline-block;
+    background: #1a73e8;
+    color: white;
+    padding: 8px 24px;
+    border-radius: 20px;
+    text-decoration: none;
+}
+
+/* ---------- 弹窗模态框 ---------- */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+}
+.modal-content {
+    background: white;
+    max-width: 500px;
+    padding: 24px;
+    border-radius: 16px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+.modal-close {
+    float: right;
+    cursor: pointer;
+    font-size: 1.2rem;
+}
+
+/* ---------- 响应式适配 ---------- */
+/* 移动端（宽度 <= 768px） */
+@media (max-width: 768px) {
+    .content-header {
+        padding: 20px 16px;
+    }
+    .wiki-content {
+        padding: 0 16px 40px 16px;
+    }
+    .wiki-wrapper {
+        padding: 0 16px;
+    }
+    .right-toc {
+        display: none;
+    }
+    .bottom-bar {
+        padding: 8px 0;
+        font-size: 0.65rem;
+    }
+    .bottom-bar-content {
+        flex-direction: column;
+        gap: 4px;
+    }
+    .main-content {
+        margin-bottom: 70px;
+    }
+    .sidebar {
+        padding-bottom: 70px;
+    }
+}
+
+/* 中等屏幕（宽度 <= 1000px）隐藏右侧目录 */
+@media (max-width: 1000px) {
+    .wiki-wrapper {
+        padding: 0 16px;
+    }
+    .right-toc {
+        display: none;
+    }
+}
+
+/* 一级无序列表：实心圆 */
+.wiki-body ul { list-style-type: disc; }
+/* 二级无序列表：空心圆 */
+.wiki-body ul ul { list-style-type: circle; }
+/* 三级无序列表：方块 */
+.wiki-body ul ul ul { list-style-type: square; }
+
+.wiki-body ul,
+.wiki-body ol {
+    padding-left: 1.2em;   /* 第一级列表缩进 */
+}
+.wiki-body ul ul,
+.wiki-body ol ol,
+.wiki-body ul ol,
+.wiki-body ol ul {
+    padding-left: 0.7em;   /* 深层列表稍小，保持层次美观 */
+}
+
+/* ========== 引用块样式 ========== */
+.wiki-body blockquote {
+    margin: 1.2em 0;
+    padding: 0.8em 1.2em;
+    background: #f6f8fa;
+    border-left: 4px solid #1a73e8;
+    border-radius: 0 8px 8px 0;
+    color: #3b3f46;
+    font-style: normal;
+    overflow-x: auto;
+}
+
+.wiki-body blockquote p {
+    margin-bottom: 0;
+}
+
+.wiki-body blockquote p + p {
+    margin-top: 0.5em;
+}
+
+/* ========== 代码块容器样式 ========== */
+
+
+
+/* ========== 行内代码样式（仅用于不在 pre 内的 code） ========== */
+.wiki-body code:not(pre code) {
+    background: #f0f2f5;
+    padding: 0.2em 0.4em;
+    border-radius: 6px;
+    font-family: 'Consolas', 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.85em;
+    color: #1a1a1a;
+}
+
+/* ========== DeepSeek 风格代码块 ========== */
+.code-block-wrapper {
+    margin: 1.2em 0;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e1e4e8;
+    background: #f6f8fa;   /* 整体背景色，与下半部分一致 */
+}
+
+/* 上半部分：标题栏（颜色略深） */
+.code-block-header {
+    background: #e9ecef;
+    padding: 0.3em 0.8em;   /* 减小上下内边距 */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    border-bottom: 1px solid #d0d7de;
+}
+.code-lang {
+    font-weight: 600;
+    color: #2c3e50;
+    text-transform: lowercase;
+}
+.code-copy-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 0.75rem;
+    color: #4a5568;
+    padding: 0.2em 0.6em;
+    border-radius: 6px;
+    transition: background 0.2s, color 0.2s;
+}
+.code-copy-btn:hover {
+    background: #d0d7de;
+    color: #1a1a1a;
+}
+
+/* 下半部分：代码内容区域 */
+.code-block-wrapper pre {
+    background: #f6f8fa;   /* 与 wrapper 背景一致，略浅于标题栏 */
+    margin: 0;
+    padding: 0em;          /* 边距收紧，可调小为 0.8em 1em */
+    overflow-x: auto;
+    border-radius: 0;
+}
+.code-block-wrapper pre code {
+    background: transparent;
+    padding: 0;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    font-family: 'Consolas', 'SF Mono', 'Fira Code', monospace;
+    color: #24292e;        /* 代码颜色由 highlight.js 决定，这里只是兜底 */
+}
+/* ========== 表格样式 ========== */
+.wiki-body table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+    font-size: 0.9rem;
+}
+.wiki-body th,
+.wiki-body td {
+    border: 1px solid #d0d7de;
+    padding: 0.5em 0.75em;
+    text-align: left;
+}
+.wiki-body th {
+    background: #f6f8fa;
+    font-weight: 600;
+}
+.wiki-body tr:nth-child(even) {
+    background: #fafbfc;
+}

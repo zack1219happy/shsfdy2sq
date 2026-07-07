@@ -1,0 +1,43 @@
+{
+  "siteTitle": "上中初三 Wiki",
+  "sidebar": [
+    {
+      "id": "home",
+      "icon": "fas fa-house",
+      "title": "首页",
+      "type": "page",
+      "path": "contents/home/index.md"
+    },
+    {
+      "id": "meme",
+      "icon": "fas fa-book",
+      "title": "梗",
+      "type": "folder",
+      "path": "contents/meme/index.md",
+      "children": [
+        {
+          "id": "guajiro",
+          "title": "Guajiro",
+          "type": "folder",
+          "path": "contents/meme/guajiro/index.md"
+        }
+      ]
+    },
+    {
+      "id": "advanced",
+      "icon": "fas fa-cogs",
+      "title": "文档说明",
+      "type": "folder",
+      "path": "contents/advanced/index.md",
+      "children": [
+      ]
+    },
+    {
+      "id": "guba",
+      "icon": "fas fa-book",
+      "title": "古巴特展！",
+      "type": "page",
+      "path": "contents/guba/index.md"
+    }
+  ]
+}
