@@ -1,0 +1,427 @@
+/* ============================================
+   上中初二 Wiki - 全局基础样式
+   ============================================ */
+
+/* KaTeX 数学公式样式 */
+@import 'katex/dist/katex.min.css';
+
+/* highlight.js 代码高亮主题 */
+@import 'highlight.js/styles/atom-one-dark.css';
+
+/* ---------- CSS 变量 ---------- */
+:root {
+  --sidebar-width: 280px;
+  --sidebar-min-width: 180px;
+  --sidebar-max-width: 400px;
+  --color-bg: #ffffff;
+  --color-sidebar-bg: #f4f6f8;
+  --color-border: #eaecef;
+  --color-primary: #1a73e8;
+  --color-primary-hover: #1557b0;
+  --color-text: #1a1a1a;
+  --color-text-secondary: #3b3f46;
+  --color-text-muted: #5e636c;
+  --color-text-light: #8a8f99;
+  --color-hover-bg: #eaecef;
+  --color-active-bg: #e8f0fe;
+  --color-attr-bg: #f6f8fa;
+  --color-toc-bg: #fafbfc;
+  --color-bottom-bar-bg: #f8f9fa;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter',
+    'Helvetica Neue', sans-serif;
+  --content-max-width: 800px;
+  --wrapper-max-width: 1400px;
+  --bottom-bar-height: 50px;
+}
+
+/* ---------- 重置 ---------- */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+a:visited {
+  color: var(--color-primary);
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* Wiki Link */
+.wiki-link::after {
+  content: ' ↗';
+  font-size: 0.75em;
+  opacity: 0.5;
+}
+
+/* ---------- Callout / 折叠框 ---------- */
+.callout {
+  margin: 16px 0;
+  border-left: 4px solid var(--color-border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  background: var(--color-attr-bg);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.callout summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0 0 4px;
+  user-select: none;
+  list-style: none;                /* Firefox 默认三角 */
+}
+.callout summary::-webkit-details-marker {
+  display: none;                   /* Chrome/Safari 默认三角 */
+}
+
+.callout summary::before {
+  content: '▶';
+  font-size: 0.75em;
+  display: inline-block;
+  margin-right: 6px;
+  transition: transform 0.15s;
+}
+
+.callout[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.callout > .callout-header {
+  font-weight: 600;
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+}
+
+/* 类型颜色 */
+.callout-note { border-left-color: #1a73e8; }
+.callout-note .callout-header,
+.callout-note summary { color: #1a73e8; }
+
+.callout-success { border-left-color: #2ecc40; }
+.callout-success .callout-header,
+.callout-success summary { color: #1e8a2e; }
+
+.callout-warning { border-left-color: #f39c12; }
+.callout-warning .callout-header,
+.callout-warning summary { color: #b35a00; }
+
+.callout-bug { border-left-color: #e74c3c; }
+.callout-bug .callout-header,
+.callout-bug summary { color: #b10e0e; }
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ---------- 高亮/选择 ---------- */
+::selection {
+  background: var(--color-active-bg);
+}
+
+/* ---------- 滚动条 ---------- */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+/* ============================================
+   Wiki 内容样式（由 marked 生成，全局作用域）
+   ============================================ */
+
+.wiki-body {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #2c2f36;
+}
+
+.wiki-body p {
+  margin-bottom: 1rem;
+}
+
+.wiki-body h1,
+.wiki-body h2,
+.wiki-body h3,
+.wiki-body h4 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--color-text);
+  scroll-margin-top: 80px;
+}
+.wiki-body h1 { font-size: 1.6rem; }
+.wiki-body h2 { font-size: 1.35rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.3em; }
+.wiki-body h3 { font-size: 1.15rem; }
+.wiki-body h4 { font-size: 1rem; }
+
+.wiki-body ul,
+.wiki-body ol {
+  margin: 0 0 1rem 1.5rem;
+}
+.wiki-body li {
+  margin-bottom: 0.25rem;
+}
+
+.wiki-body blockquote {
+  margin: 1rem 0;
+  padding: 0.5rem 1rem;
+  border-left: 4px solid var(--color-primary);
+  background: var(--color-attr-bg);
+  color: var(--color-text-muted);
+}
+
+.wiki-body code {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.875em;
+  padding: 0.15em 0.35em;
+  background: #f0f2f5;
+  border-radius: 4px;
+}
+
+/* ========== 代码块（wrapper + header + 复制按钮） ========== */
+
+.code-block-wrapper {
+  margin: 1.2em 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  background: #1e1e2e;
+}
+
+.code-block-header {
+  background: #2a2a3e;
+  padding: 0.3em 0.8em;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  font-family: var(--font-sans);
+  border-bottom: 1px solid #3a3a5e;
+}
+
+.code-lang {
+  font-weight: 600;
+  color: #a6adc8;
+  text-transform: lowercase;
+}
+
+.code-copy-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: #a6adc8;
+  padding: 0.2em 0.6em;
+  border-radius: 6px;
+  transition: background 0.2s, color 0.2s;
+}
+.code-copy-btn:hover {
+  background: #3a3a5e;
+  color: #cdd6f4;
+}
+
+.wiki-body pre {
+  margin: 0;
+  padding: 1rem 1.5rem;
+  background: transparent;
+  overflow-x: auto;
+  border-radius: 0;
+  line-height: 1.6;
+}
+.wiki-body pre code {
+  background: transparent;
+  padding: 0;
+  color: #cdd6f4;
+  font-size: 0.85rem;
+  line-height: inherit;
+}
+
+/* hljs theme override for dark pre blocks */
+.wiki-body pre .hljs {
+  background: transparent;
+}
+
+/* 表格 */.wiki-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+.wiki-body th,
+.wiki-body td {
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  text-align: left;
+}
+.wiki-body th {
+  background: var(--color-attr-bg);
+  font-weight: 600;
+}
+
+/* 水平线 */
+.wiki-body hr {
+  margin: 1.5rem 0;
+  border: none;
+  border-top: 1px solid var(--color-border);
+}
+
+/* 图片 */
+.wiki-body img {
+  transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1),
+              box-shadow 0.3s ease;
+  cursor: pointer;
+  border-radius: 8px;
+}
+.wiki-body img:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+}
+
+/* 图片图注 */
+.image-figure {
+  margin: 1.5rem 0;
+  text-align: center;
+}
+.image-figure img {
+  max-width: 100%;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+.image-figure figcaption {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+/* ---------- 面包屑 ---------- */
+.breadcrumb {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px dashed var(--color-border);
+}
+.breadcrumb-link {
+  color: var(--color-primary);
+}
+.breadcrumb-link:hover {
+  text-decoration: underline;
+}
+.breadcrumb-current {
+  font-weight: 500;
+  color: var(--color-text);
+}
+.breadcrumb-sep {
+  margin: 0 4px;
+  color: var(--color-text-light);
+}
+
+/* ---------- 属性框 (attribute-box) ---------- */
+.attribute-box {
+  background: var(--color-attr-bg);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  font-size: 0.9rem;
+}
+.attribute-box table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.attribute-box th {
+  text-align: left;
+  font-weight: 600;
+  width: 30%;
+  vertical-align: top;
+  padding: 6px 12px 6px 0;
+  border: none;
+  color: var(--color-text-secondary);
+  background: transparent;
+}
+.attribute-box td {
+  padding: 6px 0;
+  border: none;
+  color: var(--color-text-muted);
+}
+
+/* ---------- 404 ---------- */
+.not-found-page {
+  text-align: center;
+  padding: 80px 40px;
+}
+.not-found-page h2 {
+  font-size: 3rem;
+  color: var(--color-text-light);
+  margin-bottom: 12px;
+}
+.not-found-page p {
+  color: var(--color-text-muted);
+  margin-bottom: 24px;
+}
+.not-found-page a {
+  display: inline-block;
+  background: var(--color-primary);
+  color: white;
+  padding: 8px 24px;
+  border-radius: 20px;
+  text-decoration: none;
+}
+.not-found-page a:hover {
+  background: var(--color-primary-hover);
+}
+
+/* ---------- 拖拽中全局状态 ---------- */
+.resizing {
+  user-select: none;
+  cursor: ew-resize;
+}
+
+/* ---------- 页面加载动画 ---------- */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.page-content {
+  animation: fadeInUp 0.2s ease-out;
+}
+
+/* TOC 可见时，补偿右 padding，让内容居中在 sidebar 和 TOC 之间 */
+@media (min-width: 1601px) {
+  .page-content {
+    padding-right: 308px; /* 260px TOC + 48px gap */
+  }
+}

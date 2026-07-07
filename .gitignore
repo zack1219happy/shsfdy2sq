@@ -1,0 +1,24 @@
+# next.js
+.next/
+out/
+
+# dependencies
+node_modules/
+
+# env
+.env*.local
+
+# ide
+.vscode/
+.idea/
+
+# os
+.DS_Store
+Thumbs.db
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# generated copies of data/ (copy-data-dev.js → dev server)
+public/data/
