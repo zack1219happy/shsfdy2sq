@@ -16,8 +16,8 @@ attributes:
 如有侵权、不满请到 Github 上提交 Issue 或联系管理员。
 
 > [!note] 管理员名单
-> - zack1219happy：项目的发起者，拥有 ~1 年的 coding 经验，擅长编写 html+css+javascript 的传统网页。我们的[王梓](people/wang-zi)大佬！
-> - Irade-tqy：只会让 AI 写代码的蒟蒻[童麒宇](people/tong-qiyu)。
+> - zack1219happy：项目的发起者，拥有 ~1 年的 coding 经验，**不**擅长编写 html+css+javascript 的传统网页。我们的[王梓](people/wang-zi)~~大佬~~ 菜鸟！
+> - Irade-tqy：~~只会让~~能够自由支配 AI 写代码的~~蒟蒻~~大佬[童麒宇](people/tong-qiyu)！
 
 ### 内容分类
 
