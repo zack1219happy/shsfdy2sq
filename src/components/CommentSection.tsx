@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { fetchComments, addComment } from '@/lib/gist-api'
 import type { Comment } from '@/types/gist'
+import WikiContent from '@/components/WikiContent'
 import styles from '@/styles/comment.module.css'
 
 interface Props {
@@ -259,7 +260,7 @@ function CommentCard({
           if (e.key === 'Enter') onReply(comment.id, comment.author)
         }}
       >
-        {comment.content}
+        <WikiContent content={comment.content} />
       </div>
     </div>
   )
@@ -294,7 +295,7 @@ function UnifiedReply({
           if (e.key === 'Enter') onReply(comment.id, comment.author)
         }}
       >
-        {comment.content}
+        <WikiContent content={comment.content} />
       </div>
     </div>
   )
