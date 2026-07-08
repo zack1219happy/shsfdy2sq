@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import type { Heading } from '@/lib/content'
+import FaIcon from '@/components/FaIcon'
 import styles from '@/styles/toc.module.css'
 
 interface Props {
@@ -68,7 +69,7 @@ export default function TableOfContents({ headings, isEditing, onToggleEdit }: P
               title={isEditing ? '切换为阅读模式' : '切换为编辑模式'}
               aria-label={isEditing ? '切换为阅读模式' : '切换为编辑模式'}
             >
-              <i className={isEditing ? 'fas fa-eye' : 'fas fa-pen'} />
+              <FaIcon name={isEditing ? 'eye' : 'pen'} />
             </button>
           )}
           <button
@@ -77,7 +78,7 @@ export default function TableOfContents({ headings, isEditing, onToggleEdit }: P
             title="回到顶部"
             aria-label="回到顶部"
           >
-            <i className="fas fa-arrow-up" />
+            <FaIcon name="arrow-up" />
           </button>
           <button
             className={styles.navBtn}
@@ -85,7 +86,7 @@ export default function TableOfContents({ headings, isEditing, onToggleEdit }: P
             title="跳到底部"
             aria-label="跳到底部"
           >
-            <i className="fas fa-arrow-down" />
+            <FaIcon name="arrow-down" />
           </button>
         </div>
       </div>

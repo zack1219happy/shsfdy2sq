@@ -51,14 +51,14 @@ export default function WikiContent({ content, format, className }: Props) {
       if (!code) return
       try {
         await navigator.clipboard.writeText(code.textContent || '')
-        btn.innerHTML = '<i class="fas fa-check" style="color:#28a745"></i> 已复制'
+        btn.innerHTML = '✅ 已复制'
         setTimeout(() => {
-          btn.innerHTML = '<i class="fas fa-copy"></i> 复制'
+          btn.innerHTML = '📋 复制'
         }, 2000)
       } catch {
-        btn.innerHTML = '<i class="fas fa-times" style="color:#dc3545"></i> 失败'
+        btn.innerHTML = '❌ 失败'
         setTimeout(() => {
-          btn.innerHTML = '<i class="fas fa-copy"></i> 复制'
+          btn.innerHTML = '📋 复制'
         }, 2000)
       }
     }
