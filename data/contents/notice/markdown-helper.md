@@ -52,8 +52,8 @@ attributes:           # 可选 — 属性表（渲染为键值对表格）
 
 ```markdown
 [显示文字](https://example.com)
-[校园地图](/campus/map)
-[用户协议](/notice/user-agreement)
+[[校园地图]]
+[[用户协议]]
 ```
 
 - 站内链接使用相对路径 `/[slug]`。可以用 `..` 返回上一级，如 `../people/wang-zi/#班级信息`。

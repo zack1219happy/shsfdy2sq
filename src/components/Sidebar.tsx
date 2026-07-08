@@ -14,6 +14,7 @@ interface Props {
   tree: NavNode[]
   siteTitle: string
   announcement: string
+  titleSlugMap: Record<string, string>
 }
 
 function getActivePathKey(pathname: string): string {
@@ -21,7 +22,7 @@ function getActivePathKey(pathname: string): string {
   return slug || 'home'
 }
 
-export default function Sidebar({ tree, siteTitle, announcement }: Props) {
+export default function Sidebar({ tree, siteTitle, announcement, titleSlugMap }: Props) {
   const pathname = usePathname()
   const activePathKey = getActivePathKey(pathname)
 
@@ -199,7 +200,7 @@ export default function Sidebar({ tree, siteTitle, announcement }: Props) {
           {tree.map((node) => renderNode(node, 0))}
         </ul>
 
-        {!collapsed && <Announcement initialContent={announcement} />}
+        {!collapsed && <Announcement initialContent={announcement} titleSlugMap={titleSlugMap} />}
       </div>
 
       {/* 拖拽手柄 */}
@@ -214,7 +215,7 @@ export default function Sidebar({ tree, siteTitle, announcement }: Props) {
   )
 }
 
-function Announcement({ initialContent }: { initialContent: string }) {
+function Announcement({ initialContent, titleSlugMap }: { initialContent: string; titleSlugMap: Record<string, string> }) {
   const [markdown, setMarkdown] = useState<string>(initialContent)
 
   const loadAnnouncement = useCallback(async () => {
@@ -242,7 +243,7 @@ function Announcement({ initialContent }: { initialContent: string }) {
         </button>
       </div>
       {markdown ? (
-        <WikiContent format="markdown" content={markdown} className={styles.announcementContent} />
+        <WikiContent format="markdown" content={markdown} className={styles.announcementContent} titleSlugMap={titleSlugMap} />
       ) : (
         <div className={styles.announcementContent}>
           <FaIcon name="spinner" spin /> 加载中...

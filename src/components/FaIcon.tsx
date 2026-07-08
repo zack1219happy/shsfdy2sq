@@ -17,7 +17,15 @@ interface Props {
  */
 export default function FaIcon({ name, className, spin, title }: Props) {
   const icon = typeof name === 'string' ? resolveIcon(name) : name
-  if (!icon) return null
+
+  // 找不到图标时显示原始文字，保证不崩
+  if (!icon) {
+    return (
+      <span className={className} title={title}>
+        {typeof name === 'string' ? name : '?'}
+      </span>
+    )
+  }
 
   return (
     <span className={className} title={title}>

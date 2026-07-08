@@ -88,7 +88,7 @@ export async function addComment(
     id: crypto.randomUUID(),
     page,
     author: input.author.trim() || '匿名',
-    content: input.content,
+    content: input.content.trim(),
     date: new Date().toISOString(),
     parentId: input.parentId,
     status: 'approved', // Phase 2 改为 pending，由管理员审核

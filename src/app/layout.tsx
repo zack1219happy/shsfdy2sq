@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import fs from 'fs'
 import path from 'path'
-import { getNavTree, getSiteTitle } from '@/lib/navigation'
+import { getNavTree, getSiteTitle, getTitleToSlugMap } from '@/lib/navigation'
 import Sidebar from '@/components/Sidebar'
 import ImageModal from '@/components/ImageModal'
 import { config } from '@fortawesome/fontawesome-svg-core'
@@ -24,6 +24,7 @@ export default function RootLayout({
 }) {
   const tree = getNavTree()
   const siteTitle = getSiteTitle()
+  const titleSlugMap = Object.fromEntries(getTitleToSlugMap())
 
   // 公告内容在构建时编译，无需客户端 fetch
   let announcementContent = ''
@@ -40,7 +41,7 @@ export default function RootLayout({
     <html lang="zh-CN">
       <head />
       <body>
-        <Sidebar tree={tree} siteTitle={siteTitle} announcement={announcementContent} />
+        <Sidebar tree={tree} siteTitle={siteTitle} announcement={announcementContent} titleSlugMap={titleSlugMap} />
 
         <ImageModal />
 

@@ -43,6 +43,9 @@ jobs:
           GIST_TOKEN: ${{ secrets.NEXT_PUBLIC_GIST_TOKEN }}
           GIST_MASTER_SECRET: ${{ secrets.GIST_MASTER_SECRET }}
 
+      - name: Scan markdown files for new icons
+        run: node scripts/scan-icons.js
+
       - name: Compute encryption key hash
         id: compute-key
         run: |

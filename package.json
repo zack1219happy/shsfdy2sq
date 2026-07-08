@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "next dev",
     "predev": "node scripts/copy-data-dev.js",
+    "prescan": "node scripts/scan-icons.js",
     "build": "next build",
-    "export": "cross-env EXPORT=true next build && node scripts/copy-static.js",
+    "export": "node scripts/scan-icons.js && cross-env EXPORT=true next build && node scripts/copy-static.js",
     "start": "next start",
     "lint": "next lint"
   },

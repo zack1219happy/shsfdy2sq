@@ -2,7 +2,7 @@ zack1219happy 在独立开发了 ~1 学期后，Irade-tqy 于 2026/7/6 加入了
 
 wiki 内容根据传言撰写，不代表所写本人意见。
 
-访问并阅读本站页面即表示您同意[用户协议](/shsg8c1wiki/notice/user-agreement/)和[社区规范](/shsg8c1wiki/notice/community-guidelines/)。
+访问并阅读本站页面即表示您同意[[用户协议]]和[[社区规范]]。
 
 © 上中初二 Wiki
 
