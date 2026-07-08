@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { fetchComments, addComment } from '@/lib/gist-api'
+import { fetchPageComments, addComment } from '@/lib/gist-api'
 import type { Comment } from '@/types/gist'
 import WikiContent from '@/components/WikiContent'
 import styles from '@/styles/comment.module.css'
@@ -25,10 +25,10 @@ export default function CommentSection({ pageSlug }: Props) {
     setError(null)
     setReplyTarget(null)
 
-    fetchComments()
-      .then((all) => {
+    fetchPageComments(pageSlug)
+      .then((data) => {
         if (cancelled) return
-        setComments((all[pageSlug] ?? []).filter((c) => c.status === 'approved'))
+        setComments(data)
       })
       .catch((e: Error) => {
         if (cancelled) return
@@ -46,8 +46,8 @@ export default function CommentSection({ pageSlug }: Props) {
       await addComment(pageSlug, { ...input, parentId: replyTarget?.id })
       setReplyTarget(null)
       // 软刷新
-      const all = await fetchComments(true)
-      setComments((all[pageSlug] ?? []).filter((c) => c.status === 'approved'))
+      const data = await fetchPageComments(pageSlug)
+      setComments(data)
     },
     [pageSlug, replyTarget],
   )

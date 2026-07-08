@@ -1,71 +1,50 @@
 'use client'
 
+import { supabase } from './supabase'
 import type { Comment, CommentsData } from '@/types/gist'
-import { encrypt, decrypt } from './gist-crypto'
-
-/** 基础校验：确保 parsed 符合 CommentsData 结构，过滤危险 key */
-function validateCommentsData(raw: unknown): CommentsData {
-  if (!raw || typeof raw !== 'object') return {}
-  const result: CommentsData = {}
-  for (const key of Object.keys(raw as Record<string, unknown>)) {
-    // 跳过原型污染 key
-    if (key === '__proto__' || key === 'constructor') continue
-    const val = (raw as Record<string, unknown>)[key]
-    if (Array.isArray(val)) {
-      result[key] = val.filter(
-        (c): c is Comment =>
-          c && typeof c === 'object' && typeof c.id === 'string' && typeof c.content === 'string',
-      )
-    }
-  }
-  return result
-}
-
-const GIST_ID = process.env.NEXT_PUBLIC_GIST_ID!
-const TOKEN = process.env.NEXT_PUBLIC_GIST_TOKEN!
-const GIST_API = `https://api.github.com/gists/${GIST_ID}`
-
-// ---------- 缓存 ----------
-let cache: {
-  data: CommentsData | null
-  timestamp: number
-} = { data: null, timestamp: 0 }
-const CACHE_TTL = 30_000 // 30 秒
-
-function isCacheValid(): boolean {
-  return cache.data !== null && Date.now() - cache.timestamp < CACHE_TTL
-}
 
 // ---------- 读取 ----------
 
-/** 从 Gist 拉取 comments.json 全文 */
-export async function fetchComments(forceRefresh = false): Promise<CommentsData> {
-  if (!forceRefresh && isCacheValid()) return cache.data!
+/** 获取某页面的已审核评论 */
+export async function fetchPageComments(page: string): Promise<Comment[]> {
+  const { data, error } = await supabase
+    .from('comments')
+    .select('*')
+    .eq('page', page)
+    .eq('status', 'approved')
+    .order('date', { ascending: true })
 
-  const res = await fetch(GIST_API, {
-    headers: { Authorization: `Bearer ${TOKEN}` },
-    next: { revalidate: 30 },
-  })
-
-  if (!res.ok) throw new Error(`GitHub API ${res.status}: ${res.statusText}`)
-
-  const gist = await res.json()
-  const raw = gist.files?.['comments.json']?.content
-  if (!raw) return {}
-
-  // 如果是密文就解密，否则当明文 JSON 解析（兼容旧数据）
-  const isEncrypted = !raw.startsWith('{') && !raw.startsWith('[')
-  const json = isEncrypted ? await decrypt(raw) : raw
-  const parsed = JSON.parse(json)
-  const data = validateCommentsData(parsed)
-  cache = { data, timestamp: Date.now() }
-  return data
+  if (error) throw new Error(`Supabase 查询失败: ${error.message}`)
+  return data ?? []
 }
 
-/** 获取某个页面的已审核评论 */
-export async function getPageComments(page: string): Promise<Comment[]> {
-  const all = await fetchComments()
-  return (all[page] ?? []).filter((c) => c.status === 'approved')
+/** 获取所有页面的评论（按页面分组），管理后台用 */
+export async function fetchAllComments(): Promise<CommentsData> {
+  const { data, error } = await supabase
+    .from('comments')
+    .select('*')
+    .order('date', { ascending: true })
+
+  if (error) throw new Error(`Supabase 查询失败: ${error.message}`)
+
+  const grouped: CommentsData = {}
+  for (const c of data ?? []) {
+    if (!grouped[c.page]) grouped[c.page] = []
+    grouped[c.page].push(c)
+  }
+  return grouped
+}
+
+/** 获取某页面的所有评论（含 pending），管理后台用 */
+export async function fetchAllPageComments(page: string): Promise<Comment[]> {
+  const { data, error } = await supabase
+    .from('comments')
+    .select('*')
+    .eq('page', page)
+    .order('date', { ascending: true })
+
+  if (error) throw new Error(`Supabase 查询失败: ${error.message}`)
+  return data ?? []
 }
 
 // ---------- 限流 ----------
@@ -94,52 +73,43 @@ function checkRateLimit(): void {
 
 // ---------- 写入 ----------
 
-/** 添加新评论（写回 Gist） */
+/** 添加新评论（写入 Supabase） */
 export async function addComment(
   page: string,
   input: { author: string; content: string; parentId?: string },
 ): Promise<void> {
-  checkRateLimit() // 同一设备 60 条/小时
-  const all = await fetchComments(true) // 跳过缓存，拿最新防覆盖
-  const list = all[page] ?? []
+  checkRateLimit()
 
-  const comment: Comment = {
-    id: crypto.randomUUID(),
+  const { error } = await supabase.from('comments').insert({
     page,
     author: input.author.trim() || '匿名',
     content: input.content.trim(),
+    parent_id: input.parentId || null,
+    status: 'approved',
     date: new Date().toISOString(),
-    parentId: input.parentId,
-    status: 'approved', // Phase 2 改为 pending，由管理员审核
-  }
+  })
 
-  list.push(comment)
-
-  const updated: CommentsData = { ...all, [page]: list }
-  await writeComments(updated)
+  if (error) throw new Error(`写入失败: ${error.message}`)
 }
 
-/** 覆盖写入 comments.json（先加密再写入） */
-async function writeComments(data: CommentsData): Promise<void> {
-  const encrypted = await encrypt(JSON.stringify(data, null, 2))
-  const body = JSON.stringify({
-    files: { 'comments.json': { content: encrypted } },
-  })
+// ---------- 审核（管理后台用） ----------
 
-  const res = await fetch(GIST_API, {
-    method: 'PATCH',
-    headers: {
-      Authorization: `Bearer ${TOKEN}`,
-      'Content-Type': 'application/json',
-    },
-    body,
-  })
+/** 更新评论状态 */
+export async function updateCommentStatus(id: string, status: 'pending' | 'approved' | 'rejected'): Promise<void> {
+  const { error } = await supabase
+    .from('comments')
+    .update({ status })
+    .eq('id', id)
 
-  if (!res.ok) {
-    const err = await res.text()
-    throw new Error(`写入 Gist 失败 (${res.status}): ${err}`)
-  }
+  if (error) throw new Error(`更新状态失败: ${error.message}`)
+}
 
-  // 更新缓存
-  cache = { data, timestamp: Date.now() }
+/** 删除评论 */
+export async function deleteComment(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('comments')
+    .delete()
+    .eq('id', id)
+
+  if (error) throw new Error(`删除失败: ${error.message}`)
 }

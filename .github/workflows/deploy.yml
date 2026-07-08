@@ -36,31 +36,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Migrate & encrypt Gist data
-        run: node scripts/migrate-gist.js
-        env:
-          GIST_ID: ${{ secrets.NEXT_PUBLIC_GIST_ID }}
-          GIST_TOKEN: ${{ secrets.NEXT_PUBLIC_GIST_TOKEN }}
-          GIST_MASTER_SECRET: ${{ secrets.GIST_MASTER_SECRET }}
-
       - name: Scan markdown files for new icons
         run: node scripts/scan-icons.js
-
-      - name: Compute encryption key hash
-        id: compute-key
-        env:
-          GIST_MASTER_SECRET: ${{ secrets.GIST_MASTER_SECRET }}
-        run: |
-          HASH=$(echo -n "$GIST_MASTER_SECRET" | sha256sum | cut -d' ' -f1)
-          echo "key-hash=$HASH" >> $GITHUB_OUTPUT
 
       - name: Build static export
         run: npm run export
         env:
           NEXT_PUBLIC_BASE_PATH: /shsg8c1wiki
-          NEXT_PUBLIC_GIST_ID: ${{ secrets.NEXT_PUBLIC_GIST_ID }}
-          NEXT_PUBLIC_GIST_TOKEN: ${{ secrets.NEXT_PUBLIC_GIST_TOKEN }}
-          NEXT_PUBLIC_GIST_KEY: ${{ steps.compute-key.outputs.key-hash }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
