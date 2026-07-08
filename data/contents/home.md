@@ -11,13 +11,13 @@ attributes:
 
 前往 gitHub 仓库以 Star 本 Wiki，或进行内容修改。
 
-使用前先阅读 **[通告](/notice)** 以确保你理解本 Wiki 的用户政策。
+使用前先阅读 **[[通告]]** 以确保你理解本 Wiki 的用户政策。
 
 如有侵权、不满请到 Github 上提交 Issue 或联系管理员。
 
 > [!note] 管理员名单
-> - zack1219happy：项目的发起者，拥有 ~1 年的 coding 经验，**不**擅长编写 html+css+javascript 的传统网页。我们的[王梓](people/wang-zi)~~大佬~~ 菜鸟！
-> - Irade-tqy：~~只会让~~能够自由支配 AI 写代码的~~蒟蒻~~大佬[童麒宇](people/tong-qiyu)！
+> - zack1219happy：项目的发起者，拥有 ~1 年的 coding 经验，**不**擅长编写 html+css+javascript 的传统网页。我们的[[王梓]]~~大佬~~ 菜鸟！
+> - Irade-tqy：~~只会让~~能够自由支配 AI 写代码的~~蒟蒻~~大佬[[童麒宇]]！
 
 ### 内容分类
 

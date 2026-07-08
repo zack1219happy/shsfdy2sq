@@ -47,7 +47,7 @@ const md: MarkdownIt = new MarkdownIt({
       `<div class="code-block-header">` +
       `<span class="code-lang">${md.utils.escapeHtml(displayLang)}</span>` +
       `<button class="code-copy-btn" data-code-copy-btn title="复制代码">` +
-      `📋 复制` +
+      `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>复制` +
       `</button>` +
       `</div>` +
       `<pre class="hljs"><code>${highlighted}</code></pre>` +
