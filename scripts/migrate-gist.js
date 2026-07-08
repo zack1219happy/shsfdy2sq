@@ -15,7 +15,7 @@
 const crypto = require('crypto')
 
 const GIST_ID = process.env.GIST_ID || process.env.NEXT_PUBLIC_GIST_ID
-const TOKEN = process.env.GIST_TOKEN || process.env.NEXT_PUBLIC_GIST_TOKEN
+const TOKEN = process.env.GIST_TOKEN
 const MASTER_SECRET = process.env.GIST_MASTER_SECRET
 
 if (!GIST_ID || !TOKEN || !MASTER_SECRET) {
@@ -25,7 +25,7 @@ if (!GIST_ID || !TOKEN || !MASTER_SECRET) {
 
 // SHA-256 作为 AES-256 密钥
 const KEY_HASH = crypto.createHash('sha256').update(MASTER_SECRET).digest('hex')
-console.log(`[migrate] GIST_MASTER_SECRET → SHA-256: ${KEY_HASH.slice(0, 16)}…`)
+console.log(`[migrate] GIST_MASTER_SECRET → SHA-256: ${KEY_HASH.slice(0, 4)}…`)
 
 // ---------- 工具函数 ----------
 
@@ -66,7 +66,6 @@ async function run() {
 
   if (alreadyEncrypted) {
     console.log('[migrate] 数据已加密，跳过迁移')
-    console.log(`[migrate] NEXT_PUBLIC_GIST_KEY=${KEY_HASH}`)
     return KEY_HASH
   }
 
@@ -119,7 +118,6 @@ async function run() {
   }
 
   console.log('[migrate] 迁移完成 ✅')
-  console.log(`[migrate] NEXT_PUBLIC_GIST_KEY=${KEY_HASH}`)
   return KEY_HASH
 }
 

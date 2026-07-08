@@ -6,6 +6,7 @@ import texmath from 'markdown-it-texmath'
 import anchor from 'markdown-it-anchor'
 import matter from 'gray-matter'
 import katex from 'katex'
+import DOMPurify from 'isomorphic-dompurify'
 import { getTitleToSlugMap } from './navigation'
 
 export interface PageContent {
@@ -158,6 +159,9 @@ export function getPageContent(slug: string[]): PageContent {
   // 添加图片图注
   html = addImageCaptions(html)
 
+  // 构建时 HTML 净化，剥离脚本、事件处理器等
+  html = DOMPurify.sanitize(html)
+
   // 提取标题用于目录（从渲染后 HTML 提取，保证 ID 与 DOM 一致）
   const headings = extractHeadingsFromHtml(html)
 
@@ -203,6 +207,8 @@ function fixImagePaths(html: string, slugPath: string): string {
     /<img\s+([^>]*?)src="([^"]+)"([^>]*)>/gi,
     (match, before, src, after) => {
       if (src.startsWith('http') || src.startsWith('/')) return match
+      // 防止路径穿越
+      if (src.includes('..')) return match
       return `<img ${before}src="${assetPrefix}${src}"${after}>`
     }
   )
@@ -234,11 +240,19 @@ function addImageCaptions(html: string): string {
   return html.replace(
     /<img\s+([^>]*?)alt="([^"]*)"([^>]*)>/gi,
     (match, before, alt, after) => {
-      const imgTag = `<img ${before}alt="${alt}"${after} loading="lazy" class="clickable-image" onclick="window.dispatchEvent(new CustomEvent('open-image-modal', {detail: this.src}))">`
+      // 剥离 img 标签中的事件处理器属性
+      const cleanBefore = stripEventHandlers(before)
+      const cleanAfter = stripEventHandlers(after)
+      const imgTag = `<img ${cleanBefore}alt="${alt}"${cleanAfter} loading="lazy" class="clickable-image" onclick="window.dispatchEvent(new CustomEvent('open-image-modal', {detail: this.src}))">`
       if (!alt.trim()) return imgTag
       return `<figure class="image-figure">${imgTag}<figcaption>${alt}</figcaption></figure>`
     }
   )
+}
+
+/** 剥离 HTML 属性中的 on* 事件处理器 */
+function stripEventHandlers(attrs: string): string {
+  return attrs.replace(/\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '')
 }
 
 /**
@@ -251,9 +265,9 @@ function renderAttributesFromFrontmatter(data: Record<string, unknown>): Record<
   if (!rawAttributes || typeof rawAttributes !== 'object') return {}
   const result: Record<string, string> = {}
   for (const [key, value] of Object.entries(rawAttributes)) {
-    const renderedKey = md.renderInline(String(key)).trim()
+    const renderedKey = DOMPurify.sanitize(md.renderInline(String(key)).trim())
     const strValue = Array.isArray(value) ? value.join('、') : String(value ?? '')
-    const renderedValue = md.renderInline(strValue).trim()
+    const renderedValue = DOMPurify.sanitize(md.renderInline(strValue).trim())
     result[renderedKey] = renderedValue
   }
   return result

@@ -6,11 +6,13 @@ out/
 node_modules/
 
 # env
+.env
 .env*.local
 
 # ide
 .vscode/
 .idea/
+data/.obsidian/
 
 # os
 .DS_Store

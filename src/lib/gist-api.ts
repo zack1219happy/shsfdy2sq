@@ -3,6 +3,24 @@
 import type { Comment, CommentsData } from '@/types/gist'
 import { encrypt, decrypt } from './gist-crypto'
 
+/** 基础校验：确保 parsed 符合 CommentsData 结构，过滤危险 key */
+function validateCommentsData(raw: unknown): CommentsData {
+  if (!raw || typeof raw !== 'object') return {}
+  const result: CommentsData = {}
+  for (const key of Object.keys(raw as Record<string, unknown>)) {
+    // 跳过原型污染 key
+    if (key === '__proto__' || key === 'constructor') continue
+    const val = (raw as Record<string, unknown>)[key]
+    if (Array.isArray(val)) {
+      result[key] = val.filter(
+        (c): c is Comment =>
+          c && typeof c === 'object' && typeof c.id === 'string' && typeof c.content === 'string',
+      )
+    }
+  }
+  return result
+}
+
 const GIST_ID = process.env.NEXT_PUBLIC_GIST_ID!
 const TOKEN = process.env.NEXT_PUBLIC_GIST_TOKEN!
 const GIST_API = `https://api.github.com/gists/${GIST_ID}`
@@ -38,7 +56,8 @@ export async function fetchComments(forceRefresh = false): Promise<CommentsData>
   // 如果是密文就解密，否则当明文 JSON 解析（兼容旧数据）
   const isEncrypted = !raw.startsWith('{') && !raw.startsWith('[')
   const json = isEncrypted ? await decrypt(raw) : raw
-  const data: CommentsData = JSON.parse(json)
+  const parsed = JSON.parse(json)
+  const data = validateCommentsData(parsed)
   cache = { data, timestamp: Date.now() }
   return data
 }

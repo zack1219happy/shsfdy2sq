@@ -3,6 +3,7 @@
 import { useMemo, useRef, useEffect } from 'react'
 import MarkdownIt from 'markdown-it'
 import katex from 'katex'
+import DOMPurify from 'dompurify'
 
 /** 客户端 markdown-it 实例（轻量，不含 highlight.js） */
 const md = new MarkdownIt({
@@ -54,7 +55,10 @@ export default function WikiContent({ content, format, className, titleSlugMap }
         : processed
 
     // 2. 渲染 LaTeX
-    return renderLatexInHtml(rawHtml)
+    const withLatex = renderLatexInHtml(rawHtml)
+
+    // 3. 净化 HTML（仅在浏览器端），剥离 <script>、事件处理器等恶意内容
+    return typeof window !== 'undefined' ? DOMPurify.sanitize(withLatex) : withLatex
   }, [content, format, titleSlugMap, basePath])
 
   // 代码块复制按钮：事件委托
