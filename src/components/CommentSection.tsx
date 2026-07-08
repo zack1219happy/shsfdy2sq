@@ -108,7 +108,7 @@ export default function CommentSection({ pageSlug }: Props) {
 
     // 每组按时间排序
     for (const [, list] of groupsByRoot) {
-      list.sort((a, b) => new Date(a.comment.date).getTime() - new Date(b.comment.date).getTime())
+      list.sort((a, b) => new Date(b.comment.date).getTime() - new Date(a.comment.date).getTime())
     }
 
     return { topLevel, groupsByRoot }

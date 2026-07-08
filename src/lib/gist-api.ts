@@ -5,14 +5,14 @@ import type { Comment, CommentsData } from '@/types/gist'
 
 // ---------- 读取 ----------
 
-/** 获取某页面的已审核评论 */
+/** 获取某页面的已审核评论（最新在前） */
 export async function fetchPageComments(page: string): Promise<Comment[]> {
   const { data, error } = await supabase
     .from('comments')
     .select('*')
     .eq('page', page)
     .eq('status', 'approved')
-    .order('date', { ascending: true })
+    .order('date', { ascending: false })
 
   if (error) throw new Error(`Supabase 查询失败: ${error.message}`)
   return data ?? []
