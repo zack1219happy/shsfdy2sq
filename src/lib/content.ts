@@ -47,7 +47,7 @@ const md: MarkdownIt = new MarkdownIt({
       `<div class="code-block-header">` +
       `<span class="code-lang">${md.utils.escapeHtml(displayLang)}</span>` +
       `<button class="code-copy-btn" data-code-copy-btn title="复制代码">` +
-      `<i class="fas fa-copy"></i> 复制` +
+      `📋 复制` +
       `</button>` +
       `</div>` +
       `<pre class="hljs"><code>${highlighted}</code></pre>` +

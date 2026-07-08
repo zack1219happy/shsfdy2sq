@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import FaIcon from '@/components/FaIcon'
 import styles from '@/styles/image-modal.module.css'
 
 /**
@@ -51,7 +52,7 @@ export default function ImageModal() {
         aria-label="关闭"
         type="button"
       >
-        <i className="fas fa-times" />
+        <FaIcon name="times" />
       </button>
 
       <div className={styles.imageContainer}>

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import type { NavNode } from '@/lib/navigation'
 import WikiContent from '@/components/WikiContent'
+import FaIcon from '@/components/FaIcon'
 import styles from '@/styles/sidebar.module.css'
 
 const COLLAPSED_WIDTH = 55
@@ -12,6 +13,7 @@ const COLLAPSED_WIDTH = 55
 interface Props {
   tree: NavNode[]
   siteTitle: string
+  announcement: string
 }
 
 function getActivePathKey(pathname: string): string {
@@ -19,7 +21,7 @@ function getActivePathKey(pathname: string): string {
   return slug || 'home'
 }
 
-export default function Sidebar({ tree, siteTitle }: Props) {
+export default function Sidebar({ tree, siteTitle, announcement }: Props) {
   const pathname = usePathname()
   const activePathKey = getActivePathKey(pathname)
 
@@ -122,14 +124,16 @@ export default function Sidebar({ tree, siteTitle }: Props) {
           }}
         >
           {!collapsed && isFolder && node.children ? (
-            <span className={styles.expandIcon}>
-              <i className={`fas fa-chevron-right ${isExpanded ? styles.rotated : ''}`} />
+            <span className={`${styles.expandIcon} ${isExpanded ? styles.rotated : ''}`}>
+              <FaIcon name="chevron-right" />
             </span>
           ) : (
             !collapsed && <span className={styles.spacer} />
           )}
 
-          <i className={`${styles.treeIcon} ${node.icon || (isFolder ? (isExpanded ? 'fas fa-folder-open' : 'fas fa-folder') : 'fas fa-file-lines')}`}
+          <FaIcon
+            name={node.icon || (isFolder ? (isExpanded ? 'folder-open' : 'folder') : 'file-lines')}
+            className={styles.treeIcon}
             title={collapsed ? node.title : undefined}
           />
 
@@ -175,7 +179,7 @@ export default function Sidebar({ tree, siteTitle }: Props) {
               onClick={() => setCollapsed(false)}
               aria-label="展开侧边栏"
             >
-              <i className="fas fa-bars" />
+              <FaIcon name="bars" />
             </button>
           ) : (
             <>
@@ -185,7 +189,7 @@ export default function Sidebar({ tree, siteTitle }: Props) {
                 onClick={() => setCollapsed(true)}
                 aria-label="收起侧边栏"
               >
-                <i className="fas fa-chevron-left" />
+                <FaIcon name="chevron-left" />
               </button>
             </>
           )}
@@ -195,7 +199,7 @@ export default function Sidebar({ tree, siteTitle }: Props) {
           {tree.map((node) => renderNode(node, 0))}
         </ul>
 
-        {!collapsed && <Announcement />}
+        {!collapsed && <Announcement initialContent={announcement} />}
       </div>
 
       {/* 拖拽手柄 */}
@@ -210,8 +214,8 @@ export default function Sidebar({ tree, siteTitle }: Props) {
   )
 }
 
-function Announcement() {
-  const [markdown, setMarkdown] = useState<string>('')
+function Announcement({ initialContent }: { initialContent: string }) {
+  const [markdown, setMarkdown] = useState<string>(initialContent)
 
   const loadAnnouncement = useCallback(async () => {
     try {
@@ -220,32 +224,28 @@ function Announcement() {
       if (!resp.ok) throw new Error('HTTP ' + resp.status)
       setMarkdown(await resp.text())
     } catch {
-      setMarkdown('⚠️ 公告加载失败')
+      // fallback: keep the compiled-in version
     }
   }, [])
-
-  useEffect(() => {
-    loadAnnouncement()
-  }, [loadAnnouncement])
 
   return (
     <div className={styles.announcement}>
       <div className={styles.announcementHeader}>
-        <i className="fas fa-bullhorn" />
+        <FaIcon name="bullhorn" />
         <span>公告</span>
         <button
           className={styles.announcementRefresh}
           onClick={loadAnnouncement}
           title="刷新"
         >
-          <i className="fas fa-sync-alt" />
+          <FaIcon name="sync-alt" />
         </button>
       </div>
       {markdown ? (
         <WikiContent format="markdown" content={markdown} className={styles.announcementContent} />
       ) : (
         <div className={styles.announcementContent}>
-          <i className="fas fa-spinner fa-pulse" /> 加载中...
+          <FaIcon name="spinner" spin /> 加载中...
         </div>
       )}
     </div>
