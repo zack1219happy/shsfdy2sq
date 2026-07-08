@@ -1,0 +1,369 @@
+- generic [active] [ref=f2e1]:
+  - generic "油猴插件：Github 增强 - 高速下载 注：此脚本由 dev-sidecar 注入" [ref=f2e2]
+  - generic [ref=f2e3]:
+    - generic [ref=f2e4]:
+      - link "Skip to content" [ref=f2e5] [cursor=pointer]:
+        - /url: "#start-of-content"
+      - banner [ref=f2e7]:
+        - heading "Navigation Menu" [level=2] [ref=f2e8]
+        - generic [ref=f2e9]:
+          - link "Homepage" [ref=f2e11] [cursor=pointer]:
+            - /url: /
+            - img [ref=f2e12]
+          - generic [ref=f2e14]:
+            - navigation "Global" [ref=f2e17]:
+              - list [ref=f2e18]:
+                - listitem [ref=f2e19]:
+                  - button "Platform" [ref=f2e21] [cursor=pointer]:
+                    - text: Platform
+                    - img [ref=f2e22]
+                - listitem [ref=f2e24]:
+                  - button "Solutions" [ref=f2e26] [cursor=pointer]:
+                    - text: Solutions
+                    - img [ref=f2e27]
+                - listitem [ref=f2e29]:
+                  - button "Resources" [ref=f2e31] [cursor=pointer]:
+                    - text: Resources
+                    - img [ref=f2e32]
+                - listitem [ref=f2e34]:
+                  - button "Open Source" [ref=f2e36] [cursor=pointer]:
+                    - text: Open Source
+                    - img [ref=f2e37]
+                - listitem [ref=f2e39]:
+                  - button "Enterprise" [ref=f2e41] [cursor=pointer]:
+                    - text: Enterprise
+                    - img [ref=f2e42]
+                - listitem [ref=f2e44]:
+                  - link "Pricing" [ref=f2e45] [cursor=pointer]:
+                    - /url: https://github.com/pricing
+                    - generic [ref=f2e46]: Pricing
+            - generic [ref=f2e47]:
+              - button "Search or jump to…" [ref=f2e50] [cursor=pointer]:
+                - img [ref=f2e52]
+                - generic [ref=f2e54]: Search or jump to...
+                - img [ref=f2e56]
+              - link "Sign in" [ref=f2e60] [cursor=pointer]:
+                - /url: /login?return_to=https%3A%2F%2Fgithub.com%2Fzack1219happy%2Fshsg8c1wiki%2F
+              - link "Sign up" [ref=f2e61] [cursor=pointer]:
+                - /url: /signup?ref_cta=Sign+up&ref_loc=header+logged+out&ref_page=%2F%3Cuser-name%3E%2F%3Crepo-name%3E&source=header-repo&source_repo=zack1219happy%2Fshsg8c1wiki
+              - button "Appearance settings" [ref=f2e64] [cursor=pointer]:
+                - img
+    - main [ref=f2e68]:
+      - generic [ref=f2e69]:
+        - generic [ref=f2e70]:
+          - generic [ref=f2e72]:
+            - img [ref=f2e73]
+            - link "zack1219happy" [ref=f2e76] [cursor=pointer]:
+              - /url: /zack1219happy
+            - generic [ref=f2e77]: /
+            - strong [ref=f2e78]:
+              - link "shsg8c1wiki" [ref=f2e79] [cursor=pointer]:
+                - /url: /zack1219happy/shsg8c1wiki
+            - generic [ref=f2e80]: Public
+          - generic [ref=f2e81]:
+            - list:
+              - listitem [ref=f2e82]:
+                - link "You must be signed in to change notification settings" [ref=f2e83] [cursor=pointer]:
+                  - /url: /login?return_to=%2Fzack1219happy%2Fshsg8c1wiki
+                  - img [ref=f2e84]
+                  - text: Notifications
+              - listitem [ref=f2e86]:
+                - link "Fork 0" [ref=f2e87] [cursor=pointer]:
+                  - /url: /login?return_to=%2Fzack1219happy%2Fshsg8c1wiki
+                  - img [ref=f2e88]
+                  - text: Fork
+                  - generic "0" [ref=f2e90]
+              - listitem [ref=f2e91]:
+                - link "You must be signed in to star a repository" [ref=f2e93] [cursor=pointer]:
+                  - /url: /login?return_to=%2Fzack1219happy%2Fshsg8c1wiki
+                  - img [ref=f2e94]
+                  - text: Star
+                  - generic "2 users starred this repository" [ref=f2e96]: "2"
+        - navigation "Repository" [ref=f2e97]:
+          - list [ref=f2e98]:
+            - listitem [ref=f2e99]:
+              - link "Code" [ref=f2e100] [cursor=pointer]:
+                - /url: /zack1219happy/shsg8c1wiki
+                - img [ref=f2e101]
+                - generic [ref=f2e103]: Code
+            - listitem [ref=f2e104]:
+              - link "Issues" [ref=f2e105] [cursor=pointer]:
+                - /url: /zack1219happy/shsg8c1wiki/issues
+                - img [ref=f2e106]
+                - generic [ref=f2e109]: Issues
+            - listitem [ref=f2e110]:
+              - link "Pull requests" [ref=f2e111] [cursor=pointer]:
+                - /url: /zack1219happy/shsg8c1wiki/pulls
+                - img [ref=f2e112]
+                - generic [ref=f2e114]: Pull requests
+            - listitem [ref=f2e115]:
+              - link "Actions" [ref=f2e116] [cursor=pointer]:
+                - /url: /zack1219happy/shsg8c1wiki/actions
+                - img [ref=f2e117]
+                - generic [ref=f2e119]: Actions
+            - listitem [ref=f2e120]:
+              - link "Projects" [ref=f2e121] [cursor=pointer]:
+                - /url: /zack1219happy/shsg8c1wiki/projects
+                - img [ref=f2e122]
+                - generic [ref=f2e124]: Projects
+            - listitem [ref=f2e125]:
+              - link "Security and quality" [ref=f2e126] [cursor=pointer]:
+                - /url: /zack1219happy/shsg8c1wiki/security
+                - img [ref=f2e127]
+                - generic [ref=f2e129]: Security and quality
+            - listitem [ref=f2e130]:
+              - link "Insights" [ref=f2e131] [cursor=pointer]:
+                - /url: /zack1219happy/shsg8c1wiki/pulse
+                - img [ref=f2e132]
+                - generic [ref=f2e134]: Insights
+      - generic [ref=f2e147]:
+        - heading "zack1219happy/shsg8c1wiki" [level=1] [ref=f2e149]
+        - generic [ref=f2e150]:
+          - generic [ref=f2e153]:
+            - generic [ref=f2e154]:
+              - generic [ref=f2e155]:
+                - button "main branch" [ref=f2e157] [cursor=pointer]:
+                  - generic [ref=f2e158]:
+                    - generic [ref=f2e160]:
+                      - img [ref=f2e162]
+                      - generic [ref=f2e165]: main
+                    - generic:
+                      - img
+                - generic [ref=f2e166]:
+                  - link "2 Branches" [ref=f2e408] [cursor=pointer]:
+                    - /url: /zack1219happy/shsg8c1wiki/branches
+                    - generic [ref=f2e168]:
+                      - generic:
+                        - img
+                      - generic [ref=f2e409]:
+                        - strong [ref=f2e410]: "2"
+                        - text: Branches
+                  - link "0 Tags" [ref=f2e411] [cursor=pointer]:
+                    - /url: /zack1219happy/shsg8c1wiki/tags
+                    - generic [ref=f2e171]:
+                      - generic:
+                        - img
+                      - generic [ref=f2e412]:
+                        - strong [ref=f2e413]: "0"
+                        - text: Tags
+              - generic [ref=f2e173]:
+                - generic [ref=f2e177]:
+                  - img [ref=f2e179]
+                  - combobox "Go to file" [ref=f2e181]
+                - button "Code" [ref=f2e182] [cursor=pointer]:
+                  - generic [ref=f2e183]:
+                    - generic:
+                      - img
+                    - generic [ref=f2e184]: Code
+                    - generic:
+                      - img
+            - generic [ref=f2e186]:
+              - heading "Folders and files" [level=2] [ref=f2e187]
+              - table "Folders and files" [ref=f2e188]:
+                - rowgroup:
+                  - row "Name Last commit message Last commit date":
+                    - columnheader "Name"
+                    - columnheader "Last commit message":
+                      - generic "Last commit message"
+                    - columnheader "Last commit date":
+                      - generic "Last commit date"
+                - rowgroup [ref=f2e189]:
+                  - row "Latest commit zack1219happy commits by zack1219happy 小失误 success Commit 64b21d2 · Jul 7, 20268 hours ago History 3 Commits" [ref=f2e190]:
+                    - cell "Latest commit zack1219happy commits by zack1219happy 小失误 success Commit 64b21d2 · Jul 7, 20268 hours ago History 3 Commits" [ref=f2e191]:
+                      - generic [ref=f2e192]:
+                        - heading "Latest commit" [level=2] [ref=f2e193]
+                        - generic [ref=f2e194]:
+                          - generic [ref=f2e196]:
+                            - link "zack1219happy" [ref=f2e197] [cursor=pointer]:
+                              - /url: /zack1219happy
+                              - img "zack1219happy" [ref=f2e198]
+                            - link "commits by zack1219happy" [ref=f2e199] [cursor=pointer]:
+                              - /url: /zack1219happy/shsg8c1wiki/commits?author=zack1219happy
+                              - text: zack1219happy
+                          - generic [ref=f2e200]:
+                            - link "小失误" [ref=f2e203] [cursor=pointer]:
+                              - /url: /zack1219happy/shsg8c1wiki/commit/64b21d276cd38e1d0dd4a2b6fb94a06b9963ed2b
+                            - button "success" [ref=f2e204] [cursor=pointer]:
+                              - img [ref=f2e205]
+                        - generic [ref=f2e207]:
+                          - generic [ref=f2e209]:
+                            - link "Commit 64b21d2" [ref=f2e210] [cursor=pointer]:
+                              - /url: /zack1219happy/shsg8c1wiki/commit/64b21d276cd38e1d0dd4a2b6fb94a06b9963ed2b
+                              - text: 64b21d2
+                            - text: ·
+                            - generic "Jul 7, 2026, 11:52 GMT+8" [ref=f2e211]: Jul 7, 20268 hours ago
+                          - generic [ref=f2e212]:
+                            - heading "History" [level=2] [ref=f2e213]
+                            - link "3 Commits" [ref=f2e214] [cursor=pointer]:
+                              - /url: /zack1219happy/shsg8c1wiki/commits/main/
+                              - generic [ref=f2e215]:
+                                - generic:
+                                  - img
+                                - generic [ref=f2e216]: 3 Commits
+                  - row "css, (Directory) 更新 Jul 7, 20269 hours ago" [ref=f2e217]:
+                    - cell "css, (Directory)" [ref=f2e218]:
+                      - generic [ref=f2e219]:
+                        - img [ref=f2e220]
+                        - link "css, (Directory)" [ref=f2e225] [cursor=pointer]:
+                          - /url: /zack1219happy/shsg8c1wiki/tree/main/css
+                          - text: css
+                    - cell "更新" [ref=f2e226]:
+                      - link "更新" [ref=f2e229] [cursor=pointer]:
+                        - /url: /zack1219happy/shsg8c1wiki/commit/5d999d1b7f6f89df08c8026d183e0b1ec59a71a7
+                    - cell "Jul 7, 20269 hours ago" [ref=f2e230]:
+                      - generic [ref=f2e231]: Jul 7, 20269 hours ago
+                  - row "data, (Directory) 小失误 Jul 7, 20268 hours ago" [ref=f2e232]:
+                    - cell "data, (Directory)" [ref=f2e233]:
+                      - generic [ref=f2e234]:
+                        - img [ref=f2e235]
+                        - link "data, (Directory)" [ref=f2e240] [cursor=pointer]:
+                          - /url: /zack1219happy/shsg8c1wiki/tree/main/data
+                          - text: data
+                    - cell "小失误" [ref=f2e241]:
+                      - link "小失误" [ref=f2e244] [cursor=pointer]:
+                        - /url: /zack1219happy/shsg8c1wiki/commit/64b21d276cd38e1d0dd4a2b6fb94a06b9963ed2b
+                    - cell "Jul 7, 20268 hours ago" [ref=f2e245]:
+                      - generic [ref=f2e246]: Jul 7, 20268 hours ago
+                  - row "js, (Directory) 更新 Jul 7, 20269 hours ago" [ref=f2e247]:
+                    - cell "js, (Directory)" [ref=f2e248]:
+                      - generic [ref=f2e249]:
+                        - img [ref=f2e250]
+                        - link "js, (Directory)" [ref=f2e255] [cursor=pointer]:
+                          - /url: /zack1219happy/shsg8c1wiki/tree/main/js
+                          - text: js
+                    - cell "更新" [ref=f2e256]:
+                      - link "更新" [ref=f2e259] [cursor=pointer]:
+                        - /url: /zack1219happy/shsg8c1wiki/commit/5d999d1b7f6f89df08c8026d183e0b1ec59a71a7
+                    - cell "Jul 7, 20269 hours ago" [ref=f2e260]:
+                      - generic [ref=f2e261]: Jul 7, 20269 hours ago
+                  - row ".nojekyll, (File) 更新 Jul 7, 20269 hours ago" [ref=f2e262]:
+                    - cell ".nojekyll, (File)" [ref=f2e263]:
+                      - generic [ref=f2e264]:
+                        - img [ref=f2e265]
+                        - link ".nojekyll, (File)" [ref=f2e270] [cursor=pointer]:
+                          - /url: /zack1219happy/shsg8c1wiki/blob/main/.nojekyll
+                          - text: .nojekyll
+                    - cell "更新" [ref=f2e271]:
+                      - link "更新" [ref=f2e274] [cursor=pointer]:
+                        - /url: /zack1219happy/shsg8c1wiki/commit/5d999d1b7f6f89df08c8026d183e0b1ec59a71a7
+                    - cell "Jul 7, 20269 hours ago" [ref=f2e275]:
+                      - generic [ref=f2e276]: Jul 7, 20269 hours ago
+                  - row "index.html, (File) 更新 Jul 7, 20269 hours ago" [ref=f2e277]:
+                    - cell "index.html, (File)" [ref=f2e278]:
+                      - generic [ref=f2e279]:
+                        - img [ref=f2e280]
+                        - link "index.html, (File)" [ref=f2e285] [cursor=pointer]:
+                          - /url: /zack1219happy/shsg8c1wiki/blob/main/index.html
+                          - text: index.html
+                    - cell "更新" [ref=f2e286]:
+                      - link "更新" [ref=f2e289] [cursor=pointer]:
+                        - /url: /zack1219happy/shsg8c1wiki/commit/5d999d1b7f6f89df08c8026d183e0b1ec59a71a7
+                    - cell "Jul 7, 20269 hours ago" [ref=f2e290]:
+                      - generic [ref=f2e291]: Jul 7, 20269 hours ago
+          - generic [ref=f2e295]:
+            - generic [ref=f2e298]:
+              - heading "About" [level=2] [ref=f2e299]
+              - paragraph [ref=f2e300]: 上中初二wiki
+              - link "Activity" [ref=f2e302] [cursor=pointer]:
+                - /url: /zack1219happy/shsg8c1wiki/activity
+                - img [ref=f2e303]
+                - text: Activity
+              - heading "Stars" [level=3] [ref=f2e305]
+              - generic [ref=f2e307]:
+                - img [ref=f2e308]
+                - strong [ref=f2e310]: "2"
+                - text: stars
+              - heading "Watchers" [level=3] [ref=f2e311]
+              - generic [ref=f2e313]:
+                - img [ref=f2e314]
+                - strong [ref=f2e316]: "0"
+                - text: watching
+              - heading "Forks" [level=3] [ref=f2e317]
+              - link "0 forks" [ref=f2e319] [cursor=pointer]:
+                - /url: /zack1219happy/shsg8c1wiki/forks
+                - img [ref=f2e320]
+                - strong [ref=f2e322]: "0"
+                - text: forks
+              - link "Report repository" [ref=f2e324] [cursor=pointer]:
+                - /url: /contact/report-content?content_url=https%3A%2F%2Fgithub.com%2Fzack1219happy%2Fshsg8c1wiki&report=zack1219happy+%28user%29
+            - generic [ref=f2e326]:
+              - heading "Releases" [level=2] [ref=f2e327]:
+                - link "Releases" [ref=f2e328] [cursor=pointer]:
+                  - /url: /zack1219happy/shsg8c1wiki/releases
+              - generic [ref=f2e329]: No releases published
+            - generic [ref=f2e331]:
+              - heading "Packages" [level=2] [ref=f2e332]:
+                - link "Packages" [ref=f2e333] [cursor=pointer]:
+                  - /url: /users/zack1219happy/packages?repo_name=shsg8c1wiki
+              - generic [ref=f2e334]: No packages published
+            - generic [ref=f2e336]:
+              - heading "Contributors 1" [level=2] [ref=f2e337]:
+                - link "Contributors 1" [ref=f2e338] [cursor=pointer]:
+                  - /url: /zack1219happy/shsg8c1wiki/graphs/contributors
+                  - text: Contributors
+                  - generic "1" [ref=f2e339]
+              - list [ref=f2e340]:
+                - listitem [ref=f2e341]:
+                  - link "@zack1219happy" [ref=f2e342] [cursor=pointer]:
+                    - /url: https://github.com/zack1219happy
+                    - img "@zack1219happy" [ref=f2e343]
+                  - link "zack1219happy" [ref=f2e345] [cursor=pointer]:
+                    - /url: https://github.com/zack1219happy
+                    - strong [ref=f2e346]: zack1219happy
+            - generic [ref=f2e348]:
+              - heading "Languages" [level=2] [ref=f2e349]
+              - list [ref=f2e355]:
+                - listitem [ref=f2e356]:
+                  - link "JavaScript 63.1%" [ref=f2e357] [cursor=pointer]:
+                    - /url: /zack1219happy/shsg8c1wiki/search?l=javascript
+                    - img [ref=f2e358]
+                    - generic [ref=f2e360]: JavaScript
+                    - generic [ref=f2e361]: 63.1%
+                - listitem [ref=f2e362]:
+                  - link "CSS 30.3%" [ref=f2e363] [cursor=pointer]:
+                    - /url: /zack1219happy/shsg8c1wiki/search?l=css
+                    - img [ref=f2e364]
+                    - generic [ref=f2e366]: CSS
+                    - generic [ref=f2e367]: 30.3%
+                - listitem [ref=f2e368]:
+                  - link "HTML 6.6%" [ref=f2e369] [cursor=pointer]:
+                    - /url: /zack1219happy/shsg8c1wiki/search?l=html
+                    - img [ref=f2e370]
+                    - generic [ref=f2e372]: HTML
+                    - generic [ref=f2e373]: 6.6%
+    - contentinfo [ref=f2e375]:
+      - heading "Footer" [level=2] [ref=f2e376]
+      - generic [ref=f2e377]:
+        - generic [ref=f2e378]:
+          - link "GitHub Homepage" [ref=f2e379] [cursor=pointer]:
+            - /url: https://github.com
+            - img [ref=f2e380]
+          - generic [ref=f2e382]: © 2026 GitHub, Inc.
+        - navigation "Footer" [ref=f2e383]:
+          - heading "Footer navigation" [level=3] [ref=f2e384]
+          - list "Footer navigation" [ref=f2e385]:
+            - listitem [ref=f2e386]:
+              - link "Terms" [ref=f2e387] [cursor=pointer]:
+                - /url: https://docs.github.com/site-policy/github-terms/github-terms-of-service
+            - listitem [ref=f2e388]:
+              - link "Privacy" [ref=f2e389] [cursor=pointer]:
+                - /url: https://docs.github.com/site-policy/privacy-policies/github-privacy-statement
+            - listitem [ref=f2e390]:
+              - link "Security" [ref=f2e391] [cursor=pointer]:
+                - /url: https://github.com/security
+            - listitem [ref=f2e392]:
+              - link "Status" [ref=f2e393] [cursor=pointer]:
+                - /url: https://www.githubstatus.com/
+            - listitem [ref=f2e394]:
+              - link "Community" [ref=f2e395] [cursor=pointer]:
+                - /url: https://github.community/
+            - listitem [ref=f2e396]:
+              - link "Docs" [ref=f2e397] [cursor=pointer]:
+                - /url: https://docs.github.com/
+            - listitem [ref=f2e398]:
+              - link "Contact" [ref=f2e399] [cursor=pointer]:
+                - /url: https://support.github.com?tags=dotcom-footer
+            - listitem [ref=f2e400]:
+              - button "Manage cookies" [ref=f2e402] [cursor=pointer]
+            - listitem [ref=f2e403]:
+              - button "Do not share my personal information" [ref=f2e405] [cursor=pointer]
