@@ -46,7 +46,7 @@ export default function CommentSection({ pageSlug }: Props) {
       await addComment(pageSlug, { ...input, parentId: replyTarget?.id })
       setReplyTarget(null)
       // 软刷新
-      const all = await fetchComments()
+      const all = await fetchComments(true)
       setComments((all[pageSlug] ?? []).filter((c) => c.status === 'approved'))
     },
     [pageSlug, replyTarget],
