@@ -31,3 +31,6 @@ public/data/
 # local planning & AI config docs
 PLAN.md
 CLAUDE.md
+
+# generated preview
+__icon_preview.html
