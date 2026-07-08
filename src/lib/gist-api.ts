@@ -3,6 +3,21 @@
 import { supabase } from './supabase'
 import type { Comment, CommentsData } from '@/types/gist'
 
+// ---------- 字段映射 ----------
+
+/** 将 Supabase 返回的蛇形字段转为前端驼峰 Comment */
+function mapComment(raw: Record<string, unknown>): Comment {
+  return {
+    id: raw.id as string,
+    page: raw.page as string,
+    author: raw.author as string,
+    content: raw.content as string,
+    date: raw.date as string,
+    parentId: raw.parent_id as string | undefined,
+    status: raw.status as 'pending' | 'approved' | 'rejected',
+  }
+}
+
 // ---------- 读取 ----------
 
 /** 获取某页面的已审核评论（最新在前） */
@@ -15,7 +30,7 @@ export async function fetchPageComments(page: string): Promise<Comment[]> {
     .order('date', { ascending: false })
 
   if (error) throw new Error(`Supabase 查询失败: ${error.message}`)
-  return data ?? []
+  return (data ?? []).map(mapComment)
 }
 
 /** 获取所有页面的评论（按页面分组），管理后台用 */
@@ -28,7 +43,8 @@ export async function fetchAllComments(): Promise<CommentsData> {
   if (error) throw new Error(`Supabase 查询失败: ${error.message}`)
 
   const grouped: CommentsData = {}
-  for (const c of data ?? []) {
+  for (const raw of data ?? []) {
+    const c = mapComment(raw)
     if (!grouped[c.page]) grouped[c.page] = []
     grouped[c.page].push(c)
   }
@@ -44,7 +60,7 @@ export async function fetchAllPageComments(page: string): Promise<Comment[]> {
     .order('date', { ascending: true })
 
   if (error) throw new Error(`Supabase 查询失败: ${error.message}`)
-  return data ?? []
+  return (data ?? []).map(mapComment)
 }
 
 // ---------- 限流 ----------
