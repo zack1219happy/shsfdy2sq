@@ -61,8 +61,8 @@ function tryConvert(href, text) {
   // 跳过外链、锚点、邮件
   if (/^(https?:|mailto:|#|\.)/i.test(href)) return null
 
-  // 去掉 basePath 前缀
-  let slug = href.replace(/^\/shsg8c1wiki\//, '').replace(/^\//, '').replace(/\/$/, '')
+  // 去掉 basePath 前缀（可能带 / 也可能不带 / 开头）
+  let slug = href.replace(/^\/?shsg8c1wiki\//, '').replace(/^\//, '').replace(/\/$/, '')
 
   // 在 slug map 中查找
   const title = slugToTitle[slug]
