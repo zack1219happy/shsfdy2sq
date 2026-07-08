@@ -21,8 +21,8 @@ function isCacheValid(): boolean {
 // ---------- 读取 ----------
 
 /** 从 Gist 拉取 comments.json 全文 */
-export async function fetchComments(): Promise<CommentsData> {
-  if (isCacheValid()) return cache.data!
+export async function fetchComments(forceRefresh = false): Promise<CommentsData> {
+  if (!forceRefresh && isCacheValid()) return cache.data!
 
   const res = await fetch(GIST_API, {
     headers: { Authorization: `Bearer ${TOKEN}` },
@@ -81,7 +81,7 @@ export async function addComment(
   input: { author: string; content: string; parentId?: string },
 ): Promise<void> {
   checkRateLimit() // 同一设备 60 条/小时
-  const all = await fetchComments() // 拿最新
+  const all = await fetchComments(true) // 跳过缓存，拿最新防覆盖
   const list = all[page] ?? []
 
   const comment: Comment = {
