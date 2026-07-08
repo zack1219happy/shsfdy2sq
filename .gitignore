@@ -25,3 +25,7 @@ public/data/
 
 # playwright MCP tool artifacts
 .playwright-mcp/
+
+# local planning & AI config docs
+PLAN.md
+CLAUDE.md

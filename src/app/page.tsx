@@ -3,6 +3,7 @@ import { getBreadcrumbs } from '@/lib/navigation'
 import Breadcrumb from '@/components/Breadcrumb'
 import AttributeBox from '@/components/AttributeBox'
 import TableOfContents from '@/components/TableOfContents'
+import CommentSection from '@/components/CommentSection'
 
 export default function HomePage() {
   const content = getPageContent([])
@@ -33,6 +34,8 @@ export default function HomePage() {
         <AttributeBox attributes={content.attributes} />
 
         <div className="wiki-body" dangerouslySetInnerHTML={{ __html: content.html }} />
+
+        <CommentSection pageSlug="home" />
       </article>
 
       <TableOfContents headings={content.headings} />

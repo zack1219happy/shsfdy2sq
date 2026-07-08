@@ -4,6 +4,7 @@ import { getPageContent } from '@/lib/content'
 import Breadcrumb from '@/components/Breadcrumb'
 import AttributeBox from '@/components/AttributeBox'
 import TableOfContents from '@/components/TableOfContents'
+import CommentSection from '@/components/CommentSection'
 import type { NavNode } from '@/lib/navigation'
 
 interface Props {
@@ -44,6 +45,8 @@ function WikiArticle({ node, slug }: { node: NavNode; slug: string[] }) {
         <AttributeBox attributes={content.attributes} />
 
         <div className="wiki-body" dangerouslySetInnerHTML={{ __html: content.html }} />
+
+        <CommentSection pageSlug={slugPath} />
       </article>
 
       <TableOfContents headings={content.headings} />

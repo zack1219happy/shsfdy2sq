@@ -1,0 +1,256 @@
+/* ---------- 评论区容器 ---------- */
+.section {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--color-border);
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 20px;
+}
+
+/* ---------- 表单 ---------- */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.field input,
+.field textarea {
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-family: var(--font-sans);
+  color: var(--color-text);
+  background: var(--color-bg);
+  transition: border-color 0.15s;
+}
+
+.field input:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
+}
+
+.field textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.submitBtn {
+  align-self: flex-end;
+  padding: 8px 20px;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.submitBtn:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.submitBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---------- 回复标签 ---------- */
+.replyTag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--color-active-bg);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+.replyTag strong {
+  color: var(--color-text);
+}
+
+.replyTagClose {
+  margin-left: auto;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  color: var(--color-text-light);
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 3px;
+  transition: all 0.15s;
+}
+
+.replyTagClose:hover {
+  background: var(--color-hover-bg);
+  color: var(--color-text);
+}
+
+/* ---------- 评论列表 ---------- */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ---------- 顶层卡片 + 其回复的容器 ---------- */
+.topGroup {
+  padding-bottom: 4px;
+}
+
+/* ---------- 单条评论卡片（无边框） ---------- */
+.comment {
+  padding: 10px 0;
+}
+
+.commentMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  font-size: 0.8rem;
+}
+
+.commentAuthor {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.commentDate {
+  color: var(--color-text-light);
+  flex-shrink: 0;
+}
+
+/* ---------- 回复指示器（CommentCard 中显示 "回复 xxx"） ---------- */
+.replyIndicator {
+  font-weight: 400;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.replyIndicator strong {
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+/* ---------- 可点击的正文（click-to-reply） ---------- */
+.commentBody {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  cursor: pointer;
+  padding: 4px 0;
+  border-radius: 4px;
+  transition: background 0.12s;
+}
+
+.commentBody:hover {
+  background: var(--color-toc-bg);
+}
+
+/* ---------- 统一回复（两行：meta + 多行内容） ---------- */
+.unifiedReply {
+  padding: 8px 0;
+}
+
+.replyMeta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 2px;
+  font-size: 0.82rem;
+}
+
+.replyAuthor {
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.replyVerb {
+  color: var(--color-text-light);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.replyTarget {
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.replyDate {
+  margin-left: auto;
+  color: var(--color-text-light);
+  font-size: 0.78rem;
+  flex-shrink: 0;
+}
+
+.replyContent {
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  cursor: pointer;
+  padding: 2px 0;
+  border-radius: 4px;
+  transition: background 0.12s;
+}
+
+.replyContent:hover {
+  background: var(--color-toc-bg);
+}
+
+/* ---------- 嵌套回复容器 ---------- */
+.replies {
+  margin-left: 16px;
+  margin-top: 4px;
+  border-left: 2px solid var(--color-border);
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ---------- 状态 ---------- */
+.loading,
+.error,
+.empty {
+  text-align: center;
+  padding: 24px;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.error {
+  color: #d32f2f;
+}
