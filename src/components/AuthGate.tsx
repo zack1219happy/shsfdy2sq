@@ -131,7 +131,7 @@ function LoginScreen({
             <input
               id="auth-name"
               type="text"
-              placeholder="真实姓名或用户名（如 tqy）"
+              placeholder="真实姓名或用户名"
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoFocus
