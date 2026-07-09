@@ -10,6 +10,13 @@ import {
   type LoginResult,
   type UserSession,
 } from '@/lib/auth'
+import {
+  fetchNotifications,
+  getUnreadCount,
+  markNotificationRead,
+  clearAllNotifications,
+  type Notification,
+} from '@/lib/gist-api'
 import styles from '@/styles/auth.module.css'
 import FaIcon from '@/components/FaIcon'
 
@@ -69,7 +76,10 @@ export default function AuthGate({ children }: Props) {
 
   return (
     <>
-      <UserMenu session={session} onLogout={handleLogout} />
+      <div style={{ position: 'fixed', top: 12, right: 16, zIndex: 1500, display: 'flex', gap: 6 }}>
+        <NotificationBell session={session} />
+        <UserMenu session={session} onLogout={handleLogout} />
+      </div>
       {children}
     </>
   )
@@ -195,7 +205,7 @@ function UserMenu({
 
   return (
     <>
-      <div ref={menuRef} style={{ position: 'fixed', top: 12, right: 16, zIndex: 1500 }}>
+      <div ref={menuRef} style={{ position: 'relative' }}>
         <button className={styles.userBtn} onClick={() => setOpen(!open)}>
           <FaIcon name="user" />
           <span className={styles.userName}>{session.username}</span>
@@ -242,6 +252,107 @@ function UserMenu({
         <NameModal studentId={session.studentId} currentUsername={session.username} onClose={() => setShowNameModal(false)} />
       )}
     </>
+  )
+}
+
+/* ==============================================================
+   NotificationBell — 消息通知铃铛
+   ============================================================== */
+
+function NotificationBell({ session }: { session: UserSession }) {
+  const [notifs, setNotifs] = useState<Notification[]>([])
+  const [unread, setUnread] = useState(0)
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  // 轮询只查未读数（轻量），通知列表在打开面板时拉
+  const loadUnread = useCallback(async () => {
+    try { setUnread(await getUnreadCount(session.userId)) }
+    catch { /* ignore */ }
+  }, [session.userId])
+
+  const loadFull = useCallback(async () => {
+    try {
+      const [n, u] = await Promise.all([
+        fetchNotifications(session.userId),
+        getUnreadCount(session.userId),
+      ])
+      setNotifs(n)
+      setUnread(u)
+    } catch { /* ignore */ }
+  }, [session.userId])
+
+  useEffect(() => {
+    loadUnread()
+    const iv = setInterval(loadUnread, 15000)
+    return () => clearInterval(iv)
+  }, [loadUnread])
+
+  const handleToggle = useCallback(() => {
+    setOpen(prev => { if (!prev) loadFull(); return !prev })
+  }, [loadFull])
+
+  useEffect(() => {
+    if (!open) return
+    const h = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
+  }, [open])
+
+  const handleClear = useCallback(async () => {
+    await clearAllNotifications(session.userId)
+    setUnread(0)
+    setNotifs(prev => prev.map(n => ({ ...n, read: true })))
+  }, [session.userId])
+
+  const handleClick = useCallback(async (id: string) => {
+    await markNotificationRead(id, session.userId)
+    setUnread(prev => Math.max(0, prev - 1))
+    setNotifs(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
+  }, [session.userId])
+
+  // 监听新通知事件
+  useEffect(() => {
+    const h = () => loadFull()
+    window.addEventListener('new-notification', h)
+    return () => window.removeEventListener('new-notification', h)
+  }, [loadFull])
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <button className={styles.bellBtn} onClick={handleToggle}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg>
+        {unread > 0 && <span className={styles.bellBadge}>{unread > 99 ? '99+' : unread}</span>}
+      </button>
+
+      {open && (
+        <div className={styles.notifPanel}>
+          <div className={styles.notifHeader}>
+            <span>通知</span>
+            {unread > 0 && (
+              <button className={styles.notifClear} onClick={handleClear}>全部已读</button>
+            )}
+          </div>
+          {notifs.length === 0 && <div className={styles.notifEmpty}>暂无通知</div>}
+          {notifs.map(n => (
+            <a
+              key={n.id}
+              className={`${styles.notifItem} ${n.read ? styles.notifRead : ''}`}
+              href={n.page ? `/${n.page}/#comment-${n.id}` : undefined}
+              onClick={() => handleClick(n.id)}
+            >
+              <span className={styles.notifFrom}>{n.from_username ?? '匿名'}</span>
+              <span className={styles.notifText}>{n.excerpt ?? ''}</span>
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 

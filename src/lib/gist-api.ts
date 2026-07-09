@@ -114,7 +114,7 @@ function checkRateLimit(): void {
 
 // ---------- 写入 ----------
 
-/** 添加新评论（写入 Supabase） */
+/** 添加新评论（写入 Supabase），如果是回复则创建通知 */
 export async function addComment(
   page: string,
   input: { author: string; content: string; parentId?: string; userId?: string },
@@ -132,6 +132,57 @@ export async function addComment(
   })
 
   if (error) throw new Error(`写入失败: ${error.message}`)
+
+  // 如果是回复，给被回复者发通知
+  if (input.parentId && input.userId) {
+    const { data: parent } = await supabase
+      .from('comments')
+      .select('user_id')
+      .eq('id', input.parentId)
+      .single<{ user_id: string | null }>()
+
+    if (parent?.user_id) {
+      const excerpt = input.content.trim().slice(0, 100)
+      await supabase.from('notifications').insert({
+        user_id: parent.user_id,
+        from_user_id: input.userId,
+        comment_id: input.parentId,
+        page,
+        excerpt: excerpt + (excerpt.length >= 100 ? '…' : ''),
+      }).maybeSingle()
+    }
+  }
+}
+
+// ---------- 通知 ----------
+
+export interface Notification {
+  id: string
+  from_username: string | null
+  page: string
+  excerpt: string | null
+  read: boolean
+  created_at: string
+}
+
+export async function fetchNotifications(userId: string): Promise<Notification[]> {
+  const { data, error } = await supabase.rpc('get_notifications', { p_user_id: userId })
+  if (error) throw new Error(`获取通知失败: ${error.message}`)
+  return (data ?? []) as Notification[]
+}
+
+export async function getUnreadCount(userId: string): Promise<number> {
+  const { data, error } = await supabase.rpc('get_unread_count', { p_user_id: userId })
+  if (error) return 0
+  return (data as number) ?? 0
+}
+
+export async function markNotificationRead(notificationId: string, userId: string): Promise<void> {
+  await supabase.rpc('mark_notification_read', { p_notification_id: notificationId, p_user_id: userId })
+}
+
+export async function clearAllNotifications(userId: string): Promise<void> {
+  await supabase.rpc('clear_all_notifications', { p_user_id: userId })
 }
 
 // ---------- 删除 ----------

@@ -48,6 +48,7 @@ export default function CommentSection({ pageSlug }: Props) {
       setReplyTarget(null)
       const data = await fetchPageComments(pageSlug)
       setComments(data)
+      window.dispatchEvent(new CustomEvent('new-notification'))
     },
     [pageSlug, replyTarget],
   )
