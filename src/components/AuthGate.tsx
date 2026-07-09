@@ -264,14 +264,20 @@ function NotificationBell({ session }: { session: UserSession }) {
   const [unread, setUnread] = useState(0)
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const lastRefreshRef = useRef(0)
+  const THROTTLE_MS = 30_000
 
-  // 轮询只查未读数（轻量），通知列表在打开面板时拉
+  // 初次加载未读数
   const loadUnread = useCallback(async () => {
     try { setUnread(await getUnreadCount(session.userId)) }
     catch { /* ignore */ }
   }, [session.userId])
 
-  const loadFull = useCallback(async () => {
+  // 全量加载（受 30 秒节流保护，force=true 跳过）
+  const loadFull = useCallback(async (force = false) => {
+    const now = Date.now()
+    if (!force && now - lastRefreshRef.current < THROTTLE_MS) return
+    lastRefreshRef.current = now
     try {
       const [n, u] = await Promise.all([
         fetchNotifications(session.userId),
@@ -284,13 +290,19 @@ function NotificationBell({ session }: { session: UserSession }) {
 
   useEffect(() => {
     loadUnread()
-    const iv = setInterval(loadUnread, 15000)
-    return () => clearInterval(iv)
   }, [loadUnread])
 
   const handleToggle = useCallback(() => {
-    setOpen(prev => { if (!prev) loadFull(); return !prev })
-  }, [loadFull])
+    setOpen(prev => {
+      if (!prev) {
+        // 打开面板时刷新，30 秒内不重复拉取
+        loadFull()
+        // 未读数轻量查询不受限
+        loadUnread()
+      }
+      return !prev
+    })
+  }, [loadFull, loadUnread])
 
   useEffect(() => {
     if (!open) return
@@ -313,9 +325,9 @@ function NotificationBell({ session }: { session: UserSession }) {
     setNotifs(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
   }, [session.userId])
 
-  // 监听新通知事件
+  // 监听新通知事件（跳过节流）
   useEffect(() => {
-    const h = () => loadFull()
+    const h = () => loadFull(true)
     window.addEventListener('new-notification', h)
     return () => window.removeEventListener('new-notification', h)
   }, [loadFull])

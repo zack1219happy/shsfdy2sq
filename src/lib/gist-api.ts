@@ -22,54 +22,21 @@ function mapComment(raw: Record<string, unknown>): Comment {
 
 // ---------- 读取 ----------
 
-/** 获取某页面的已审核评论（最新在前），同时查最新用户名 */
+/** 获取某页面的已审核评论（最新在前），通过 RPC 联表查最新用户名和颜色 */
 export async function fetchPageComments(page: string): Promise<Comment[]> {
-  // 1. 获取评论
-  const { data, error } = await supabase
-    .from('comments')
-    .select('*')
-    .eq('page', page)
-    .eq('status', 'approved')
-    .order('date', { ascending: false })
-
-  if (error) throw new Error(`Supabase 查询失败: ${error.message}`)
-  const comments = (data ?? []).map(mapComment)
-
-  // 2. 收集有 user_id 的评论，查最新 username
-  const userIds = [...new Set(comments.map(c => c.userId).filter(Boolean))]
-  if (userIds.length === 0) return comments
-
-  const { data: users } = await supabase
-    .from('wiki_users')
-    .select('id, username, color')
-    .in('id', userIds)
-
-  const userMap = new Map((users ?? []).map(u => [u.id, u]))
-
-  // 3. 替换 author 为最新 username，设置颜色
-  for (const c of comments) {
-    if (c.userId && userMap.has(c.userId)) {
-      const u = userMap.get(c.userId)!
-      c.author = u.username
-      c.authorColor = u.color || undefined
-    }
-  }
-
-  return comments
+  const { data, error } = await supabase.rpc('get_page_comments', { p_page: page })
+  if (error) throw new Error(`查询失败: ${error.message}`)
+  return ((data ?? []) as Record<string, unknown>[]).map(mapComment)
 }
 
 /** 获取所有页面的评论（按页面分组），管理后台用 */
 export async function fetchAllComments(): Promise<CommentsData> {
-  const { data, error } = await supabase
-    .from('comments')
-    .select('*')
-    .order('date', { ascending: true })
-
-  if (error) throw new Error(`Supabase 查询失败: ${error.message}`)
+  const { data, error } = await supabase.rpc('get_all_comments')
+  if (error) throw new Error(`查询失败: ${error.message}`)
 
   const grouped: CommentsData = {}
   for (const raw of data ?? []) {
-    const c = mapComment(raw)
+    const c = mapComment(raw as Record<string, unknown>)
     if (!grouped[c.page]) grouped[c.page] = []
     grouped[c.page].push(c)
   }
@@ -78,14 +45,9 @@ export async function fetchAllComments(): Promise<CommentsData> {
 
 /** 获取某页面的所有评论（含 pending），管理后台用 */
 export async function fetchAllPageComments(page: string): Promise<Comment[]> {
-  const { data, error } = await supabase
-    .from('comments')
-    .select('*')
-    .eq('page', page)
-    .order('date', { ascending: true })
-
-  if (error) throw new Error(`Supabase 查询失败: ${error.message}`)
-  return (data ?? []).map(mapComment)
+  const { data, error } = await supabase.rpc('get_all_page_comments', { p_page: page })
+  if (error) throw new Error(`查询失败: ${error.message}`)
+  return ((data ?? []) as Record<string, unknown>[]).map(mapComment)
 }
 
 // ---------- 限流 ----------
@@ -114,44 +76,22 @@ function checkRateLimit(): void {
 
 // ---------- 写入 ----------
 
-/** 添加新评论（写入 Supabase），如果是回复则创建通知 */
+/** 添加新评论（写入 Supabase），回复通知由 RPC 内部处理 */
 export async function addComment(
   page: string,
   input: { author: string; content: string; parentId?: string; userId?: string },
 ): Promise<void> {
   checkRateLimit()
 
-  const { error } = await supabase.from('comments').insert({
-    page,
-    author: input.author.trim() || '匿名',
-    content: input.content.trim(),
-    parent_id: input.parentId || null,
-    user_id: input.userId || null,
-    status: 'approved',
-    date: new Date().toISOString(),
+  const { error } = await supabase.rpc('add_comment', {
+    p_page: page,
+    p_author: input.author.trim() || '匿名',
+    p_content: input.content.trim(),
+    p_parent_id: input.parentId || null,
+    p_user_id: input.userId || null,
   })
 
-  if (error) throw new Error(`写入失败: ${error.message}`)
-
-  // 如果是回复，给被回复者发通知
-  if (input.parentId && input.userId) {
-    const { data: parent } = await supabase
-      .from('comments')
-      .select('user_id')
-      .eq('id', input.parentId)
-      .single<{ user_id: string | null }>()
-
-    if (parent?.user_id) {
-      const excerpt = input.content.trim().slice(0, 100)
-      await supabase.from('notifications').insert({
-        user_id: parent.user_id,
-        from_user_id: input.userId,
-        comment_id: input.parentId,
-        page,
-        excerpt: excerpt + (excerpt.length >= 100 ? '…' : ''),
-      }).maybeSingle()
-    }
-  }
+  if (error) throw new Error(`提交失败: ${error.message}`)
 }
 
 // ---------- 通知 ----------
@@ -205,11 +145,11 @@ export async function deleteComment(
 
 /** 更新评论状态 */
 export async function updateCommentStatus(id: string, status: 'pending' | 'approved' | 'rejected'): Promise<void> {
-  const { error } = await supabase
-    .from('comments')
-    .update({ status })
-    .eq('id', id)
+  const { error } = await supabase.rpc('update_comment_status', {
+    p_comment_id: id,
+    p_status: status,
+  })
 
-  if (error) throw new Error(`更新状态失败: ${error.message}`)
+  if (error) throw new Error(`更新失败: ${error.message}`)
 }
 

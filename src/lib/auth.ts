@@ -101,41 +101,34 @@ export async function login(
 ): Promise<LoginResult> {
   const trimmed = nameOrUsername.trim()
 
-  // 先按 name 查
-  let { data, error } = await supabase
-    .from('wiki_users')
-    .select('id, student_id, name, username, password_hash')
-    .eq('name', trimmed)
-    .maybeSingle<WikiUser>()
+  // 先按 name 查（RPC，SECURITY DEFINER）
+  let { data, error } = await supabase.rpc('find_user_by_name', { p_name: trimmed })
+  let userRow: WikiUser | undefined = (data as WikiUser[] | undefined)?.[0]
 
   // 没找到再按 username 查
-  if (!data) {
-    const result = await supabase
-      .from('wiki_users')
-      .select('id, student_id, name, username, password_hash')
-      .eq('username', trimmed)
-      .maybeSingle<WikiUser>()
-    data = result.data
+  if (!userRow) {
+    const result = await supabase.rpc('find_user_by_username', { p_username: trimmed })
+    userRow = (result.data as WikiUser[] | undefined)?.[0]
     error = result.error
   }
 
-  if (!data) {
+  if (!userRow) {
     return { success: false, message: '姓名或用户名不存在，请检查后重试' }
   }
 
   // 有密码 → 走密码验证
-  if (data.password_hash !== null) {
+  if (userRow.password_hash !== null) {
     const inputHash = await hashPassword(credential)
-    if (inputHash !== data.password_hash) {
+    if (inputHash !== userRow.password_hash) {
       return { success: false, message: '姓名/用户名或密码错误，请重新输入' }
     }
-    saveSession(data)
+    saveSession(userRow)
     return { success: true, message: '登录成功' }
   }
 
   // 无密码 → 验证输入是否为学号
-  if (credential.trim() === data.student_id) {
-    saveSession(data)
+  if (credential.trim() === userRow.student_id) {
+    saveSession(userRow)
     return { success: true, message: '登录成功' }
   }
 
