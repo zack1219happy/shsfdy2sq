@@ -20,8 +20,11 @@ import {
   faFolderOpen,
   faGavel,
   faHome,
+  faKey,
   faMapMarkedAlt,
   faPen,
+  faSchool,
+  faSignOutAlt,
   faSpinner,
   faSyncAlt,
   faTimes,
@@ -67,10 +70,14 @@ register(faFolderOpen)
 register(faGavel)
 register(faHome)
 cssAlias(faHome, 'home')
+register(faKey)
 register(faMapMarkedAlt)
 cssAlias(faMapMarkedAlt, 'map-marked-alt')
 register(faMarkdown)
 register(faPen)
+register(faSchool)
+register(faSignOutAlt)
+cssAlias(faSignOutAlt, 'sign-out-alt')
 register(faSpinner)
 register(faSyncAlt)
 cssAlias(faSyncAlt, 'sync-alt')

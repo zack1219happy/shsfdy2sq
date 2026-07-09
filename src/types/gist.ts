@@ -6,6 +6,8 @@ export interface Comment {
   date: string
   parentId?: string
   status: 'pending' | 'approved' | 'rejected'
+  userId?: string
+  authorColor?: string
 }
 
 export interface CommentsData {

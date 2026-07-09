@@ -1,7 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { fetchPageComments, addComment } from '@/lib/gist-api'
+import { fetchPageComments, addComment, deleteComment } from '@/lib/gist-api'
+import { getSession } from '@/lib/auth'
 import type { Comment } from '@/types/gist'
 import WikiContent from '@/components/WikiContent'
 import styles from '@/styles/comment.module.css'
@@ -42,14 +43,42 @@ export default function CommentSection({ pageSlug }: Props) {
   }, [pageSlug])
 
   const handleAdd = useCallback(
-    async (input: { author: string; content: string }) => {
+    async (input: { author: string; content: string; userId?: string }) => {
       await addComment(pageSlug, { ...input, parentId: replyTarget?.id })
       setReplyTarget(null)
-      // 软刷新
       const data = await fetchPageComments(pageSlug)
       setComments(data)
     },
     [pageSlug, replyTarget],
+  )
+
+  // 硬编码 UUID，权限不随用户名变化
+  const TQY_UUID = 'e7da1be9-29f3-41d6-a44a-e40b143c75f5'
+  const WZ_UUID = '3d5cb49d-f1c4-4661-879e-955e7ceebf62'
+
+  const session = getSession()
+  const canDelete = useCallback(
+    (commentUserId?: string) => {
+      if (!session) return false
+      if (session.userId === TQY_UUID) return true
+      if (session.userId === WZ_UUID && commentUserId !== TQY_UUID) return true
+      if (commentUserId && commentUserId === session.userId) return true
+      return false
+    },
+    [session],
+  )
+
+  const handleDelete = useCallback(
+    async (commentId: string) => {
+      if (!session) return
+      try {
+        await deleteComment(commentId, session.userId)
+        setComments((prev) => prev.filter((c) => c.id !== commentId))
+      } catch {
+        alert('删除失败')
+      }
+    },
+    [session],
   )
 
   const handleReplyClick = useCallback((id: string, author: string) => {
@@ -68,6 +97,7 @@ export default function CommentSection({ pageSlug }: Props) {
     comment: Comment
     depth: number
     parentAuthor?: string
+    parentColor?: string
   }
 
   const groups = useMemo(() => {
@@ -95,7 +125,7 @@ export default function CommentSection({ pageSlug }: Props) {
         cur = commentMap.get(cur.parentId)
       }
 
-      // 找直接父评论的作者（用于 "xxx 回复 yyy"）
+      // 找直接父评论的作者和颜色（用于 "xxx 回复 yyy"）
       const directParent = c.parentId ? commentMap.get(c.parentId) : undefined
 
       if (!groupsByRoot.has(topId)) groupsByRoot.set(topId, [])
@@ -103,6 +133,7 @@ export default function CommentSection({ pageSlug }: Props) {
         comment: c,
         depth,
         parentAuthor: directParent?.author,
+        parentColor: directParent?.authorColor,
       })
     }
 
@@ -137,7 +168,7 @@ export default function CommentSection({ pageSlug }: Props) {
             return (
               <div key={top.id} className={styles.topGroup}>
                 {/* 顶层评论卡片 */}
-                <CommentCard comment={top} onReply={handleReplyClick} />
+                <CommentCard comment={top} onReply={handleReplyClick} canDelete={canDelete(top.userId)} onDelete={handleDelete} />
 
                 {/* 扁平回复列表 */}
                 {replies.length > 0 && (
@@ -147,7 +178,10 @@ export default function CommentSection({ pageSlug }: Props) {
                         key={r.comment.id}
                         comment={r.comment}
                         parentAuthor={r.parentAuthor}
+                        parentColor={r.parentColor}
                         onReply={handleReplyClick}
+                        canDelete={canDelete(r.comment.userId)}
+                        onDelete={handleDelete}
                       />
                     ))}
                   </div>
@@ -169,20 +203,24 @@ function CommentForm({
   replyTarget,
   onClearReply,
 }: {
-  onSubmit: (input: { author: string; content: string }) => Promise<void>
+  onSubmit: (input: { author: string; content: string; userId?: string }) => Promise<void>
   replyTarget: { id: string; author: string } | null
   onClearReply: () => void
 }) {
-  const [author, setAuthor] = useState('')
   const [content, setContent] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
+  // 从登录 session 获取 username 作为评论作者标识
+  const session = getSession()
+  const author = session?.username || '匿名'
+  const userId = session?.userId
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!content.trim()) return
     setSubmitting(true)
     try {
-      await onSubmit({ author: author.trim() || '匿名', content: content.trim() })
+      await onSubmit({ author, content: content.trim(), userId })
       setContent('')
     } catch {
       alert('提交失败，请稍后重试')
@@ -193,18 +231,6 @@ function CommentForm({
 
   return (
     <form className={styles.form} onSubmit={handleSubmit}>
-      <div className={styles.field}>
-        <label htmlFor="comment-author">昵称（选填）</label>
-        <input
-          id="comment-author"
-          type="text"
-          placeholder="匿名"
-          value={author}
-          onChange={(e) => setAuthor(e.target.value)}
-          maxLength={30}
-        />
-      </div>
-
       {replyTarget && (
         <div className={styles.replyTag}>
           <span>
@@ -218,7 +244,7 @@ function CommentForm({
 
       <div className={styles.field}>
         <label htmlFor="comment-content">
-          {replyTarget ? `回复 ${replyTarget.author}：` : '说点什么…'}
+          {replyTarget ? `回复 ${replyTarget.author}：` : `评论（@${author}）：`}
         </label>
         <textarea
           id="comment-content"
@@ -241,14 +267,29 @@ function CommentForm({
 function CommentCard({
   comment,
   onReply,
+  canDelete,
+  onDelete,
 }: {
   comment: Comment
   onReply: (id: string, author: string) => void
+  canDelete: boolean
+  onDelete: (id: string) => void
 }) {
   return (
     <div className={styles.comment}>
       <div className={styles.commentMeta}>
-        <span className={styles.commentAuthor}>{comment.author}</span>
+        <span className={`${styles.commentAuthor} ${getAuthorColor(comment.authorColor)}`}>{comment.author}</span>
+        {canDelete && (
+          <button
+            className={styles.deleteBtn}
+            onClick={(e) => { e.stopPropagation(); onDelete(comment.id) }}
+            title="删除"
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M2 4h12M5 4V3a1 1 0 011-1h4a1 1 0 011 1v1M3 4l1 10h8l1-10"/>
+            </svg>
+          </button>
+        )}
         <span className={styles.commentDate}>{formatDate(comment.date)}</span>
       </div>
       <div
@@ -272,18 +313,35 @@ function CommentCard({
 function UnifiedReply({
   comment,
   parentAuthor,
+  parentColor,
   onReply,
+  canDelete,
+  onDelete,
 }: {
   comment: Comment
   parentAuthor?: string
+  parentColor?: string
   onReply: (id: string, author: string) => void
+  canDelete: boolean
+  onDelete: (id: string) => void
 }) {
   return (
     <div className={styles.unifiedReply}>
       <div className={styles.replyMeta}>
-        <span className={styles.replyAuthor}>{comment.author}</span>
+        <span className={`${styles.replyAuthor} ${getAuthorColor(comment.authorColor)}`}>{comment.author}</span>
         <span className={styles.replyVerb}> 回复 </span>
-        <span className={styles.replyTarget}>{parentAuthor ?? '未知'}</span>
+        <span className={`${styles.replyTarget} ${getAuthorColor(parentColor)}`}>{parentAuthor ?? '未知'}</span>
+        {canDelete && (
+          <button
+            className={styles.deleteBtn}
+            onClick={(e) => { e.stopPropagation(); onDelete(comment.id) }}
+            title="删除"
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M2 4h12M5 4V3a1 1 0 011-1h4a1 1 0 011 1v1M3 4l1 10h8l1-10"/>
+            </svg>
+          </button>
+        )}
         <span className={styles.replyDate}>{formatDate(comment.date)}</span>
       </div>
       <div
@@ -304,6 +362,17 @@ function UnifiedReply({
 /* ==============================================================
    工具函数
    ============================================================== */
+/** 根据颜色字面值返回 CSS 颜色类名 */
+function getAuthorColor(color?: string): string {
+  switch (color) {
+    case 'rainbow': return styles.colorWz
+    case '#1a73e8': return styles.colorTqy
+    case '#dc2626': return styles.colorZyj
+    case '#16a34a': return styles.colorDouDou
+    default: return ''
+  }
+}
+
 function formatDate(iso: string): string {
   try {
     const d = new Date(iso)

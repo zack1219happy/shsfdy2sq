@@ -3,6 +3,7 @@ import fs from 'fs'
 import path from 'path'
 import { getNavTree, getSiteTitle, getTitleToSlugMap } from '@/lib/navigation'
 import Sidebar from '@/components/Sidebar'
+import AuthGate from '@/components/AuthGate'
 import ImageModal from '@/components/ImageModal'
 import { config } from '@fortawesome/fontawesome-svg-core'
 import '@fortawesome/fontawesome-svg-core/styles.css'
@@ -45,14 +46,16 @@ export default function RootLayout({
 
         <ImageModal />
 
-        <div
-          style={{
-            marginLeft: 'var(--sidebar-actual-width, var(--sidebar-width))',
-            minHeight: '100vh',
-          }}
-        >
-          {children}
-        </div>
+        <AuthGate>
+          <div
+            style={{
+              marginLeft: 'var(--sidebar-actual-width, var(--sidebar-width))',
+              minHeight: '100vh',
+            }}
+          >
+            {children}
+          </div>
+        </AuthGate>
       </body>
     </html>
   )

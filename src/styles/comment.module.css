@@ -145,6 +145,7 @@
 .commentDate {
   color: var(--color-text-light);
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 /* ---------- 回复指示器（CommentCard 中显示 "回复 xxx"） ---------- */
@@ -208,10 +209,10 @@
 }
 
 .replyDate {
-  margin-left: auto;
   color: var(--color-text-light);
   font-size: 0.78rem;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .replyContent {
@@ -253,4 +254,58 @@
 
 .error {
   color: #d32f2f;
+}
+
+/* ---------- 删除按钮 ---------- */
+.deleteBtn {
+  margin-left: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-light);
+  opacity: 0;
+  transition: opacity 0.15s;
+  padding: 2px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.commentMeta:hover .deleteBtn,
+.replyMeta:hover .deleteBtn {
+  opacity: 1;
+}
+
+.deleteBtn:hover {
+  color: #dc2626;
+  background: var(--color-hover-bg);
+}
+
+/* ---------- 彩色用户名 ---------- */
+.colorWz {
+  background: linear-gradient(90deg, #ff3b30, #ffd60a, #30d158, #007aff);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: wzRainbow 4s ease infinite;
+}
+
+@keyframes wzRainbow {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.colorTqy {
+  color: #1a73e8 !important;
+}
+
+.colorZyj {
+  color: #dc2626 !important;
+}
+
+.colorDouDou {
+  color: #16a34a !important;
 }

@@ -15,13 +15,16 @@ function mapComment(raw: Record<string, unknown>): Comment {
     date: raw.date as string,
     parentId: raw.parent_id as string | undefined,
     status: raw.status as 'pending' | 'approved' | 'rejected',
+    userId: raw.user_id as string | undefined,
+    authorColor: raw.author_color as string | undefined,
   }
 }
 
 // ---------- 读取 ----------
 
-/** 获取某页面的已审核评论（最新在前） */
+/** 获取某页面的已审核评论（最新在前），同时查最新用户名 */
 export async function fetchPageComments(page: string): Promise<Comment[]> {
+  // 1. 获取评论
   const { data, error } = await supabase
     .from('comments')
     .select('*')
@@ -30,7 +33,29 @@ export async function fetchPageComments(page: string): Promise<Comment[]> {
     .order('date', { ascending: false })
 
   if (error) throw new Error(`Supabase 查询失败: ${error.message}`)
-  return (data ?? []).map(mapComment)
+  const comments = (data ?? []).map(mapComment)
+
+  // 2. 收集有 user_id 的评论，查最新 username
+  const userIds = [...new Set(comments.map(c => c.userId).filter(Boolean))]
+  if (userIds.length === 0) return comments
+
+  const { data: users } = await supabase
+    .from('wiki_users')
+    .select('id, username, color')
+    .in('id', userIds)
+
+  const userMap = new Map((users ?? []).map(u => [u.id, u]))
+
+  // 3. 替换 author 为最新 username，设置颜色
+  for (const c of comments) {
+    if (c.userId && userMap.has(c.userId)) {
+      const u = userMap.get(c.userId)!
+      c.author = u.username
+      c.authorColor = u.color || undefined
+    }
+  }
+
+  return comments
 }
 
 /** 获取所有页面的评论（按页面分组），管理后台用 */
@@ -92,7 +117,7 @@ function checkRateLimit(): void {
 /** 添加新评论（写入 Supabase） */
 export async function addComment(
   page: string,
-  input: { author: string; content: string; parentId?: string },
+  input: { author: string; content: string; parentId?: string; userId?: string },
 ): Promise<void> {
   checkRateLimit()
 
@@ -101,11 +126,28 @@ export async function addComment(
     author: input.author.trim() || '匿名',
     content: input.content.trim(),
     parent_id: input.parentId || null,
+    user_id: input.userId || null,
     status: 'approved',
     date: new Date().toISOString(),
   })
 
   if (error) throw new Error(`写入失败: ${error.message}`)
+}
+
+// ---------- 删除 ----------
+
+/** 删除评论（权限由后端 RPC 控制） */
+export async function deleteComment(
+  commentId: string,
+  userId: string,
+): Promise<boolean> {
+  const { data, error } = await supabase.rpc('delete_comment', {
+    p_comment_id: commentId,
+    p_user_id: userId,
+  })
+
+  if (error) throw new Error(`删除失败: ${error.message}`)
+  return !!data
 }
 
 // ---------- 审核（管理后台用） ----------
@@ -120,12 +162,3 @@ export async function updateCommentStatus(id: string, status: 'pending' | 'appro
   if (error) throw new Error(`更新状态失败: ${error.message}`)
 }
 
-/** 删除评论 */
-export async function deleteComment(id: string): Promise<void> {
-  const { error } = await supabase
-    .from('comments')
-    .delete()
-    .eq('id', id)
-
-  if (error) throw new Error(`删除失败: ${error.message}`)
-}
