@@ -144,7 +144,7 @@ function LoginScreen({
             <input
               id="auth-cred"
               type="password"
-              placeholder="未设密码则填学号，已设密码则填密码"
+              placeholder="未设密码则填 8 位学号，已设密码则填密码"
               value={credential}
               onChange={(e) => setCredential(e.target.value)}
             />
