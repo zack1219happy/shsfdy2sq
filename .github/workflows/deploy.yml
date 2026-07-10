@@ -42,7 +42,7 @@ jobs:
       - name: Build static export
         run: npm run export
         env:
-          NEXT_PUBLIC_BASE_PATH: /shsg8c1wiki
+          NEXT_PUBLIC_BASE_PATH: /shsfdy2sq
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
 

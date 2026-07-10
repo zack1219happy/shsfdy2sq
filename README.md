@@ -8,7 +8,7 @@ zack1219happy（王梓）是我们的创始人大大！
 
 从零到一搭起这个 Wiki 的框架，一个人默默写了整整一学期，没有他的坚持就不会有这个站。HTML、CSS、JavaScript 一把梭，所有东西都是他（用 DeepSeek）亲手敲出来的，代码力拉满。而且他不光技术好，还特别有耐心，把每个页面都调得细致又好看（谁知道跟没有多模态的 AI 交流前端有多费劲）。最关键的是，他永远欢迎大家一起参与，真正把 Wiki 做成了属于全班的知识库。感谢创始人大大，你是我们的超人 🦸‍♂️！！！
 
-**在线访问：** https://zack1219happy.github.io/shsg8c1wiki/
+**在线访问：** https://zack1219happy.github.io/shsfdy2sq/
 
 ---
 
@@ -47,7 +47,7 @@ zack1219happy（王梓）是我们的创始人大大！
 
 **第 1 步：找到文件**
 
-1. 打开 https://github.com/zack1219happy/shsg8c1wiki
+1. 打开 https://github.com/zack1219happy/shsfdy2sq
 2. 点击 `data` 文件夹 → `contents` 文件夹
 3. 找到你要修改的 `.md` 文件（例如 `campus/dormitory.md`）
 
@@ -83,7 +83,7 @@ zack1219happy（王梓）是我们的创始人大大！
 
 **第 1 步：进入目标目录**
 
-1. 打开 https://github.com/zack1219happy/shsg8c1wiki/tree/main/data/contents
+1. 打开 https://github.com/zack1219happy/shsfdy2sq/tree/main/data/contents
 2. 点进你要添加页面的分类目录（如 `people`、`campus`、`daily`）
 
 **第 2 步：新建文件**
@@ -156,8 +156,8 @@ icon: fas fa-file-alt
 ### 第一步：克隆仓库
 
 ```bash
-git clone https://github.com/zack1219happy/shsg8c1wiki.git
-cd shsg8c1wiki
+git clone https://github.com/zack1219happy/shsfdy2sq.git
+cd shsfdy2sq
 ```
 
 ### 第二步：创建新分支
@@ -190,7 +190,7 @@ npm install
 npm run dev
 ```
 
-打开 http://localhost:3000/shsg8c1wiki/ 查看效果。
+打开 http://localhost:3000/shsfdy2sq/ 查看效果。
 
 ### 第五步：提交并推送
 
@@ -204,7 +204,7 @@ git push origin my-edit-branch
 
 推送后终端会显示一个链接，点进去创建 PR。或者：
 
-1. 打开 https://github.com/zack1219happy/shsg8c1wiki
+1. 打开 https://github.com/zack1219happy/shsfdy2sq
 2. 点 **Pull requests** 标签 → 绿色的 **New pull request**
 3. 选 `base: main` ← `compare: my-edit-branch`
 4. 点 **Create pull request**

@@ -2,7 +2,7 @@
 title: 首页
 icon: fas fa-home
 attributes:
-  gitHub 仓库: "[zack1219happy/shsg8c1wiki: 上中初二wiki](https://github.com/zack1219happy/shsg8c1wiki)"
+  gitHub 仓库: "[zack1219happy/shsfdy2sq: 上中初二wiki](https://github.com/zack1219happy/shsfdy2sq)"
 ---
 
 ## 欢迎来到上中初二 Wiki
@@ -30,12 +30,12 @@ attributes:
 ## 如何在本地留档 / 验证
 
 ```bash
-git clone https://github.com/zack1219happy/shsg8c1wiki.git # 官网，最靠谱
+git clone https://github.com/zack1219happy/shsfdy2sq.git # 官网，最靠谱
 
 # 下面是可选的镜像
-git clone https://gitclone.com/github.com/zack1219happy/shsg8c1wiki.git
-git clone https://wget.la/https://github.com/zack1219happy/shsg8c1wiki.git
-git clone https://ghfast.top/https://github.com/zack1219happy/shsg8c1wiki.git
+git clone https://gitclone.com/github.com/zack1219happy/shsfdy2sq.git
+git clone https://wget.la/https://github.com/zack1219happy/shsfdy2sq.git
+git clone https://ghfast.top/https://github.com/zack1219happy/shsfdy2sq.git
 ```
 
 然后运行，即可愉快查看。
