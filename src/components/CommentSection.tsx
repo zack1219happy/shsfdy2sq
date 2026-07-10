@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { fetchPageComments, addComment, deleteComment } from '@/lib/gist-api'
 import { getSession } from '@/lib/auth'
 import type { Comment } from '@/types/gist'
@@ -19,6 +19,34 @@ export default function CommentSection({ pageSlug }: Props) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [replyTarget, setReplyTarget] = useState<{ id: string; author: string } | null>(null)
+
+  // 保存要跳转的评论 ID（挂载时立即清除 hash，避开异步 timing 问题）
+  const commentTargetRef = useRef<string | null>(null)
+
+  // 挂载时立即清除 #comment- hash，目标 ID 存下来供后续滚动
+  useEffect(() => {
+    const hash = window.location.hash
+    if (hash.startsWith('#comment-')) {
+      commentTargetRef.current = hash.substring(1)
+      history.replaceState(null, '', window.location.pathname + window.location.search)
+    }
+  }, [])
+
+  // 评论加载完成后滚动到目标评论
+  useEffect(() => {
+    if (loading || !commentTargetRef.current) return
+    const id = commentTargetRef.current
+    commentTargetRef.current = null // 只滚动一次
+
+    requestAnimationFrame(() => {
+      const el = document.getElementById(id)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        el.classList.add(styles.highlight)
+        setTimeout(() => el.classList.remove(styles.highlight), 2500)
+      }
+    })
+  }, [loading])
 
   useEffect(() => {
     let cancelled = false
@@ -82,25 +110,6 @@ export default function CommentSection({ pageSlug }: Props) {
   const handleReplyClick = useCallback((id: string, author: string) => {
     setReplyTarget((prev) => (prev?.id === id ? null : { id, author }))
   }, [])
-
-  // ---- 评论加载完成后，滚动到 URL hash 指定的评论 ----
-  useEffect(() => {
-    if (loading) return
-    const hash = window.location.hash
-    if (!hash.startsWith('#comment-')) return
-
-    // 给浏览器一帧让 DOM 稳定
-    requestAnimationFrame(() => {
-      const el = document.getElementById(hash.substring(1))
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        el.classList.add(styles.highlight)
-        setTimeout(() => el.classList.remove(styles.highlight), 2500)
-      }
-      // 清除 hash，避免跨页面导航残留
-      history.replaceState(null, '', window.location.pathname + window.location.search)
-    })
-  }, [loading])
 
   // ---- 数据整理：顶层评论 + 扁平回复分组 ----
 
