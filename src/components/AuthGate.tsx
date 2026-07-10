@@ -361,7 +361,7 @@ function NotificationBell({ session }: { session: UserSession }) {
             <a
               key={n.id}
               className={`${styles.notifItem} ${n.read ? styles.notifRead : ''}`}
-              href={n.page ? `/${n.page}/#comment-${n.id}` : undefined}
+              href={n.page ? `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/${n.page}/#comment-${n.id}` : undefined}
               onClick={() => handleClick(n.id)}
             >
               <span className={styles.notifFrom}>{n.from_username ?? '匿名'}</span>
