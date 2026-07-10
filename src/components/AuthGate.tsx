@@ -172,6 +172,10 @@ function LoginScreen({
             {loading ? '登录中…' : '登 录'}
           </button>
         </form>
+
+        <p className={styles.pwdNotice}>
+          如果你在 2026/7/9 及以前修改过密码，密码可能已被重置为 8 位学号
+        </p>
       </div>
     </div>
   )

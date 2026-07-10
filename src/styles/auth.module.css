@@ -124,6 +124,14 @@
   box-shadow: 0 0 0 3px rgba(26,115,232,0.12);
 }
 
+.pwdNotice {
+  margin-top: 16px;
+  font-size: 0.72rem;
+  color: var(--color-text-light);
+  line-height: 1.4;
+  text-align: center;
+}
+
 .submitBtn {
   margin-top: 8px;
   padding: 12px;
