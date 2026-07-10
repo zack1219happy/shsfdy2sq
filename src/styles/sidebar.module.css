@@ -47,6 +47,18 @@
   margin-right: 8px;
 }
 
+.header h1 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.siteIcon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
 .toggleBtn {
   background: transparent;
   border: none;

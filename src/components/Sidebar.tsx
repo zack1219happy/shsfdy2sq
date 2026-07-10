@@ -184,7 +184,10 @@ export default function Sidebar({ tree, siteTitle, announcement, titleSlugMap }:
             </button>
           ) : (
             <>
-              <h1>{siteTitle}</h1>
+              <h1>
+                <img src="/logo.png" alt="" className={styles.siteIcon} />
+                {siteTitle}
+              </h1>
               <button
                 className={styles.toggleBtn}
                 onClick={() => setCollapsed(true)}

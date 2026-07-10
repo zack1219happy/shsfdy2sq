@@ -132,7 +132,7 @@ function LoginScreen({
   return (
     <div className={styles.overlay}>
       <div className={styles.card}>
-        <FaIcon name="school" className={styles.cardLogo} />
+        <img src="/logo.png" alt="" className={styles.cardLogo} />
 
         <h1>上中初二 Wiki</h1>
         <p className={styles.cardSubtitle}>上海中学 2027 届 8 班 · 班级知识库</p>
