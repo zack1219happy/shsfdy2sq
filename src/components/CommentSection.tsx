@@ -99,12 +99,14 @@ export default function CommentSection({ pageSlug }: Props) {
       if (!session) return
       try {
         await deleteComment(commentId)
-        setComments((prev) => prev.filter((c) => c.id !== commentId))
+        // 重新拉取（保留软删除标记的评论），确保子评论的树结构完整
+        const data = await fetchPageComments(pageSlug)
+        setComments(data)
       } catch (e: any) {
         alert(e?.message || '删除失败')
       }
     },
-    [session],
+    [session, pageSlug],
   )
 
   const handleReplyClick = useCallback((id: string, author: string) => {
