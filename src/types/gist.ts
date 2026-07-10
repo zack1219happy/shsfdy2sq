@@ -8,6 +8,7 @@ export interface Comment {
   status: 'pending' | 'approved' | 'rejected'
   userId?: string
   authorColor?: string
+  deleted?: boolean
 }
 
 export interface CommentsData {

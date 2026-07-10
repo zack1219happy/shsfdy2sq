@@ -14,6 +14,7 @@ function mapComment(raw: Record<string, unknown>): Comment {
     status: raw.status as 'pending' | 'approved' | 'rejected',
     userId: raw.user_id as string | undefined,
     authorColor: raw.author_color as string | undefined,
+    deleted: raw.deleted as boolean | undefined,
   }
 }
 

@@ -305,6 +305,19 @@
   color: #16a34a !important;
 }
 
+/* ---------- 已删除评论 ---------- */
+.commentDeleted {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.deletedLabel {
+  font-size: 0.82rem;
+  color: var(--color-text-light);
+  font-style: italic;
+  margin-left: 8px;
+}
+
 /* ---------- 锚点高亮动画 ---------- */
 @keyframes highlightFade {
   0%   { background-color: rgba(26, 115, 232, 0.2); }

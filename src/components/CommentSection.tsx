@@ -301,6 +301,18 @@ function CommentCard({
   canDelete: boolean
   onDelete: (id: string) => void
 }) {
+  if (comment.deleted) {
+    return (
+      <div className={`${styles.comment} ${styles.commentDeleted}`} id={`comment-${comment.id}`}>
+        <div className={styles.commentMeta}>
+          <span className={`${styles.commentAuthor} ${getAuthorColor(comment.authorColor)}`}>{comment.author}</span>
+          <span className={styles.deletedLabel}>该评论已被删除</span>
+          <span className={styles.commentDate}>{formatDate(comment.date)}</span>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className={styles.comment} id={`comment-${comment.id}`}>
       <div className={styles.commentMeta}>
@@ -351,6 +363,20 @@ function UnifiedReply({
   canDelete: boolean
   onDelete: (id: string) => void
 }) {
+  if (comment.deleted) {
+    return (
+      <div className={`${styles.unifiedReply} ${styles.commentDeleted}`} id={`comment-${comment.id}`}>
+        <div className={styles.replyMeta}>
+          <span className={`${styles.replyAuthor} ${getAuthorColor(comment.authorColor)}`}>{comment.author}</span>
+          <span className={styles.replyVerb}> 回复 </span>
+          <span className={`${styles.replyTarget} ${getAuthorColor(parentColor)}`}>{parentAuthor ?? '未知'}</span>
+          <span className={styles.deletedLabel}>该评论已被删除</span>
+          <span className={styles.replyDate}>{formatDate(comment.date)}</span>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className={styles.unifiedReply} id={`comment-${comment.id}`}>
       <div className={styles.replyMeta}>
