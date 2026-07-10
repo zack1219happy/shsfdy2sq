@@ -53,16 +53,13 @@ export default function CommentSection({ pageSlug }: Props) {
     [pageSlug, replyTarget],
   )
 
-  // 硬编码 UUID，权限不随用户名变化
-  const TQY_UUID = 'e7da1be9-29f3-41d6-a44a-e40b143c75f5'
-  const WZ_UUID = '3d5cb49d-f1c4-4661-879e-955e7ceebf62'
 
   const session = getSession()
   const canDelete = useCallback(
     (commentUserId?: string) => {
       if (!session) return false
-      if (session.userId === TQY_UUID) return true
-      if (session.userId === WZ_UUID && commentUserId !== TQY_UUID) return true
+      if (session.role === "super_admin") return true
+      if (session.role === "admin" && commentUserId !== session.userId) return true
       if (commentUserId && commentUserId === session.userId) return true
       return false
     },
@@ -388,5 +385,8 @@ function formatDate(iso: string): string {
     return iso
   }
 }
+
+
+
 
 
