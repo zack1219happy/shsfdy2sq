@@ -85,6 +85,7 @@ export interface Notification {
   excerpt: string | null
   read: boolean
   created_at: string
+  comment_id: string
 }
 
 export async function fetchNotifications(): Promise<Notification[]> {

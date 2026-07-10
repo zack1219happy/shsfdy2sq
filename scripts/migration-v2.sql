@@ -380,7 +380,8 @@ RETURNS TABLE(
   page          text,
   excerpt       text,
   read          boolean,
-  created_at    timestamptz
+  created_at    timestamptz,
+  comment_id    uuid
 )
 LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = public
@@ -391,7 +392,7 @@ BEGIN
   END IF;
 
   RETURN QUERY
-  SELECT n.id, w.username, n.page, n.excerpt, n.read, n.created_at
+  SELECT n.id, w.username, n.page, n.excerpt, n.read, n.created_at, n.comment_id
   FROM notifications n
   LEFT JOIN wiki_users w ON w.id = n.from_user_id
   WHERE n.user_id = auth.uid()

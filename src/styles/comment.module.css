@@ -304,3 +304,14 @@
 .colorDouDou {
   color: #16a34a !important;
 }
+
+/* ---------- 锚点高亮动画 ---------- */
+@keyframes highlightFade {
+  0%   { background-color: rgba(26, 115, 232, 0.2); }
+  100% { background-color: transparent; }
+}
+
+.highlight {
+  border-radius: 6px;
+  animation: highlightFade 2.5s ease-out forwards;
+}

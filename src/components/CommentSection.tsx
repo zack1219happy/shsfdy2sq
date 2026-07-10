@@ -83,6 +83,23 @@ export default function CommentSection({ pageSlug }: Props) {
     setReplyTarget((prev) => (prev?.id === id ? null : { id, author }))
   }, [])
 
+  // ---- 评论加载完成后，滚动到 URL hash 指定的评论 ----
+  useEffect(() => {
+    if (loading) return
+    const hash = window.location.hash
+    if (!hash.startsWith('#comment-')) return
+
+    // 给浏览器一帧让 DOM 稳定
+    requestAnimationFrame(() => {
+      const el = document.getElementById(hash.substring(1))
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        el.classList.add(styles.highlight)
+        setTimeout(() => el.classList.remove(styles.highlight), 2500)
+      }
+    })
+  }, [loading])
+
   // ---- 数据整理：顶层评论 + 扁平回复分组 ----
 
   const commentMap = useMemo(() => {

@@ -362,7 +362,7 @@ function NotificationBell({ session }: { session: UserSession }) {
               key={n.id}
               className={`${styles.notifItem} ${n.read ? styles.notifRead : ''}`}
               href={n.page
-                ? `${process.env.NEXT_PUBLIC_BASE_PATH || ''}${n.page === 'home' ? '/' : `/${n.page}/`}#comment-${n.id}`
+                ? `${process.env.NEXT_PUBLIC_BASE_PATH || ''}${n.page === 'home' ? '/' : `/${n.page}/`}#comment-${n.comment_id}`
                 : undefined}
               onClick={() => handleClick(n.id)}
             >
