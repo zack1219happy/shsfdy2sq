@@ -14,7 +14,9 @@ export default function NotFound() {
       window.location.hostname.includes('github.io') &&
       !window.location.pathname.startsWith(BASE_PATH)
     ) {
-      window.location.href = `${BASE_PATH}${window.location.pathname}${window.location.search}${window.location.hash}`
+      // 把 /home -> / 映射掉，因为首页实际在 / 不在 /home/
+      const normalized = window.location.pathname.replace(/^\/home(?=\/|$)/i, '')
+      window.location.href = `${BASE_PATH}${normalized}${window.location.search}${window.location.hash}`
     }
   }, [])
 
