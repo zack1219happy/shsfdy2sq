@@ -63,7 +63,7 @@ DECLARE
   new_id        uuid;
   parent_owner  uuid;
   page_owner    uuid;
-  page_slug     text;
+  v_page_slug   text;
 BEGIN
   INSERT INTO comments (page, author, content, parent_id, user_id, status, date)
   VALUES (
@@ -91,9 +91,9 @@ BEGIN
   -- 不重复通知：如果页面主人刚刚已被回复通知覆盖，则跳过
   IF p_page LIKE 'people/%' THEN
     -- 提取 'people/' 后面的 slug
-    page_slug := split_part(p_page, '/', 2);
+    v_page_slug := split_part(p_page, '/', 2);
 
-    SELECT id INTO page_owner FROM wiki_users WHERE page_slug = page_slug;
+    SELECT id INTO page_owner FROM wiki_users WHERE page_slug = v_page_slug;
 
     IF page_owner IS NOT NULL AND page_owner <> auth.uid() THEN
       -- 避免与上方的回复通知重复（当页面主人 = 被回复者时）
