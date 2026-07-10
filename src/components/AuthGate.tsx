@@ -7,6 +7,7 @@ import {
   clearSession,
   setPassword,
   changeUsername,
+  tryRestoreSessionFromAuth,
   type LoginResult,
   type UserSession,
 } from '@/lib/auth'
@@ -39,6 +40,7 @@ export default function AuthGate({ children }: Props) {
   useEffect(() => {
     setSession(getSession())
     setChecked(true)
+    tryRestoreSessionFromAuth().then(() => setSession(getSession()))
   }, [])
 
   useEffect(() => {
@@ -269,7 +271,7 @@ function NotificationBell({ session }: { session: UserSession }) {
 
   // 初次加载未读数
   const loadUnread = useCallback(async () => {
-    try { setUnread(await getUnreadCount(session.userId)) }
+    try { setUnread(await getUnreadCount()) }
     catch { /* ignore */ }
   }, [session.userId])
 
@@ -280,8 +282,8 @@ function NotificationBell({ session }: { session: UserSession }) {
     lastRefreshRef.current = now
     try {
       const [n, u] = await Promise.all([
-        fetchNotifications(session.userId),
-        getUnreadCount(session.userId),
+        fetchNotifications(),
+        getUnreadCount(),
       ])
       setNotifs(n)
       setUnread(u)
@@ -314,13 +316,13 @@ function NotificationBell({ session }: { session: UserSession }) {
   }, [open])
 
   const handleClear = useCallback(async () => {
-    await clearAllNotifications(session.userId)
+    await clearAllNotifications()
     setUnread(0)
     setNotifs(prev => prev.map(n => ({ ...n, read: true })))
   }, [session.userId])
 
   const handleClick = useCallback(async (id: string) => {
-    await markNotificationRead(id, session.userId)
+    await markNotificationRead(id)
     setUnread(prev => Math.max(0, prev - 1))
     setNotifs(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
   }, [session.userId])
@@ -517,3 +519,4 @@ function NameModal({
     </div>
   )
 }
+

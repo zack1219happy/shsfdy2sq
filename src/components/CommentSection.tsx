@@ -73,10 +73,10 @@ export default function CommentSection({ pageSlug }: Props) {
     async (commentId: string) => {
       if (!session) return
       try {
-        await deleteComment(commentId, session.userId)
+        await deleteComment(commentId)
         setComments((prev) => prev.filter((c) => c.id !== commentId))
-      } catch {
-        alert('删除失败')
+      } catch (e: any) {
+        alert(e?.message || '删除失败')
       }
     },
     [session],
@@ -223,8 +223,8 @@ function CommentForm({
     try {
       await onSubmit({ author, content: content.trim(), userId })
       setContent('')
-    } catch {
-      alert('提交失败，请稍后重试')
+    } catch (e: any) {
+      alert(e?.message || '提交失败，请稍后重试')
     } finally {
       setSubmitting(false)
     }
@@ -388,3 +388,5 @@ function formatDate(iso: string): string {
     return iso
   }
 }
+
+

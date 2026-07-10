@@ -1,208 +1,170 @@
 /**
- * 认证逻辑层 — 学号登录 / 密码登录 / Session 管理
- *
- * 遵循 src/lib/gist-api.ts 的 Supabase 调用风格。
- * 所有登录/修改操作均通过 Supabase RLS 或 SECURITY DEFINER RPC 完成。
+ * 认证逻辑层 — Supabase Auth 驱动
  */
+import { supabase } from "./supabase";
 
-import { supabase } from './supabase'
-import { hashPassword } from './crypto'
-
-// ---------- 常量 ----------
-
-const SESSION_KEY = 'wiki_session'
-const SESSION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000 // 30 天
-
-// ---------- 类型 ----------
+const SESSION_KEY = "wiki_session";
+const SESSION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 
 export interface UserSession {
-  userId: string
-  username: string
-  studentId: string
-  name: string
-  loginTime: string
+  userId: string;
+  username: string;
+  studentId: string;
+  name: string;
+  role: string;
+  loginTime: string;
 }
-
-interface WikiUser {
-  id: string
-  student_id: string
-  name: string
-  username: string
-  password_hash: string | null
-}
-
-// ---------- Session 管理 ----------
 
 export function getSession(): UserSession | null {
-  if (typeof window === 'undefined') return null
+  if (typeof window === "undefined") return null;
   try {
-    const raw = localStorage.getItem(SESSION_KEY)
-    if (!raw) return null
-    const session = JSON.parse(raw)
-    // 迁移：旧格式没有 username，清掉
-    if (!session.username) {
-      clearSession()
-      return null
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const session = JSON.parse(raw);
+    if (!session.username || !session.role) {
+      clearSession();
+      return null;
     }
-    const age = Date.now() - new Date(session.loginTime).getTime()
+    const age = Date.now() - new Date(session.loginTime).getTime();
     if (age > SESSION_MAX_AGE_MS) {
-      clearSession()
-      return null
+      clearSession();
+      return null;
     }
-    return session as UserSession
+    return session as UserSession;
   } catch {
-    return null
+    return null;
   }
-}
-
-function saveSession(user: {
-  id: string
-  username: string
-  student_id: string
-  name: string
-}): void {
-  const session: UserSession = {
-    userId: user.id,
-    username: user.username,
-    studentId: user.student_id,
-    name: user.name,
-    loginTime: new Date().toISOString(),
-  }
-  localStorage.setItem(SESSION_KEY, JSON.stringify(session))
 }
 
 export function clearSession(): void {
-  if (typeof window === 'undefined') return
-  localStorage.removeItem(SESSION_KEY)
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem("sb-iiiyoafpzfqxpaqheojg-auth-token");
+  localStorage.removeItem("sb-iiiyoafpzfqxpaqheojg-provider-token");
+  supabase.auth.signOut().catch(() => {});
 }
 
 export function isLoggedIn(): boolean {
-  return getSession() !== null
+  return getSession() !== null;
 }
-
-// ---------- 统一登录 ----------
 
 export interface LoginResult {
-  success: boolean
-  message: string
+  success: boolean;
+  message: string;
 }
 
-/**
- * 统一登录 — 单表单，支持姓名/用户名，自动检测密码/学号。
- *
- * 流程：
- * 1. 先按 name 查表，找不到再按 username 查
- * 2. 有密码 → hash 输入 → 比对
- * 3. 无密码 → 输入与 student_id 比对
- */
 export async function login(
   nameOrUsername: string,
   credential: string,
 ): Promise<LoginResult> {
-  const trimmed = nameOrUsername.trim()
+  const trimmed = nameOrUsername.trim();
+  const { data, error } = await supabase.rpc("login", {
+    p_name_or_username: trimmed,
+    p_password: credential,
+  });
 
-  // 先按 name 查（RPC，SECURITY DEFINER）
-  let { data, error } = await supabase.rpc('find_user_by_name', { p_name: trimmed })
-  let userRow: WikiUser | undefined = (data as WikiUser[] | undefined)?.[0]
-
-  // 没找到再按 username 查
-  if (!userRow) {
-    const result = await supabase.rpc('find_user_by_username', { p_username: trimmed })
-    userRow = (result.data as WikiUser[] | undefined)?.[0]
-    error = result.error
+  const user = (data as any[])?.[0];
+  if (!user) {
+    return { success: false, message: "姓名/用户名或密码错误，请检查后重试" };
   }
 
-  if (!userRow) {
-    return { success: false, message: '姓名或用户名不存在，请检查后重试' }
-  }
+  // Try to establish Auth session
+  const email = user.student_id + "@wiki.local";
+  const { error: authError } = await supabase.auth.signInWithPassword({
+    email,
+    password: credential,
+  });
 
-  // 有密码 → 走密码验证
-  if (userRow.password_hash !== null) {
-    const inputHash = await hashPassword(credential)
-    if (inputHash !== userRow.password_hash) {
-      return { success: false, message: '姓名/用户名或密码错误，请重新输入' }
+  if (authError && user.has_password) {
+    const { error: fallbackError } = await supabase.auth.signInWithPassword({
+      email,
+      password: user.student_id,
+    });
+    if (!fallbackError) {
+      await supabase.auth.updateUser({ password: credential });
+    } else {
+      console.warn("Auth session 建立失败，仅使用 localStorage session", fallbackError.message);
     }
-    saveSession(userRow)
-    return { success: true, message: '登录成功' }
+  } else if (authError && !user.has_password) {
+    const { error: retryError } = await supabase.auth.signInWithPassword({
+      email,
+      password: user.student_id,
+    });
+    if (retryError) {
+      console.warn("Auth session 建立失败，仅使用 localStorage session", retryError.message);
+    }
   }
 
-  // 无密码 → 验证输入是否为学号
-  if (credential.trim() === userRow.student_id) {
-    saveSession(userRow)
-    return { success: true, message: '登录成功' }
-  }
+  const session: UserSession = {
+    userId: user.id,
+    username: user.username || "",
+    studentId: user.student_id || "",
+    name: user.name || "",
+    role: user.role || "user",
+    loginTime: new Date().toISOString(),
+  };
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  return { success: true, message: "登录成功" };
+}
 
-  return { success: false, message: '姓名/用户名或密码错误，请重新输入' }
+export async function tryRestoreSessionFromAuth(): Promise<void> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return;
+  const existing = getSession();
+  if (existing) return;
+  const meta = session.user.user_metadata;
+  if (meta?.username) {
+    const restored: UserSession = {
+      userId: session.user.id,
+      username: meta.username || "",
+      studentId: meta.student_id || "",
+      name: meta.name || "",
+      role: meta.role || "user",
+      loginTime: new Date().toISOString(),
+    };
+    localStorage.setItem(SESSION_KEY, JSON.stringify(restored));
+  }
 }
 
 export async function logout(): Promise<void> {
-  clearSession()
+  clearSession();
 }
 
-// ---------- 密码管理 ----------
-
-/**
- * 统一设置/修改密码 — 有密码验密码，无密码验学号。
- * credential: 当前密码（有密码时）或学号（无密码时）
- */
 export async function setPassword(
   studentId: string,
-  credential: string,
+  oldCredential: string,
   newPassword: string,
 ): Promise<LoginResult> {
-  const newHash = await hashPassword(newPassword)
-  const credHash = await hashPassword(credential)
-
-  const { data, error } = await supabase.rpc('set_password', {
+  const { data, error } = await supabase.rpc("set_password", {
     p_student_id: studentId,
-    p_credential: credHash,
-    p_new_password_hash: newHash,
-    p_student_id_raw: credential,
-  })
+    p_old_password: oldCredential,
+    p_new_password: newPassword,
+  });
+  if (error) return { success: false, message: error.message };
+  if (!data) return { success: false, message: "密码设置失败" };
 
-  if (error) {
-    return { success: false, message: error.message }
-  }
-
-  if (!data) {
-    return { success: false, message: '密码设置失败' }
-  }
-
-  return { success: true, message: '密码设置成功' }
+  const { error: authError } = await supabase.auth.updateUser({ password: newPassword });
+  if (authError) console.warn("Auth 密码同步更新失败", authError.message);
+  return { success: true, message: "密码设置成功" };
 }
 
-// ---------- 用户名管理 ----------
-
-/**
- * 修改用户名 — 有密码验密码，无密码验学号。校验在 RPC 端。
- */
 export async function changeUsername(
   studentId: string,
-  credential: string,
+  password: string,
   newUsername: string,
 ): Promise<LoginResult> {
-  const credHash = await hashPassword(credential)
-
-  const { data, error } = await supabase.rpc('change_username', {
+  const { data, error } = await supabase.rpc("change_username", {
     p_student_id: studentId,
-    p_password_hash: credHash,
+    p_password: password,
     p_new_username: newUsername.trim(),
-    p_student_id_raw: credential,
-  })
+  });
+  if (error) return { success: false, message: error.message };
+  if (!data) return { success: false, message: "修改用户名失败" };
 
-  if (error) {
-    return { success: false, message: error.message }
-  }
-
-  if (!data) {
-    return { success: false, message: '修改用户名失败' }
-  }
-
-  const session = getSession()
+  const session = getSession();
   if (session) {
-    session.username = newUsername.trim()
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session))
+    session.username = newUsername.trim();
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
   }
-
-  return { success: true, message: '用户名修改成功' }
+  return { success: true, message: "用户名修改成功" };
 }
