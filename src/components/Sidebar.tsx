@@ -185,7 +185,7 @@ export default function Sidebar({ tree, siteTitle, announcement, titleSlugMap }:
           ) : (
             <>
               <h1>
-                <img src="/logo.png" alt="" className={styles.siteIcon} />
+                <img src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/logo.png`} alt="" className={styles.siteIcon} />
                 {siteTitle}
               </h1>
               <button
