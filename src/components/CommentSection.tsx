@@ -274,7 +274,7 @@ function CommentCard({
   onDelete: (id: string) => void
 }) {
   return (
-    <div className={styles.comment}>
+    <div className={styles.comment} id={`comment-${comment.id}`}>
       <div className={styles.commentMeta}>
         <span className={`${styles.commentAuthor} ${getAuthorColor(comment.authorColor)}`}>{comment.author}</span>
         {canDelete && (
@@ -324,7 +324,7 @@ function UnifiedReply({
   onDelete: (id: string) => void
 }) {
   return (
-    <div className={styles.unifiedReply}>
+    <div className={styles.unifiedReply} id={`comment-${comment.id}`}>
       <div className={styles.replyMeta}>
         <span className={`${styles.replyAuthor} ${getAuthorColor(comment.authorColor)}`}>{comment.author}</span>
         <span className={styles.replyVerb}> 回复 </span>
