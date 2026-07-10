@@ -97,6 +97,8 @@ export default function CommentSection({ pageSlug }: Props) {
         el.classList.add(styles.highlight)
         setTimeout(() => el.classList.remove(styles.highlight), 2500)
       }
+      // 清除 hash，避免跨页面导航残留
+      history.replaceState(null, '', window.location.pathname + window.location.search)
     })
   }, [loading])
 
