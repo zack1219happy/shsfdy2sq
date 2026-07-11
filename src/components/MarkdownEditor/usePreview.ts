@@ -5,13 +5,16 @@
 'use client'
 
 import { useRef, useMemo, useEffect } from 'react'
-import { renderClient } from '@/lib/render-client'
+import { renderClientWithRegistry, replaceWikiLinks } from '@/lib/render-client'
+import { registry, titleSlugMap as defaultTitleSlugMap } from '@/data/person-registry'
 import { getPreviewLineAtTop } from './scrollSync'
 
 interface UsePreviewOptions {
   content: string
   /** 预览区滚动回调（发射行号用于 scroll sync） */
   onPreviewScroll?: (lineNumber: number) => void
+  /** 标题→slug 映射，传入后启用 [[WikiLink]] 渲染 */
+  titleSlugMap?: Record<string, string>
 }
 
 interface UsePreviewReturn {
@@ -31,14 +34,23 @@ interface UsePreviewReturn {
 export function usePreview({
   content,
   onPreviewScroll,
+  titleSlugMap: propMap,
 }: UsePreviewOptions): UsePreviewReturn {
   const previewRef = useRef<HTMLDivElement | null>(null)
+  const basePath = useMemo(() => process.env.NEXT_PUBLIC_BASE_PATH || '', [])
+  // 合并默认映射 + 传入的覆盖
+  const effectiveMap = useMemo(
+    () => propMap ? { ...defaultTitleSlugMap, ...propMap } : defaultTitleSlugMap,
+    [propMap],
+  )
 
   // 通过 render-client 统一渲染（开启 highlight + texmath + injectLn）
-  const previewHtml = useMemo(
-    () => renderClient(content, { highlight: true, texmath: true, injectLn: true }),
-    [content],
-  )
+  const previewHtml = useMemo(() => {
+    const raw = renderClientWithRegistry(content, registry, { highlight: true, texmath: true, injectLn: true })
+    // 渲染 [[Wiki 链接]]
+    const withLinks = replaceWikiLinks(raw, effectiveMap, basePath)
+    return withLinks
+  }, [content, effectiveMap, basePath])
 
   // 滚动事件监听（scroll sync）
   useEffect(() => {

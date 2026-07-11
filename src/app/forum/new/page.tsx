@@ -27,7 +27,7 @@ export default function NewPostPage() {
     setError(null)
     try {
       const id = await createForumPost(title, content)
-      router.push('/forum/post/' + id)
+      router.push('/forum/post?id=' + id)
     } catch (e: any) {
       setError(e?.message || '发帖失败')
     } finally {

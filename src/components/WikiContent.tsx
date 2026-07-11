@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useEffect } from 'react'
 import { renderClientWithRegistry, replaceWikiLinks } from '@/lib/render-client'
-import { registry } from '@/data/person-registry'
+import { registry, titleSlugMap as defaultTitleSlugMap } from '@/data/person-registry'
 
 interface Props {
   /** 原始内容（markdown 或 HTML） */
@@ -10,7 +10,7 @@ interface Props {
   /** 内容格式，默认自动检测：含 <tag 的视为 HTML，否则按 markdown */
   format?: 'markdown' | 'html'
   className?: string
-  /** 标题 → slug 映射，用于客户端渲染 [[Wiki 链接]] */
+  /** 标题 → slug 映射，用于客户端渲染 [[Wiki 链接]]。不传则使用自动生成的映射 */
   titleSlugMap?: Record<string, string>
 }
 
@@ -23,9 +23,11 @@ interface Props {
  * - DOMPurify 净化
  * - 代码块复制按钮
  */
-export default function WikiContent({ content, format, className, titleSlugMap }: Props) {
+export default function WikiContent({ content, format, className, titleSlugMap: propMap }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const basePath = useMemo(() => process.env.NEXT_PUBLIC_BASE_PATH || '', [])
+  // 优先使用传入的映射，否则使用自动生成的默认映射
+  const effectiveMap = propMap ?? defaultTitleSlugMap
   const html = useMemo(() => {
     // 1. 确定格式并转 HTML
     const rawHtml =
@@ -34,10 +36,10 @@ export default function WikiContent({ content, format, className, titleSlugMap }
         : content
 
     // 2. 替换 Wiki 链接
-    const withLinks = replaceWikiLinks(rawHtml, titleSlugMap, basePath)
+    const withLinks = replaceWikiLinks(rawHtml, effectiveMap, basePath)
 
     return withLinks
-  }, [content, format, titleSlugMap, basePath])
+  }, [content, format, effectiveMap, basePath])
 
   // 代码块复制按钮：事件委托
   useEffect(() => {

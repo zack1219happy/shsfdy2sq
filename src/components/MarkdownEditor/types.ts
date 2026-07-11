@@ -113,4 +113,6 @@ export interface EditorProps {
   onChange: (value: string) => void
   config?: MarkdownEditorConfig
   className?: string
+  /** 标题→slug 映射，传入后预览面板启用 [[WikiLink]] 渲染 */
+  titleSlugMap?: Record<string, string>
 }

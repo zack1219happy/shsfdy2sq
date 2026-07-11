@@ -362,7 +362,7 @@ function NotificationBell({ session }: { session: UserSession }) {
             const isForum = n.type?.startsWith('forum_')
             const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''
             const href = isForum
-              ? `${basePath}/forum/post/${n.page?.replace('forum/', '') || ''}?comment=${n.comment_id}&_=${Date.now()}`
+              ? `${basePath}/forum/post?id=${n.page?.replace('forum/', '') || ''}&comment=${n.comment_id}&_=${Date.now()}`
               : n.page
                 ? `${basePath}${n.page === 'home' ? '/' : `/${n.page}/`}?comment=${n.comment_id}&_=${Date.now()}`
                 : undefined

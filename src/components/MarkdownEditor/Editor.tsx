@@ -21,6 +21,7 @@ export default function Editor({
   onChange,
   config,
   className,
+  titleSlugMap,
 }: EditorProps) {
   // 1. Config
   const merged: MarkdownEditorConfig = useMemo(
@@ -115,6 +116,7 @@ export default function Editor({
           setTimeout(() => { syncingRef.current = false }, 100)
         }
       : undefined,
+    titleSlugMap,
   })
 
   // 6. Toolbar

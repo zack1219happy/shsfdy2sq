@@ -49,7 +49,7 @@ export default function ForumListPage() {
   const showSearch = searchOpen || searchQuery.length > 0
 
   const goToPost = useCallback((id: string) => {
-    router.push(`/forum/post/${id}`)
+    router.push(`/forum/post?id=${id}`)
   }, [router])
 
   return (
