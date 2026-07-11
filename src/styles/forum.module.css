@@ -6,7 +6,7 @@
 .page {
   max-width: 860px;
   margin: 0 auto;
-  padding: 20px 24px 60px;
+  padding: 76px 24px 60px;
   animation: fadeInUp 0.2s ease-out;
 }
 
@@ -503,6 +503,12 @@
   gap: 8px;
   margin-bottom: 4px;
   font-size: 0.82rem;
+  border-radius: 4px;
+  transition: background 0.12s;
+}
+
+.commentMeta:hover {
+  background: var(--color-toc-bg);
 }
 
 .commentAuthor {
@@ -521,15 +527,11 @@
   color: var(--color-text-secondary);
   white-space: pre-wrap;
   word-break: break-word;
-  cursor: pointer;
   padding: 4px 0;
   border-radius: 4px;
   transition: background 0.12s;
 }
 
-.commentBody:hover {
-  background: var(--color-toc-bg);
-}
 
 .commentReplies {
   margin-left: 20px;
@@ -551,6 +553,12 @@
   gap: 4px;
   margin-bottom: 2px;
   font-size: 0.8rem;
+  border-radius: 4px;
+  transition: background 0.12s;
+}
+
+.replyMeta:hover {
+  background: var(--color-toc-bg);
 }
 
 .replyAuthor {
@@ -582,15 +590,11 @@
   color: var(--color-text-secondary);
   white-space: pre-wrap;
   word-break: break-word;
-  cursor: pointer;
   padding: 2px 0;
   border-radius: 4px;
   transition: background 0.12s;
 }
 
-.replyContent:hover {
-  background: var(--color-toc-bg);
-}
 
 .deleteBtn {
   background: none;

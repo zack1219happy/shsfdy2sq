@@ -21,6 +21,8 @@ import {
 import { registry } from '@/data/person-registry'
 import styles from '@/styles/auth.module.css'
 import FaIcon from '@/components/FaIcon'
+import { UserColorProvider } from '@/lib/user-colors'
+import { UserName } from '@/components/UserName'
 
 /* ==============================================================
    AuthGate — 页面级登录门
@@ -78,13 +80,13 @@ export default function AuthGate({ children }: Props) {
   if (!session) return <LoginScreen onSuccess={handleLoginSuccess} />
 
   return (
-    <>
+    <UserColorProvider>
       <div style={{ position: 'fixed', top: 12, right: 16, zIndex: 1500, display: 'flex', gap: 6 }}>
         <NotificationBell session={session} />
         <UserMenu session={session} onLogout={handleLogout} />
       </div>
       {children}
-    </>
+    </UserColorProvider>
   )
 }
 
@@ -215,14 +217,14 @@ function UserMenu({
       <div ref={menuRef} style={{ position: 'relative' }}>
         <button className={styles.userBtn} onClick={() => setOpen(!open)}>
           <FaIcon name="user" />
-          <span className={styles.userName}>{session.username}</span>
+          <UserName username={session.username} className={styles.userName} />
         </button>
 
         {open && (
           <div className={styles.dropdown}>
             <div className={styles.dropdownHeader}>
               <div className={styles.dropdownName}>{session.name}</div>
-              <div className={styles.dropdownId}>@{session.username} · {session.studentId}</div>
+              <div className={styles.dropdownId}>@<UserName username={session.username} /> · {session.studentId}</div>
             </div>
 
             <button
@@ -302,8 +304,8 @@ function NotificationBell({ session }: { session: UserSession }) {
   const handleToggle = useCallback(() => {
     setOpen(prev => {
       if (!prev) {
-        // 打开面板时刷新，30 秒内不重复拉取
-        loadFull()
+        // 打开面板时强制刷新（跳过 30 秒节流，否则可能拿到过期数据）
+        loadFull(true)
         // 未读数轻量查询不受限
         loadUnread()
       }
@@ -375,12 +377,15 @@ function NotificationBell({ session }: { session: UserSession }) {
             else if (n.type === 'forum_own_post') label = '帖子动态'
             else if (n.type === 'forum_post_update') label = '关注更新'
 
+            const isDeleted = n.excerpt === '评论已删除'
+
             return (
               <a
                 key={n.id}
-                className={`${styles.notifItem} ${n.read ? styles.notifRead : ''}`}
-                href={href}
+                className={`${styles.notifItem} ${n.read ? styles.notifRead : ''} ${isDeleted ? styles.notifDeleted : ''}`}
+                href={isDeleted ? undefined : href}
                 onClick={() => handleClick(n.id)}
+                style={isDeleted ? { pointerEvents: 'none' } : undefined}
               >
                 <span className={styles.notifFrom}>
                   {n.from_username ?? '匿名'}

@@ -7,6 +7,8 @@ import { getSession } from '@/lib/auth'
 import type { Comment } from '@/types/gist'
 import WikiContent from '@/components/WikiContent'
 import { useCommentAnchor } from '@/hooks/useCommentAnchor'
+import { UserName } from '@/components/UserName'
+import { showWarningToast } from '@/lib/toast'
 import styles from '@/styles/comment.module.css'
 
 const MarkdownEditor = dynamic(
@@ -77,6 +79,13 @@ export default function CommentSection({ pageSlug }: Props) {
 
     return () => { cancelled = true }
   }, [pageSlug])
+
+  /** 如果 URL 带 ?comment=xxx 但评论不存在，显示警告 */
+  useEffect(() => {
+    if (loading || !currentCommentId) return
+    const match = comments.find((c) => c.id === currentCommentId)
+    if (!match || match.deleted) showWarningToast('该评论可能已被删除')
+  }, [loading, currentCommentId, comments])
 
   const handleAdd = useCallback(
     async (input: { author: string; content: string; userId?: string }) => {
@@ -313,7 +322,7 @@ const CommentCard = forwardRef<HTMLDivElement, {
     return (
       <div ref={ref} className={`${styles.comment} ${styles.commentDeleted}`} id={`comment-${comment.id}`}>
         <div className={styles.commentMeta}>
-          <span className={`${styles.commentAuthor} ${getAuthorColor(comment.authorColor, comment.author)}`}>{comment.author}</span>
+          <UserName username={comment.author} className={styles.commentAuthor} />
           <span className={styles.deletedLabel}>该评论已被删除</span>
           <span className={styles.commentDate}>{formatDate(comment.date)}</span>
         </div>
@@ -323,8 +332,15 @@ const CommentCard = forwardRef<HTMLDivElement, {
 
   return (
     <div ref={ref} className={styles.comment} id={`comment-${comment.id}`}>
-      <div className={styles.commentMeta}>
-        <span className={`${styles.commentAuthor} ${getAuthorColor(comment.authorColor, comment.author)}`}>{comment.author}</span>
+      <div
+        className={styles.commentMeta}
+        role="button"
+        tabIndex={0}
+        onClick={() => onReply(comment.id, comment.author)}
+        onKeyDown={(e) => { if (e.key === 'Enter') onReply(comment.id, comment.author) }}
+        style={{ cursor: 'pointer' }}
+      >
+        <UserName username={comment.author} className={styles.commentAuthor} />
         {canDelete && (
           <button
             className={styles.deleteBtn}
@@ -338,15 +354,7 @@ const CommentCard = forwardRef<HTMLDivElement, {
         )}
         <span className={styles.commentDate}>{formatDate(comment.date)}</span>
       </div>
-      <div
-        className={styles.commentBody}
-        onClick={() => onReply(comment.id, comment.author)}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') onReply(comment.id, comment.author)
-        }}
-      >
+      <div className={styles.commentBody}>
         <WikiContent content={comment.content} />
       </div>
     </div>
@@ -368,9 +376,9 @@ const UnifiedReply = forwardRef<HTMLDivElement, {
     return (
       <div ref={ref} className={`${styles.unifiedReply} ${styles.commentDeleted}`} id={`comment-${comment.id}`}>
         <div className={styles.replyMeta}>
-          <span className={`${styles.replyAuthor} ${getAuthorColor(comment.authorColor, comment.author)}`}>{comment.author}</span>
+          <UserName username={comment.author} className={styles.replyAuthor} />
           <span className={styles.replyVerb}> 回复 </span>
-          <span className={`${styles.replyTarget} ${getAuthorColor(parentColor)}`}>{parentAuthor ?? '未知'}</span>
+          {parentAuthor ? <UserName username={parentAuthor} className={styles.replyTarget} /> : <span className={styles.replyTarget}>未知</span>}
           <span className={styles.deletedLabel}>该评论已被删除</span>
           <span className={styles.replyDate}>{formatDate(comment.date)}</span>
         </div>
@@ -380,10 +388,17 @@ const UnifiedReply = forwardRef<HTMLDivElement, {
 
   return (
     <div ref={ref} className={styles.unifiedReply} id={`comment-${comment.id}`}>
-      <div className={styles.replyMeta}>
-        <span className={`${styles.replyAuthor} ${getAuthorColor(comment.authorColor, comment.author)}`}>{comment.author}</span>
+      <div
+        className={styles.replyMeta}
+        role="button"
+        tabIndex={0}
+        onClick={() => onReply(comment.id, comment.author)}
+        onKeyDown={(e) => { if (e.key === 'Enter') onReply(comment.id, comment.author) }}
+        style={{ cursor: 'pointer' }}
+      >
+        <UserName username={comment.author} className={styles.replyAuthor} />
         <span className={styles.replyVerb}> 回复 </span>
-        <span className={`${styles.replyTarget} ${getAuthorColor(parentColor)}`}>{parentAuthor ?? '未知'}</span>
+        {parentAuthor ? <UserName username={parentAuthor} className={styles.replyTarget} /> : <span className={styles.replyTarget}>未知</span>}
         {canDelete && (
           <button
             className={styles.deleteBtn}
@@ -397,15 +412,7 @@ const UnifiedReply = forwardRef<HTMLDivElement, {
         )}
         <span className={styles.replyDate}>{formatDate(comment.date)}</span>
       </div>
-      <div
-        className={styles.replyContent}
-        onClick={() => onReply(comment.id, comment.author)}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') onReply(comment.id, comment.author)
-        }}
-      >
+      <div className={styles.replyContent}>
         <WikiContent content={comment.content} />
       </div>
     </div>
@@ -415,24 +422,6 @@ const UnifiedReply = forwardRef<HTMLDivElement, {
 /* ==============================================================
    工具函数
    ============================================================== */
-/** 根据颜色字面值或用户名返回 CSS 颜色类名 */
-function getAuthorColor(color?: string, username?: string): string {
-  // 优先按用户名匹配（数据库可能没有 author_color 值）
-  switch (username) {
-    case 'tqy': return styles.colorTqy
-    case 'zyj': return styles.colorZyj
-    case 'DouDou': return styles.colorDouDou
-  }
-  // 回退：按 DB 存储的 color 值匹配
-  switch (color) {
-    case 'rainbow': return styles.colorWz
-    case '#1a73e8': return styles.colorTqy
-    case '#dc2626': return styles.colorZyj
-    case '#16a34a': return styles.colorDouDou
-    default: return ''
-  }
-}
-
 function formatDate(iso: string): string {
   try {
     const d = new Date(iso)

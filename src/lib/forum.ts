@@ -26,33 +26,3 @@ export function formatDate(iso: string): string {
     return iso
   }
 }
-
-/**
- * CSS Module 颜色类名映射表
- * 每个路由文件需传入对应的 styles 对象
- */
-export interface ColorStyles {
-  colorTqy: string
-  colorZyj: string
-  colorDouDou: string
-  colorWz: string
-}
-
-export function getAuthorColor(
-  color?: string | null,
-  username?: string,
-  styles?: ColorStyles,
-): string {
-  switch (username) {
-    case 'tqy': return styles?.colorTqy ?? ''
-    case 'zyj': return styles?.colorZyj ?? ''
-    case 'DouDou': return styles?.colorDouDou ?? ''
-  }
-  switch (color) {
-    case 'rainbow': return styles?.colorWz ?? ''
-    case '#1a73e8': return styles?.colorTqy ?? ''
-    case '#dc2626': return styles?.colorZyj ?? ''
-    case '#16a34a': return styles?.colorDouDou ?? ''
-    default: return ''
-  }
-}

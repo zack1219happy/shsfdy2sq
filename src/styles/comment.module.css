@@ -147,6 +147,12 @@
   justify-content: space-between;
   margin-bottom: 4px;
   font-size: 0.8rem;
+  border-radius: 4px;
+  transition: background 0.12s;
+}
+
+.commentMeta:hover {
+  background: var(--color-toc-bg);
 }
 
 .commentAuthor {
@@ -179,14 +185,9 @@
   color: var(--color-text-secondary);
   white-space: pre-wrap;
   word-break: break-word;
-  cursor: pointer;
   padding: 4px 0;
   border-radius: 4px;
   transition: background 0.12s;
-}
-
-.commentBody:hover {
-  background: var(--color-toc-bg);
 }
 
 /* ---------- 统一回复（两行：meta + 多行内容） ---------- */
@@ -200,6 +201,12 @@
   gap: 4px;
   margin-bottom: 2px;
   font-size: 0.82rem;
+  border-radius: 4px;
+  transition: background 0.12s;
+}
+
+.replyMeta:hover {
+  background: var(--color-toc-bg);
 }
 
 .replyAuthor {
@@ -233,14 +240,9 @@
   color: var(--color-text-secondary);
   white-space: pre-wrap;
   word-break: break-word;
-  cursor: pointer;
   padding: 2px 0;
   border-radius: 4px;
   transition: background 0.12s;
-}
-
-.replyContent:hover {
-  background: var(--color-toc-bg);
 }
 
 /* ---------- 嵌套回复容器 ---------- */

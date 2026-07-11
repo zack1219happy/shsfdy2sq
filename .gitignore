@@ -34,3 +34,6 @@ CLAUDE.md
 
 # generated preview
 __icon_preview.html
+
+# local migration files (applied via Supabase API)
+*.sql
