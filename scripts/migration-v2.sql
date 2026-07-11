@@ -15,9 +15,13 @@
 --  10. 重写通知 RPC（auth.uid() 替代 p_user_id）
 --  11. 撤销 PUBLIC 权限，授予 authenticated
 --  12. 收紧 RLS 策略
+--  13. 评论删除：叶子物理删除，有子评论则保留删除占位
 -- ============================================================================
 
 BEGIN;
+
+ALTER TABLE comments
+  ADD COLUMN IF NOT EXISTS deleted boolean NOT NULL DEFAULT false;
 
 -- ============================================================
 -- 1. 用户角色系统
@@ -297,40 +301,72 @@ AS $$
 DECLARE
   v_author_uid UUID;
   v_caller_role text;
+  v_parent_id UUID;
+  v_next_parent_id UUID;
+  v_is_deleted boolean;
 BEGIN
   IF auth.uid() IS NULL THEN
     RAISE EXCEPTION '请先登录';
   END IF;
 
   SELECT role INTO v_caller_role FROM wiki_users WHERE id = auth.uid();
-  SELECT user_id INTO v_author_uid FROM comments WHERE id = p_comment_id;
+  SELECT user_id, parent_id, deleted
+  INTO v_author_uid, v_parent_id, v_is_deleted
+  FROM comments
+  WHERE id = p_comment_id;
 
-  -- super_admin 可删任何
-  IF v_caller_role = 'super_admin' THEN
-    DELETE FROM comments WHERE id = p_comment_id;
-    RETURN FOUND;
-  END IF;
-
-  -- admin 可删非 super_admin 的评论
-  IF v_caller_role = 'admin' THEN
-    IF v_author_uid IS NULL THEN
-      DELETE FROM comments WHERE id = p_comment_id;
-      RETURN FOUND;
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM wiki_users WHERE id = v_author_uid AND role = 'super_admin') THEN
-      DELETE FROM comments WHERE id = p_comment_id;
-      RETURN FOUND;
-    END IF;
+  IF NOT FOUND OR v_is_deleted THEN
     RETURN FALSE;
   END IF;
 
-  -- 自己的评论
-  IF v_author_uid = auth.uid() THEN
-    DELETE FROM comments WHERE id = p_comment_id;
-    RETURN FOUND;
+  -- super_admin 可删任何
+  IF v_caller_role = 'super_admin' THEN
+    NULL;
+  ELSIF v_caller_role = 'admin' THEN
+    -- admin 可删非 super_admin 的评论
+    IF v_author_uid IS NULL THEN
+      NULL;
+    ELSIF EXISTS (SELECT 1 FROM wiki_users WHERE id = v_author_uid AND role = 'super_admin') THEN
+      RETURN FALSE;
+    END IF;
+  ELSIF v_author_uid = auth.uid() THEN
+    -- 用户只能删除自己的评论
+    NULL;
+  ELSE
+    RETURN FALSE;
   END IF;
 
-  RETURN FALSE;
+  -- 保留有子评论的父节点，避免破坏评论树。
+  IF EXISTS (SELECT 1 FROM comments WHERE parent_id = p_comment_id) THEN
+    UPDATE comments
+    SET deleted = TRUE, content = ''
+    WHERE id = p_comment_id;
+    RETURN TRUE;
+  END IF;
+
+  -- 没有子评论的叶节点可以物理删除。
+  DELETE FROM comments WHERE id = p_comment_id;
+  IF NOT FOUND THEN
+    RETURN FALSE;
+  END IF;
+
+  -- 删除因子评论而保留的、现在已经没有子评论的已删除祖先。
+  v_next_parent_id := v_parent_id;
+  WHILE v_next_parent_id IS NOT NULL LOOP
+    DELETE FROM comments AS parent
+    WHERE parent.id = v_next_parent_id
+      AND parent.deleted = TRUE
+      AND NOT EXISTS (
+        SELECT 1 FROM comments AS child WHERE child.parent_id = parent.id
+      )
+    RETURNING parent.parent_id INTO v_next_parent_id;
+
+    IF NOT FOUND THEN
+      EXIT;
+    END IF;
+  END LOOP;
+
+  RETURN TRUE;
 END;
 $$;
 

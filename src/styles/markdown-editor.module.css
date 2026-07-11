@@ -1,0 +1,354 @@
+/* ============================================
+   MarkdownEditor — 样式（CSS Modules）
+   ============================================ */
+
+/* ---------- 容器 ---------- */
+.editor {
+  position: relative;
+  height: 100%;
+  min-height: 300px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+}
+
+.editor.editorFullscreen {
+  position: fixed;
+  z-index: 9997;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  border-radius: 0;
+}
+
+/* ---------- 工具栏 ---------- */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 8px;
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+  min-height: 40px;
+  flex-shrink: 0;
+}
+
+.toolbarBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 4px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 150ms ease-out;
+  outline: 0;
+}
+
+.toolbarBtn:hover,
+.toolbarBtn:focus-visible {
+  border-color: var(--color-border);
+  background: var(--color-hover-bg);
+  color: var(--color-text);
+}
+
+.toolbarBtn:active {
+  background: var(--color-active-bg);
+}
+
+.toolbarBtn svg {
+  display: block;
+}
+
+.toolbarDivider {
+  display: inline-block;
+  width: 0;
+  height: 20px;
+  margin: 0 4px;
+  border-right: 1px solid var(--color-border);
+  font-size: 0;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* ---------- 编辑区 + 预览区 ---------- */
+.ground {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.pane {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.paneEditor {
+  border-right: 1px solid var(--color-border);
+}
+
+/* 根因修复：让 @uiw/react-codemirror 的 wrapper（.cm-theme-light）
+   在 flex column 中拉伸填满 pane，使嵌套的 height: 100% 链生效 */
+.paneEditor > * {
+  flex: 1;
+  min-height: 0;
+}
+
+.panePreview {
+  background: var(--color-bg);
+}
+
+.paneHidden {
+  display: none;
+}
+
+.paneFull {
+  flex: 1 1 100%;
+  border-right: none;
+}
+
+@media (max-width: 768px) {
+  .ground {
+    flex-direction: column;
+  }
+  .paneEditor {
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+    min-height: 200px;
+  }
+  .panePreview {
+    min-height: 200px;
+    max-height: 50%;
+  }
+}
+
+/* ---------- CodeMirror 覆写 ---------- */
+.paneEditor :global(.cm-editor) {
+  height: 100%;
+  outline: none;
+}
+
+.paneEditor :global(.cm-editor.cm-focused) {
+  outline: none;
+}
+
+.paneEditor :global(.cm-scroller) {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  overflow: auto;
+}
+
+.paneEditor :global(.cm-content) {
+  padding: 8px 0;
+}
+
+.paneEditor :global(.cm-gutters) {
+  border-right: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+
+.paneEditor :global(.cm-line) {
+  padding: 0 12px;
+}
+
+/* 行背景在文本层（z-index: auto），选中在半透明层（z-index: 1）之上 */
+.paneEditor :global(.cm-activeLine) {
+  background: var(--color-hover-bg);
+}
+
+.paneEditor :global(.cm-activeLineGutter) {
+  background: var(--color-hover-bg);
+}
+
+.paneEditor :global(.cm-cursor) {
+  border-left-color: var(--color-primary);
+}
+
+/* 选中高亮 — z-index 在最上层，但 pointer-events: none 让鼠标穿透到文本层 */
+.paneEditor :global(.cm-selectionLayer) {
+  z-index: 1 !important;
+  pointer-events: none;
+}
+
+.paneEditor :global(.cm-selectionBackground) {
+  background: rgba(26, 115, 232, 0.2) !important;
+}
+
+/* 浏览器原生 ::selection 备用 */
+.paneEditor :global(.cm-content) ::selection {
+  background: rgba(26, 115, 232, 0.2);
+}
+
+/* ---------- 预览区 ---------- */
+.previewArea {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--color-bg);
+}
+
+.previewContent {
+  padding: 16px 20px;
+  max-width: var(--content-max-width);
+  word-wrap: break-word;
+}
+
+/* ---------- 对话框 ---------- */
+.dialogOverlay {
+  position: fixed;
+  z-index: 9998;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dialog {
+  width: 480px;
+  max-width: 90vw;
+  max-height: 80vh;
+  background: var(--color-bg);
+  border-radius: 4px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dialogHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 15px;
+  color: var(--color-text);
+}
+
+.dialogClose {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-light);
+  font-size: 18px;
+  padding: 4px;
+  line-height: 1;
+  border-radius: 4px;
+}
+
+.dialogClose:hover {
+  color: var(--color-text);
+  background: var(--color-hover-bg);
+}
+
+.dialogBody {
+  padding: 16px 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.dialogFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--color-border);
+}
+
+.dialogBtn {
+  min-width: 75px;
+  padding: 7px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  border: 1px solid var(--color-border);
+  transition: all 150ms ease-out;
+}
+
+.dialogBtnCancel {
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+}
+
+.dialogBtnCancel:hover {
+  background: var(--color-hover-bg);
+}
+
+.dialogBtnConfirm {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.dialogBtnConfirm:hover {
+  background: var(--color-primary-hover);
+}
+
+/* ---------- 表单 ---------- */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.label {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--color-text);
+  background: var(--color-bg);
+  font-family: inherit;
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
+}
+
+.select {
+  cursor: pointer;
+}
+
+.textarea {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 13px;
+  resize: vertical;
+  min-height: 120px;
+}

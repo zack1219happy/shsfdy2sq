@@ -39,7 +39,7 @@ export default function RootLayout({
   }
 
   return (
-    <html lang="zh-CN">
+    <html lang="zh-CN" data-scroll-behavior="smooth">
       <head />
       <body>
         <Sidebar tree={tree} siteTitle={siteTitle} announcement={announcementContent} titleSlugMap={titleSlugMap} />

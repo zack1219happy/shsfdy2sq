@@ -20,6 +20,18 @@
   margin-bottom: 32px;
 }
 
+.editorWrap {
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.editorWrap .editorWrapInner {
+  border: none !important;
+  border-radius: 0 !important;
+  height: 200px;
+}
+
 .field {
   display: flex;
   flex-direction: column;
@@ -320,11 +332,11 @@
 
 /* ---------- 锚点高亮动画 ---------- */
 @keyframes highlightFade {
-  0%   { background-color: rgba(26, 115, 232, 0.2); }
+  0% { background-color: rgba(26, 115, 232, 0.2); }
   100% { background-color: transparent; }
 }
 
 .highlight {
   border-radius: 6px;
-  animation: highlightFade 2.5s ease-out forwards;
+  animation: highlightFade 1s steps(1) forwards;
 }

@@ -13,6 +13,7 @@ import {
   faCheck,
   faChevronLeft,
   faChevronRight,
+  faComments,
   faCopy,
   faEye,
   faFileLines,
@@ -23,10 +24,15 @@ import {
   faKey,
   faMapMarkedAlt,
   faPen,
+  faPlus,
+  faReply,
   faSchool,
+  faSearch,
   faSignOutAlt,
   faSpinner,
   faSyncAlt,
+  faThumbsDown,
+  faThumbsUp,
   faTimes,
   faUser,
   faUsers,
@@ -62,6 +68,7 @@ cssAlias(faCalendarAlt, 'calendar-alt')
 register(faCheck)
 register(faChevronLeft)
 register(faChevronRight)
+register(faComments)
 register(faCopy)
 register(faEye)
 register(faFileLines)
@@ -75,12 +82,18 @@ register(faMapMarkedAlt)
 cssAlias(faMapMarkedAlt, 'map-marked-alt')
 register(faMarkdown)
 register(faPen)
+register(faPlus)
+register(faReply)
 register(faSchool)
+register(faSearch)
+cssAlias(faSearch, 'search')
 register(faSignOutAlt)
 cssAlias(faSignOutAlt, 'sign-out-alt')
 register(faSpinner)
 register(faSyncAlt)
 cssAlias(faSyncAlt, 'sync-alt')
+register(faThumbsDown)
+register(faThumbsUp)
 register(faTimes)
 cssAlias(faTimes, 'times')
 register(faUser)

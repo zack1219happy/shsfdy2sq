@@ -1,16 +1,8 @@
 'use client'
 
 import { useMemo, useRef, useEffect } from 'react'
-import MarkdownIt from 'markdown-it'
-import katex from 'katex'
-import DOMPurify from 'dompurify'
-
-/** 客户端 markdown-it 实例（轻量，不含 highlight.js） */
-const md = new MarkdownIt({
-  html: true,
-  linkify: true,
-  typographer: true,
-})
+import { renderClientWithRegistry, replaceWikiLinks } from '@/lib/render-client'
+import { registry, titleSlugMap as defaultTitleSlugMap } from '@/data/person-registry'
 
 interface Props {
   /** 原始内容（markdown 或 HTML） */
@@ -18,48 +10,36 @@ interface Props {
   /** 内容格式，默认自动检测：含 <tag 的视为 HTML，否则按 markdown */
   format?: 'markdown' | 'html'
   className?: string
-  /** 标题 → slug 映射，用于客户端渲染 [[Wiki 链接]] */
+  /** 标题 → slug 映射，用于客户端渲染 [[Wiki 链接]]。不传则使用自动生成的映射 */
   titleSlugMap?: Record<string, string>
 }
 
 /**
  * 通用内容渲染组件
  *
- * 接受 Markdown 或 HTML 输入，在客户端：
- * 1. 替换 [[Wiki 链接]]
- * 2. Markdown → HTML（markdown-it）
- * 3. HTML 中的 $...$ / $$...$$ → KaTeX
+ * 统一经由 render-client 渲染：
+ * - Markdown → HTML（markdown-it + highlight.js + KaTeX）
+ * - 后处理 [[Wiki 链接]]
+ * - DOMPurify 净化
+ * - 代码块复制按钮
  */
-export default function WikiContent({ content, format, className, titleSlugMap }: Props) {
+export default function WikiContent({ content, format, className, titleSlugMap: propMap }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const basePath = useMemo(() => process.env.NEXT_PUBLIC_BASE_PATH || '', [])
+  // 优先使用传入的映射，否则使用自动生成的默认映射
+  const effectiveMap = propMap ?? defaultTitleSlugMap
   const html = useMemo(() => {
-    // 0. 替换 [[Wiki 链接]]
-    let processed = content
-    if (titleSlugMap) {
-      processed = content.replace(
-        /\[\[([^\]|]+?)(?:\|([^\]|]+?))?\]\]/g,
-        (match, title, label) => {
-          const slug = titleSlugMap[title.trim()]
-          if (!slug) return match
-          const href = slug === 'home' ? `${basePath}/` : `${basePath}/${slug}`
-          return `[${(label || title).trim()}](${href})`
-        },
-      )
-    }
-
     // 1. 确定格式并转 HTML
     const rawHtml =
-      format === 'markdown' || (format !== 'html' && !looksLikeHtml(processed))
-        ? md.render(processed)
-        : processed
+      format === 'markdown' || (format !== 'html' && !looksLikeHtml(content))
+        ? renderClientWithRegistry(content, registry, { highlight: true, texmath: true, anchor: true })
+        : content
 
-    // 2. 渲染 LaTeX
-    const withLatex = renderLatexInHtml(rawHtml)
+    // 2. 替换 Wiki 链接
+    const withLinks = replaceWikiLinks(rawHtml, effectiveMap, basePath)
 
-    // 3. 净化 HTML（仅在浏览器端），剥离 <script>、事件处理器等恶意内容
-    return typeof window !== 'undefined' ? DOMPurify.sanitize(withLatex) : withLatex
-  }, [content, format, titleSlugMap, basePath])
+    return withLinks
+  }, [content, format, effectiveMap, basePath])
 
   // 代码块复制按钮：事件委托
   useEffect(() => {
@@ -94,29 +74,4 @@ export default function WikiContent({ content, format, className, titleSlugMap }
 /** 粗略判断一段文本是不是 HTML（含闭合标签） */
 function looksLikeHtml(text: string): boolean {
   return /<[a-z][\s\S]*>[\s\S]*<\/[a-z]+>/i.test(text)
-}
-
-/**
- * 在 HTML 字符串中查找 $...$ / $$...$$ 并用 KaTeX 替换
- */
-function renderLatexInHtml(html: string): string {
-  // 块级 $$...$$
-  let result = html.replace(/\$\$([\s\S]+?)\$\$/g, (_, tex: string) => {
-    try {
-      return katex.renderToString(tex.trim(), { displayMode: true, throwOnError: false })
-    } catch {
-      return `$${tex}$`
-    }
-  })
-
-  // 行内 $...$（不跨行，避免匹配已渲染的 KaTeX HTML）
-  result = result.replace(/(?<!<[^>]*)\$([^$\n]+?)\$(?![^<]*>)/g, (_, tex: string) => {
-    try {
-      return katex.renderToString(tex.trim(), { displayMode: false, throwOnError: false })
-    } catch {
-      return `$${tex}$`
-    }
-  })
-
-  return result
 }

@@ -8,9 +8,12 @@ import matter from 'gray-matter'
 import katex from 'katex'
 import DOMPurify from 'isomorphic-dompurify'
 import { getTitleToSlugMap } from './navigation'
+import { calloutPlugin, personPlugin } from './md-plugins'
+import { loadRegistry } from './people-server'
 
 export interface PageContent {
   title: string
+  titleHtml: string
   html: string
   /** 原始 Markdown（含 frontmatter），用于客户端原子编辑器 */
   rawContent: string
@@ -59,73 +62,10 @@ const md: MarkdownIt = new MarkdownIt({
   .use(texmath, { engine: katex, delimiters: 'dollars' })
   .use(anchor, { level: [2, 3], permalink: false })
 
-// ---------- Obsidian Callout 插件 ----------
+// ---------- 共享插件（callout + person 引用） ----------
 
-/**
- * 支持：
- *   > [!note]- 标题  → <details> 折叠（默认收起）
- *   > [!success]+ 标题 → <details open> 折叠（默认展开）
- *   > [!warning] 标题 → <div> 始终可见
- *   > [!bug] 标题     → <div> 始终可见
- */
-;(() => {
-  type CalloutMeta = { calloutType: string; folding: string; title: string }
-
-  // === Core Rule（在 inline 解析之前剥离标记行）===
-  md.core.ruler.before('inline', 'callout_marker', (state) => {
-    const tokens = state.tokens
-    for (let i = 0; i < tokens.length; i++) {
-      if (tokens[i].type !== 'blockquote_open') continue
-      for (let j = i + 1; j < tokens.length; j++) {
-        if (tokens[j].type === 'blockquote_close') break
-        if (tokens[j].type === 'inline') {
-          const m = tokens[j].content
-            .match(/^\[!(\w+)]([-+]?)(?:[ \t]+([^\n]*))?(?:\n|$)/)
-          if (m) {
-            ;(tokens[i] as any).meta = {
-              calloutType: m[1].toLowerCase(),
-              folding: m[2],
-              title: (m[3] ?? '').trim(),
-            } satisfies CalloutMeta
-            tokens[j].content = tokens[j].content.slice(m[0].length)
-          }
-          break
-        }
-      }
-    }
-  })
-
-  // === Renderer 覆盖 ===
-  const origOpen = md.renderer.rules.blockquote_open
-  const origClose = md.renderer.rules.blockquote_close
-  const calloutStack: boolean[] = []
-
-  md.renderer.rules.blockquote_open = (tokens, idx, opts, env, self) => {
-    const meta = (tokens[idx] as any).meta as CalloutMeta | undefined
-    if (meta?.calloutType) {
-      const type = md.utils.escapeHtml(meta.calloutType)
-      const folding = meta.folding
-      const title = md.utils.escapeHtml(meta.title)
-      const label = title || type.charAt(0).toUpperCase() + type.slice(1)
-
-      if (folding === '-' || folding === '+') {
-        calloutStack.push(true)
-        const openAttr = folding === '+' ? ' open' : ''
-        return `<details class="callout callout-${type}"${openAttr}><summary>${label}</summary>`
-      }
-      calloutStack.push(false)
-      return `<div class="callout callout-${type}"><div class="callout-header">${label}</div>`
-    }
-    return origOpen ? origOpen(tokens, idx, opts, env, self) : '<blockquote>\n'
-  }
-
-  md.renderer.rules.blockquote_close = (tokens, idx, opts, env, self) => {
-    if (calloutStack.length > 0) {
-      return calloutStack.pop() ? '</details>\n' : '</div>\n'
-    }
-    return origClose ? origClose(tokens, idx, opts, env, self) : '</blockquote>\n'
-  }
-})()
+calloutPlugin(md)
+personPlugin(md, loadRegistry())
 
 const DATA_DIR = path.join(process.cwd(), 'data')
 
@@ -141,11 +81,15 @@ export function getPageContent(slug: string[]): PageContent {
   const mdPath = path.join(DATA_DIR, 'contents', slugPath + '.md')
 
   if (!fs.existsSync(mdPath)) {
-    return { title: '未找到', html: '<p>页面不存在</p>', rawContent: '页面不存在', attributes: {}, headings: [] }
+    return { title: '未找到', titleHtml: '未找到', html: '<p>页面不存在</p>', rawContent: '页面不存在', attributes: {}, headings: [] }
   }
 
   const raw = fs.readFileSync(mdPath, 'utf-8')
   const { data, content } = matter(raw)
+
+  const title = (data.title as string) || slug[slug.length - 1] || '首页'
+  // 通过 markdown-it 渲染标题（支持 [stu:xxx] 等 markdown 语法）
+  const titleHtml = DOMPurify.sanitize(md.renderInline(title)).trim()
 
   // markdown-it 渲染
   let html = md.render(content)
@@ -170,7 +114,8 @@ export function getPageContent(slug: string[]): PageContent {
   const attributes = renderAttributesFromFrontmatter(data)
 
   return {
-    title: (data.title as string) || slug[slug.length - 1] || '首页',
+    title,
+    titleHtml,
     html,
     rawContent: raw,
     attributes,
