@@ -18,6 +18,7 @@ import {
   clearAllNotifications,
   type Notification,
 } from '@/lib/gist-api'
+import { registry } from '@/data/person-registry'
 import styles from '@/styles/auth.module.css'
 import FaIcon from '@/components/FaIcon'
 
@@ -361,10 +362,12 @@ function NotificationBell({ session }: { session: UserSession }) {
             // 论坛通知 → 跳转到 forum/post/{id}?comment={cid}
             const isForum = n.type?.startsWith('forum_')
             const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''
+            // 旧 slug → 新 slug（人物重命名后通知里的旧路径跳转过来不会 404）
+            const page = n.page ? (registry.oldToNewSlug[n.page] ?? n.page) : undefined
             const href = isForum
               ? `${basePath}/forum/post?id=${n.page?.replace('forum/', '') || ''}&comment=${n.comment_id}&_=${Date.now()}`
-              : n.page
-                ? `${basePath}${n.page === 'home' ? '/' : `/${n.page}/`}?comment=${n.comment_id}&_=${Date.now()}`
+              : page
+                ? `${basePath}${page === 'home' ? '/' : `/${page}/`}?comment=${n.comment_id}&_=${Date.now()}`
                 : undefined
 
             let label = '评论'

@@ -59,6 +59,14 @@ export default function ForumPostPage() {
   const [showVisibilityModal, setShowVisibilityModal] = useState(false)
   const [refreshCooldown, setRefreshCooldown] = useState(0)
   const [spinning, setSpinning] = useState(false)
+  const [scrollReady, setScrollReady] = useState(false)
+
+  /** 有 commentId 时：等所有内容（含动态 MarkdownEditor）加载完毕后再跳转 */
+  useEffect(() => {
+    if (loading || !commentId || scrollReady) return
+    const timer = setTimeout(() => setScrollReady(true), 80)
+    return () => clearTimeout(timer)
+  }, [loading, commentId, scrollReady])
 
   /** 全量加载（首次 / 出错时用） */
   const load = useCallback(async () => {
@@ -299,8 +307,8 @@ export default function ForumPostPage() {
               comments={comments}
               onSubmit={handleNewComment}
               onDelete={handleDeleteComment}
-              targetCommentId={commentId}
-              scrollKey={requestKey ? requestKey.length : 0}
+              targetCommentId={scrollReady ? commentId : null}
+              scrollKey={scrollReady ? (requestKey ? requestKey.length : 0) : 0}
             />
           </div>
         )}
