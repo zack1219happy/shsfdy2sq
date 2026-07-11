@@ -9,6 +9,9 @@ const DEST = path.join(__dirname, '..', 'public', 'data')
 
 if (!fs.existsSync(SRC)) process.exit(0)
 
+/** 需排除的图片扩展名（WebP 代替） */
+const IMAGE_EXTS = new Set(['.png', '.jpg', '.jpeg', '.gif'])
+
 function copyDir(src, dest) {
   fs.mkdirSync(dest, { recursive: true })
   let count = 0
@@ -18,6 +21,11 @@ function copyDir(src, dest) {
     if (e.isDirectory()) {
       count += copyDir(s, d)
     } else {
+      // 如果有 .webp 版本，跳过原始图片
+      if (IMAGE_EXTS.has(path.extname(e.name).toLowerCase())) {
+        const webpName = path.basename(e.name, path.extname(e.name)) + '.webp'
+        if (fs.existsSync(path.join(src, webpName))) continue
+      }
       fs.copyFileSync(s, d)
       count++
     }

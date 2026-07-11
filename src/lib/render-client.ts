@@ -203,6 +203,8 @@ export function addImageModalSupport(html: string): string {
     (_match, attrs) => {
       // 防止重复处理
       if (attrs.includes('data-image-modal')) return _match
+      // 替换图片格式为 WebP（convert-images-webp.js 已生成 .webp 副本）
+      attrs = attrs.replace(/\.(png|jpg|jpeg)(\?.*)?(")/gi, '.webp$2')
       // 跳过已含 loading 的图片
       const loadingAttr = attrs.includes('loading=') ? '' : ' loading="lazy"'
       return `<img ${attrs}${loadingAttr} data-image-modal>`

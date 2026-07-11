@@ -40,7 +40,10 @@ export default function RootLayout({
 
   return (
     <html lang="zh-CN" data-scroll-behavior="smooth">
-      <head />
+      <head>
+        <link rel="preconnect" href="https://iiiyoafpzfqxpaqheojg.supabase.co" />
+        <link rel="dns-prefetch" href="https://iiiyoafpzfqxpaqheojg.supabase.co" />
+      </head>
       <body>
         <Sidebar tree={tree} siteTitle={siteTitle} announcement={announcementContent} titleSlugMap={titleSlugMap} />
 

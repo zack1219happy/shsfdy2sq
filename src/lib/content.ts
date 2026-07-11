@@ -173,7 +173,9 @@ function fixImagePaths(html: string, slugPath: string): string {
       if (src.startsWith('http') || src.startsWith('/')) return match
       // 防止路径穿越
       if (src.includes('..')) return match
-      return `<img ${before}src="${assetPrefix}${src}"${after}>`
+      // 优先使用 WebP 格式（convert-images-webp.js 已生成 .webp 副本）
+      const webpSrc = src.replace(/\.(png|jpg|jpeg)(\?.*)?$/i, '.webp')
+      return `<img ${before}src="${assetPrefix}${webpSrc}"${after}>`
     }
   )
 }
