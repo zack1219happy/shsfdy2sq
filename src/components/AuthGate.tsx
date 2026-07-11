@@ -364,7 +364,7 @@ function NotificationBell({ session }: { session: UserSession }) {
             const href = isForum
               ? `${basePath}/forum/post/${n.page?.replace('forum/', '') || ''}?comment=${n.comment_id}&_=${Date.now()}`
               : n.page
-                ? `${basePath}${n.page === 'home' ? '/' : `/${n.page}/`}#comment-${n.comment_id}`
+                ? `${basePath}${n.page === 'home' ? '/' : `/${n.page}/`}?comment=${n.comment_id}&_=${Date.now()}`
                 : undefined
 
             let label = '评论'

@@ -37,9 +37,8 @@ function WikiArticle({ node, slug }: { node: NavNode; slug: string[] }) {
             color: 'var(--color-text)',
             padding: '32px 0 16px',
           }}
-        >
-          {node.title}
-        </h2>
+          dangerouslySetInnerHTML={{ __html: content.titleHtml }}
+        />
 
         <Breadcrumb crumbs={crumbs} />
         <AttributeBox attributes={content.attributes} />

@@ -35,28 +35,21 @@ export default function CommentSection({ pageSlug }: Props) {
 
   const [anchorRequest, setAnchorRequest] = useState<CommentAnchorRequest | null>(null)
 
-  const readCommentAnchor = useCallback(() => {
-    const hash = window.location.hash
-    if (hash.startsWith('#comment-')) {
-      const commentId = hash.substring('#comment-'.length)
-      if (!commentId) return
+  // 从 URL 查询参数 ?comment=xxx 读取目标评论，加载时触发滚动
+  // 不清除参数（通知链接自带 _=timestamp cache buster 确保重复点击生效）
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const commentId = params.get('comment')
+    if (commentId) {
       setAnchorRequest((previous) => ({
         pageSlug,
         commentId,
         nonce: (previous?.nonce ?? 0) + 1,
       }))
-      history.replaceState(null, '', window.location.pathname + window.location.search)
     } else {
       setAnchorRequest(null)
     }
   }, [pageSlug])
-
-  // Read and clear the hash on mount, route changes, and repeat clicks on this page.
-  useEffect(() => {
-    readCommentAnchor()
-    window.addEventListener('hashchange', readCommentAnchor)
-    return () => window.removeEventListener('hashchange', readCommentAnchor)
-  }, [readCommentAnchor])
 
   // 返回 ref 回调：元素进入 DOM 的精确时刻触发滚动 + 高亮
   const anchorRef = useCommentAnchor(styles.highlight, anchorRequest?.nonce ?? 0)

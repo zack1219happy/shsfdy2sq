@@ -1,6 +1,8 @@
 import fs from 'fs'
 import path from 'path'
 import matter from 'gray-matter'
+import { loadRegistry } from './people-server'
+import { resolveText } from './people'
 
 // ============================================================
 //  导航树 —— 自动扫描 data/contents/ 下所有 .md 文件
@@ -35,8 +37,12 @@ function readMeta(filePath: string, fallbackTitle: string): PageMeta {
   try {
     const raw = fs.readFileSync(filePath, 'utf-8')
     const { data } = matter(raw)
+    const rawTitle = (data.title as string)?.trim() || fallbackTitle
+    // 解析 [stu:xxx] / [tch:xxx] 为纯文本缩写供导航显示
+    const registry = loadRegistry()
+    const title = resolveText(rawTitle, registry)
     return {
-      title: (data.title as string)?.trim() || fallbackTitle,
+      title,
       icon: data.icon as string | undefined,
     }
   } catch {

@@ -5,10 +5,10 @@
   "description": "上中初二 Wiki - 班级知识库",
   "scripts": {
     "dev": "next dev",
-    "predev": "node scripts/copy-data-dev.js",
-    "prescan": "node scripts/scan-icons.js",
+    "predev": "node scripts/copy-data-dev.js && node scripts/generate-person-ts.js",
+    "prescan": "node scripts/scan-icons.js && node scripts/generate-person-ts.js",
     "build": "next build",
-    "export": "node scripts/scan-icons.js && cross-env EXPORT=true next build && node scripts/copy-static.js",
+    "export": "node scripts/scan-icons.js && node scripts/generate-person-ts.js && cross-env EXPORT=true next build && node scripts/copy-static.js",
     "start": "next start",
     "lint": "next lint"
   },

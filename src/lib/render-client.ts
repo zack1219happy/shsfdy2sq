@@ -11,6 +11,8 @@ import katex from 'katex'
 import texmath from 'markdown-it-texmath'
 import anchor from 'markdown-it-anchor'
 import DOMPurify from 'dompurify'
+import { calloutPlugin, personPlugin } from './md-plugins'
+import type { PersonRegistry } from './people'
 
 // ============================================================
 // 配置选项
@@ -25,6 +27,8 @@ export interface ClientMdOptions {
   injectLn?: boolean
   /** 启用 heading ID 锚点（默认 false） */
   anchor?: boolean
+  /** Person 注册表，传入则启用 person 引用插件 */
+  personRegistry?: PersonRegistry
 }
 
 // ============================================================
@@ -109,9 +113,11 @@ export function createClientMd(options?: ClientMdOptions): MarkdownIt {
     })
   }
 
-  // ---------- Callout 插件（> [!note] / > [!warning] / > [!bug] 等） ----------
-  // 与服务端 content.ts 实现相同
+  // ---------- 共享插件 ----------
   calloutPlugin(md)
+  if (opts.personRegistry) {
+    personPlugin(md, opts.personRegistry)
+  }
 
   // 缓存单例供 highlight 回调引用
   mdSingleton = md
@@ -136,6 +142,23 @@ export function renderClient(
   sanitize = true,
 ): string {
   const md = createClientMd(options)
+  const raw = md.render(content)
+  if (sanitize && typeof window !== 'undefined') {
+    return DOMPurify.sanitize(raw)
+  }
+  return raw
+}
+
+/**
+ * 渲染 Markdown 为 HTML（同时启用 person 引用插件）
+ */
+export function renderClientWithRegistry(
+  content: string,
+  registry: PersonRegistry,
+  options?: ClientMdOptions,
+  sanitize = true,
+): string {
+  const md = createClientMd({ ...options, personRegistry: registry })
   const raw = md.render(content)
   if (sanitize && typeof window !== 'undefined') {
     return DOMPurify.sanitize(raw)
@@ -170,76 +193,3 @@ export function replaceWikiLinks(
   )
 }
 
-// ============================================================
-// Callout 插件（> [!note] / > [!warning] / > [!success] / > [!bug]）
-// ============================================================
-
-interface CalloutMeta {
-  calloutType: string
-  folding: string
-  title: string
-}
-
-/**
- * markdown-it 插件：将 > [!type] 语法转为 callout div 或 details 折叠框
- * 与服务端 content.ts 实现相同
- */
-function calloutPlugin(md: MarkdownIt): void {
-  // Core Rule：在 inline 解析之前剥离标记行
-  md.core.ruler.before('inline', 'callout_marker', (state) => {
-    const tokens = state.tokens
-    for (let i = 0; i < tokens.length; i++) {
-      if (tokens[i].type !== 'blockquote_open') continue
-      for (let j = i + 1; j < tokens.length; j++) {
-        if (tokens[j].type === 'blockquote_close') break
-        if (tokens[j].type === 'inline') {
-          const m = tokens[j].content.match(
-            /^\[!(\w+)]([-+]?)(?:[ \t]+([^\n]*))?(?:\n|$)/,
-          )
-          if (m) {
-            ;(tokens[i] as any).meta = {
-              calloutType: m[1].toLowerCase(),
-              folding: m[2],
-              title: (m[3] ?? '').trim(),
-            } satisfies CalloutMeta
-            tokens[j].content = tokens[j].content.slice(m[0].length)
-          }
-          break
-        }
-      }
-    }
-  })
-
-  // Renderer 覆盖
-  const origOpen = md.renderer.rules.blockquote_open
-  const origClose = md.renderer.rules.blockquote_close
-  const calloutStack: boolean[] = []
-
-  md.renderer.rules.blockquote_open = (tokens, idx, opts, env, self) => {
-    const meta = (tokens[idx] as any).meta as CalloutMeta | undefined
-    if (meta?.calloutType) {
-      const type = md.utils.escapeHtml(meta.calloutType)
-      const folding = meta.folding
-      const title = md.utils.escapeHtml(meta.title)
-      const label = title || type.charAt(0).toUpperCase() + type.slice(1)
-
-      if (folding === '-' || folding === '+') {
-        calloutStack.push(true)
-        const openAttr = folding === '+' ? ' open' : ''
-        return `<details class="callout callout-${type}"${openAttr}><summary>${label}</summary>`
-      }
-      calloutStack.push(false)
-      return `<div class="callout callout-${type}"><div class="callout-header">${label}</div>`
-    }
-    return origOpen ? origOpen(tokens, idx, opts, env, self) : '<blockquote>\n'
-  }
-
-  md.renderer.rules.blockquote_close = (tokens, idx, opts, env, self) => {
-    if (calloutStack.length > 0) {
-      return calloutStack.pop() ? '</details>\n' : '</div>\n'
-    }
-    return origClose
-      ? origClose(tokens, idx, opts, env, self)
-      : '</blockquote>\n'
-  }
-}

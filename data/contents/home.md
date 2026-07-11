@@ -18,8 +18,8 @@ attributes:
 如果你的网络无法访问 Github，下载这个可能能解决问题：[Dev-SideCar](https://ghproxy.net/https://github.com/docmirror/dev-sidecar/releases/download/v2.2.0/DevSidecar-2.2.0-windows-x86_64.exe)（注：下载前请谨慎核实内容确定你需要，本网站不因下载或使用这个文件造成的任何损失负责）。
 
 > [!note] 管理员名单
-> - zack1219happy：项目的发起者，拥有 ~1 年的 coding 经验，**不**擅长编写 html+css+javascript 的传统网页。我们的[[王梓]]~~大佬~~ 菜鸟！
-> - Irade-tqy：~~只会让~~能够自由支配 AI 写代码的~~蒟蒻~~大佬[[童麒宇]]！
+> - zack1219happy：项目的发起者，拥有 ~1 年的 coding 经验，**不**擅长编写 html+css+javascript 的传统网页。我们的[[stu:wz]]~~大佬~~ 菜鸟！
+> - Irade-tqy：~~只会让~~能够自由支配 AI 写代码的~~蒟蒻~~大佬[[stu:tqy]]！
 
 ### 内容分类
 

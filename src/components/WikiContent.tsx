@@ -1,7 +1,8 @@
 'use client'
 
 import { useMemo, useRef, useEffect } from 'react'
-import { renderClient, replaceWikiLinks } from '@/lib/render-client'
+import { renderClientWithRegistry, replaceWikiLinks } from '@/lib/render-client'
+import { registry } from '@/data/person-registry'
 
 interface Props {
   /** 原始内容（markdown 或 HTML） */
@@ -29,7 +30,7 @@ export default function WikiContent({ content, format, className, titleSlugMap }
     // 1. 确定格式并转 HTML
     const rawHtml =
       format === 'markdown' || (format !== 'html' && !looksLikeHtml(content))
-        ? renderClient(content, { highlight: true, texmath: true, anchor: true })
+        ? renderClientWithRegistry(content, registry, { highlight: true, texmath: true, anchor: true })
         : content
 
     // 2. 替换 Wiki 链接
