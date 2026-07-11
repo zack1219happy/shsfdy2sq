@@ -27,7 +27,7 @@ export default function NoticeNav({ collapsed }: Props) {
             className={styles.nodeContent}
             style={{ paddingLeft: `${8 + (collapsed ? 0 : 0)}px`, textDecoration: 'none', color: 'inherit' }}
           >
-            <span className={styles.spacer} />
+            {!collapsed && <span className={styles.spacer} />}
             <FaIcon name={entry.icon} className={styles.treeIcon} title={collapsed ? entry.label : undefined} />
             {!collapsed && <span className={styles.treeTitle}>{entry.label}</span>}
           </Link>

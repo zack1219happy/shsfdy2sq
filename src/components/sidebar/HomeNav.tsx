@@ -29,7 +29,7 @@ export default function HomeNav({ collapsed }: Props) {
               color: 'inherit',
             }}
           >
-            <span className={styles.spacer} />
+            {!collapsed && <span className={styles.spacer} />}
             <FaIcon name={entry.icon} className={styles.treeIcon} title={collapsed ? entry.label : undefined} />
             {!collapsed && <span className={styles.treeTitle}>{entry.label}</span>}
           </Link>

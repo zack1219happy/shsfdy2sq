@@ -35,7 +35,14 @@
 
 .headerCollapsed {
   justify-content: center;
-  padding: 12px 8px;
+  padding: 20px 0 4px;
+}
+
+.collapsedHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
 }
 
 .header h1 {
@@ -103,7 +110,7 @@
 }
 
 .treeCollapsed {
-  padding: 8px 4px;
+  padding: 2px 4px;
   display: flex;
   flex-direction: column;
   align-items: center;

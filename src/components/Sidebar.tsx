@@ -122,13 +122,18 @@ export default function Sidebar({ tree, siteTitle }: Props) {
       >
         <div className={`${styles.header} ${collapsed ? styles.headerCollapsed : ''}`}>
           {collapsed ? (
-            <button
-              className={styles.toggleBtn}
-              onClick={() => setCollapsed(false)}
-              aria-label="展开侧边栏"
-            >
-              <FaIcon name="bars" />
-            </button>
+            <div className={styles.collapsedHeader}>
+              <button
+                className={styles.toggleBtn}
+                onClick={() => setCollapsed(false)}
+                aria-label="展开侧边栏"
+              >
+                <FaIcon name="bars" />
+              </button>
+              <Link href="/" aria-label="首页">
+                <img src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/logo.png`} alt="" className={styles.siteIcon} />
+              </Link>
+            </div>
           ) : (
             <>
               <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', color: 'inherit' }}>

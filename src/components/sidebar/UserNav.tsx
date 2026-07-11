@@ -20,7 +20,7 @@ export default function UserNav({ collapsed }: Props) {
           className={styles.nodeContent}
           style={{ paddingLeft: `${8 + (collapsed ? 0 : 0)}px`, textDecoration: 'none', color: 'inherit' }}
         >
-          <span className={styles.spacer} />
+          {!collapsed && <span className={styles.spacer} />}
           <FaIcon name="user" className={styles.treeIcon} title={collapsed ? '账号设置' : undefined} />
           {!collapsed && <span className={styles.treeTitle}>账号设置</span>}
         </Link>
