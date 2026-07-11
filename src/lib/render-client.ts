@@ -6,7 +6,26 @@
    ============================================ */
 
 import MarkdownIt from 'markdown-it'
-import hljs from 'highlight.js'
+// 只注册需要用到的语言，大幅减小 bundle
+import hljs from 'highlight.js/lib/core'
+import bash from 'highlight.js/lib/languages/bash'
+import markdown from 'highlight.js/lib/languages/markdown'
+import python from 'highlight.js/lib/languages/python'
+import cpp from 'highlight.js/lib/languages/cpp'
+import javascript from 'highlight.js/lib/languages/javascript'
+import rust from 'highlight.js/lib/languages/rust'
+import css from 'highlight.js/lib/languages/css'
+import xml from 'highlight.js/lib/languages/xml' // HTML 在 highlight.js 里是 xml
+
+hljs.registerLanguage('bash', bash)
+hljs.registerLanguage('markdown', markdown)
+hljs.registerLanguage('python', python)
+hljs.registerLanguage('cpp', cpp)
+hljs.registerLanguage('javascript', javascript)
+hljs.registerLanguage('rust', rust)
+hljs.registerLanguage('css', css)
+hljs.registerLanguage('html', xml)              // ```html 映射到 xml 高亮器
+hljs.registerLanguage('xml', xml)               // 完整支持
 import katex from 'katex'
 import texmath from 'markdown-it-texmath'
 import anchor from 'markdown-it-anchor'
