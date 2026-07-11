@@ -1,14 +1,27 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { forwardRef, useCallback, useEffect, useMemo, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { fetchPageComments, addComment, deleteComment } from '@/lib/gist-api'
 import { getSession } from '@/lib/auth'
 import type { Comment } from '@/types/gist'
 import WikiContent from '@/components/WikiContent'
+import { useCommentAnchor } from '@/hooks/useCommentAnchor'
 import styles from '@/styles/comment.module.css'
+
+const MarkdownEditor = dynamic(
+  () => import('@/components/MarkdownEditor').then((m) => m.MarkdownEditor),
+  { ssr: false },
+)
 
 interface Props {
   pageSlug: string
+}
+
+interface CommentAnchorRequest {
+  pageSlug: string
+  commentId: string
+  nonce: number
 }
 
 /* ==============================================================
@@ -20,33 +33,35 @@ export default function CommentSection({ pageSlug }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [replyTarget, setReplyTarget] = useState<{ id: string; author: string } | null>(null)
 
-  // 保存要跳转的评论 ID（挂载时立即清除 hash，避开异步 timing 问题）
-  const commentTargetRef = useRef<string | null>(null)
+  const [anchorRequest, setAnchorRequest] = useState<CommentAnchorRequest | null>(null)
 
-  // 挂载时立即清除 #comment- hash，目标 ID 存下来供后续滚动
-  useEffect(() => {
+  const readCommentAnchor = useCallback(() => {
     const hash = window.location.hash
     if (hash.startsWith('#comment-')) {
-      commentTargetRef.current = hash.substring(1)
+      const commentId = hash.substring('#comment-'.length)
+      if (!commentId) return
+      setAnchorRequest((previous) => ({
+        pageSlug,
+        commentId,
+        nonce: (previous?.nonce ?? 0) + 1,
+      }))
       history.replaceState(null, '', window.location.pathname + window.location.search)
+    } else {
+      setAnchorRequest(null)
     }
-  }, [])
+  }, [pageSlug])
 
-  // 评论加载完成后滚动到目标评论
+  // Read and clear the hash on mount, route changes, and repeat clicks on this page.
   useEffect(() => {
-    if (loading || !commentTargetRef.current) return
-    const id = commentTargetRef.current
-    commentTargetRef.current = null // 只滚动一次
+    readCommentAnchor()
+    window.addEventListener('hashchange', readCommentAnchor)
+    return () => window.removeEventListener('hashchange', readCommentAnchor)
+  }, [readCommentAnchor])
 
-    requestAnimationFrame(() => {
-      const el = document.getElementById(id)
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        el.classList.add(styles.highlight)
-        setTimeout(() => el.classList.remove(styles.highlight), 2500)
-      }
-    })
-  }, [loading])
+  // 返回 ref 回调：元素进入 DOM 的精确时刻触发滚动 + 高亮
+  const anchorRef = useCommentAnchor(styles.highlight, anchorRequest?.nonce ?? 0)
+
+  const currentCommentId = anchorRequest?.pageSlug === pageSlug ? anchorRequest.commentId : null
 
   useEffect(() => {
     let cancelled = false
@@ -196,7 +211,13 @@ export default function CommentSection({ pageSlug }: Props) {
             return (
               <div key={top.id} className={styles.topGroup}>
                 {/* 顶层评论卡片 */}
-                <CommentCard comment={top} onReply={handleReplyClick} canDelete={canDelete(top.userId)} onDelete={handleDelete} />
+                <CommentCard
+                  ref={top.id === currentCommentId ? anchorRef : undefined}
+                  comment={top}
+                  onReply={handleReplyClick}
+                  canDelete={canDelete(top.userId)}
+                  onDelete={handleDelete}
+                />
 
                 {/* 扁平回复列表 */}
                 {replies.length > 0 && (
@@ -204,6 +225,7 @@ export default function CommentSection({ pageSlug }: Props) {
                     {replies.map((r) => (
                       <UnifiedReply
                         key={r.comment.id}
+                        ref={r.comment.id === currentCommentId ? anchorRef : undefined}
                         comment={r.comment}
                         parentAuthor={r.parentAuthor}
                         parentColor={r.parentColor}
@@ -224,7 +246,7 @@ export default function CommentSection({ pageSlug }: Props) {
 }
 
 /* ==============================================================
-   CommentForm — 评论输入框（含回复标签）
+   CommentForm — 评论输入框（含回复标签 + MarkdownEditor）
    ============================================================== */
 function CommentForm({
   onSubmit,
@@ -243,8 +265,7 @@ function CommentForm({
   const author = session?.username || '匿名'
   const userId = session?.userId
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async () => {
     if (!content.trim()) return
     setSubmitting(true)
     try {
@@ -258,7 +279,7 @@ function CommentForm({
   }
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit}>
+    <div className={styles.form}>
       {replyTarget && (
         <div className={styles.replyTag}>
           <span>
@@ -270,44 +291,36 @@ function CommentForm({
         </div>
       )}
 
-      <div className={styles.field}>
-        <label htmlFor="comment-content">
-          {replyTarget ? `回复 ${replyTarget.author}：` : `评论（@${author}）：`}
-        </label>
-        <textarea
-          id="comment-content"
-          required
+      <div className={styles.editorWrap}>
+        <MarkdownEditor
           value={content}
-          onChange={(e) => setContent(e.target.value)}
-          maxLength={2000}
+          onChange={setContent}
+          config={{ preview: false, fullScreen: false, scrollSync: false }}
+          className={styles.editorWrapInner}
         />
       </div>
-      <button className={styles.submitBtn} type="submit" disabled={submitting || !content.trim()}>
-        {submitting ? '提交中…' : '发表评论'}
+
+      <button className={styles.submitBtn} type="button" onClick={handleSubmit} disabled={submitting || !content.trim()}>
+        {submitting ? '提交中…' : replyTarget ? '回复' : '发表评论'}
       </button>
-    </form>
+    </div>
   )
 }
 
 /* ==============================================================
    CommentCard — 顶层评论卡片
    ============================================================== */
-function CommentCard({
-  comment,
-  onReply,
-  canDelete,
-  onDelete,
-}: {
+const CommentCard = forwardRef<HTMLDivElement, {
   comment: Comment
   onReply: (id: string, author: string) => void
   canDelete: boolean
   onDelete: (id: string) => void
-}) {
+}>(function CommentCard({ comment, onReply, canDelete, onDelete }, ref) {
   if (comment.deleted) {
     return (
-      <div className={`${styles.comment} ${styles.commentDeleted}`} id={`comment-${comment.id}`}>
+      <div ref={ref} className={`${styles.comment} ${styles.commentDeleted}`} id={`comment-${comment.id}`}>
         <div className={styles.commentMeta}>
-          <span className={`${styles.commentAuthor} ${getAuthorColor(comment.authorColor)}`}>{comment.author}</span>
+          <span className={`${styles.commentAuthor} ${getAuthorColor(comment.authorColor, comment.author)}`}>{comment.author}</span>
           <span className={styles.deletedLabel}>该评论已被删除</span>
           <span className={styles.commentDate}>{formatDate(comment.date)}</span>
         </div>
@@ -316,9 +329,9 @@ function CommentCard({
   }
 
   return (
-    <div className={styles.comment} id={`comment-${comment.id}`}>
+    <div ref={ref} className={styles.comment} id={`comment-${comment.id}`}>
       <div className={styles.commentMeta}>
-        <span className={`${styles.commentAuthor} ${getAuthorColor(comment.authorColor)}`}>{comment.author}</span>
+        <span className={`${styles.commentAuthor} ${getAuthorColor(comment.authorColor, comment.author)}`}>{comment.author}</span>
         {canDelete && (
           <button
             className={styles.deleteBtn}
@@ -345,31 +358,24 @@ function CommentCard({
       </div>
     </div>
   )
-}
+})
 
 /* ==============================================================
    UnifiedReply — 所有回复统一格式（两行：meta + 多行内容）
    ============================================================== */
-function UnifiedReply({
-  comment,
-  parentAuthor,
-  parentColor,
-  onReply,
-  canDelete,
-  onDelete,
-}: {
+const UnifiedReply = forwardRef<HTMLDivElement, {
   comment: Comment
   parentAuthor?: string
   parentColor?: string
   onReply: (id: string, author: string) => void
   canDelete: boolean
   onDelete: (id: string) => void
-}) {
+}>(function UnifiedReply({ comment, parentAuthor, parentColor, onReply, canDelete, onDelete }, ref) {
   if (comment.deleted) {
     return (
-      <div className={`${styles.unifiedReply} ${styles.commentDeleted}`} id={`comment-${comment.id}`}>
+      <div ref={ref} className={`${styles.unifiedReply} ${styles.commentDeleted}`} id={`comment-${comment.id}`}>
         <div className={styles.replyMeta}>
-          <span className={`${styles.replyAuthor} ${getAuthorColor(comment.authorColor)}`}>{comment.author}</span>
+          <span className={`${styles.replyAuthor} ${getAuthorColor(comment.authorColor, comment.author)}`}>{comment.author}</span>
           <span className={styles.replyVerb}> 回复 </span>
           <span className={`${styles.replyTarget} ${getAuthorColor(parentColor)}`}>{parentAuthor ?? '未知'}</span>
           <span className={styles.deletedLabel}>该评论已被删除</span>
@@ -380,9 +386,9 @@ function UnifiedReply({
   }
 
   return (
-    <div className={styles.unifiedReply} id={`comment-${comment.id}`}>
+    <div ref={ref} className={styles.unifiedReply} id={`comment-${comment.id}`}>
       <div className={styles.replyMeta}>
-        <span className={`${styles.replyAuthor} ${getAuthorColor(comment.authorColor)}`}>{comment.author}</span>
+        <span className={`${styles.replyAuthor} ${getAuthorColor(comment.authorColor, comment.author)}`}>{comment.author}</span>
         <span className={styles.replyVerb}> 回复 </span>
         <span className={`${styles.replyTarget} ${getAuthorColor(parentColor)}`}>{parentAuthor ?? '未知'}</span>
         {canDelete && (
@@ -411,13 +417,20 @@ function UnifiedReply({
       </div>
     </div>
   )
-}
+})
 
 /* ==============================================================
    工具函数
    ============================================================== */
-/** 根据颜色字面值返回 CSS 颜色类名 */
-function getAuthorColor(color?: string): string {
+/** 根据颜色字面值或用户名返回 CSS 颜色类名 */
+function getAuthorColor(color?: string, username?: string): string {
+  // 优先按用户名匹配（数据库可能没有 author_color 值）
+  switch (username) {
+    case 'tqy': return styles.colorTqy
+    case 'zyj': return styles.colorZyj
+    case 'DouDou': return styles.colorDouDou
+  }
+  // 回退：按 DB 存储的 color 值匹配
   switch (color) {
     case 'rainbow': return styles.colorWz
     case '#1a73e8': return styles.colorTqy
@@ -441,8 +454,3 @@ function formatDate(iso: string): string {
     return iso
   }
 }
-
-
-
-
-

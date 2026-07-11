@@ -201,6 +201,19 @@ export default function Sidebar({ tree, siteTitle, announcement, titleSlugMap }:
 
         <ul className={`${styles.tree} ${collapsed ? styles.treeCollapsed : ''}`}>
           {tree.map((node) => renderNode(node, 0))}
+
+          {/* 讨论区链接（硬编码，非 wiki 页面） */}
+          <li key="forum" className={styles.treeNode}>
+            <Link
+              href="/forum"
+              className={`${styles.nodeContent} ${activePathKey === 'forum' ? styles.active : ''}`}
+              style={{ paddingLeft: `${8 + (collapsed ? 0 : 0)}px`, textDecoration: 'none', color: 'inherit' }}
+            >
+              <span className={styles.spacer} />
+              <FaIcon name="comments" className={styles.treeIcon} title={collapsed ? '讨论区' : undefined} />
+              {!collapsed && <span className={styles.treeTitle}>讨论区</span>}
+            </Link>
+          </li>
         </ul>
 
         {!collapsed && <Announcement initialContent={announcement} titleSlugMap={titleSlugMap} />}

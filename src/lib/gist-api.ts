@@ -1,7 +1,7 @@
 'use client'
 
 import { supabase } from './supabase'
-import type { Comment, CommentsData } from '@/types/gist'
+import type { Comment, CommentsData, ForumPost, ForumComment, NotificationType } from '@/types/gist'
 
 function mapComment(raw: Record<string, unknown>): Comment {
   return {
@@ -87,12 +87,16 @@ export interface Notification {
   read: boolean
   created_at: string
   comment_id: string
+  type: NotificationType
 }
 
 export async function fetchNotifications(): Promise<Notification[]> {
   const { data, error } = await supabase.rpc('get_notifications')
   if (error) throw new Error('获取通知失败: ' + error.message)
-  return (data ?? []) as Notification[]
+  return ((data ?? []) as Notification[]).map((n: any) => ({
+    ...n,
+    type: n.type ?? 'comment_reply',
+  }))
 }
 
 export async function getUnreadCount(): Promise<number> {
@@ -118,4 +122,83 @@ export async function deleteComment(commentId: string): Promise<boolean> {
 export async function updateCommentStatus(id: string, status: 'pending' | 'approved' | 'rejected'): Promise<void> {
   const { error } = await supabase.rpc('update_comment_status', { p_comment_id: id, p_status: status })
   if (error) throw new Error('更新失败: ' + error.message)
+}
+
+/* =============================================================
+   Forum API — 讨论区操作
+   ============================================================= */
+
+export async function fetchForumPosts(): Promise<ForumPost[]> {
+  const { data, error } = await supabase.rpc('get_forum_posts')
+  if (error) throw new Error('获取帖子列表失败: ' + error.message)
+  return (data ?? []) as ForumPost[]
+}
+
+export async function fetchForumPost(postId: string): Promise<ForumPost | null> {
+  const { data, error } = await supabase.rpc('get_forum_post', { p_post_id: postId })
+  if (error) throw new Error('获取帖子失败: ' + error.message)
+  return (data ?? [])[0] ?? null
+}
+
+export async function createForumPost(title: string, content: string): Promise<string> {
+  const { data, error } = await supabase.rpc('create_forum_post', {
+    p_title: title.trim(),
+    p_content: content.trim(),
+  })
+  if (error) throw new Error('发帖失败: ' + error.message)
+  return data as string
+}
+
+export async function fetchForumComments(postId: string): Promise<ForumComment[]> {
+  const { data, error } = await supabase.rpc('get_forum_comments', { p_post_id: postId })
+  if (error) throw new Error('获取评论失败: ' + error.message)
+  return ((data ?? []) as ForumComment[]).map((c: any) => ({ ...c, deleted: !!c.deleted }))
+}
+
+export async function addForumComment(
+  postId: string,
+  content: string,
+  parentId?: string,
+): Promise<string> {
+  const { data, error } = await supabase.rpc('add_forum_comment', {
+    p_post_id: postId,
+    p_content: content.trim(),
+    p_parent_id: parentId || null,
+  })
+  if (error) throw new Error('评论失败: ' + error.message)
+  return data as string
+}
+
+export async function voteForumPost(postId: string, voteType: 'up' | 'down'): Promise<void> {
+  const { error } = await supabase.rpc('vote_forum_post', {
+    p_post_id: postId,
+    p_vote_type: voteType,
+  })
+  if (error) throw new Error('投票失败: ' + error.message)
+}
+
+export async function removeForumVote(postId: string): Promise<void> {
+  const { error } = await supabase.rpc('remove_forum_vote', { p_post_id: postId })
+  if (error) throw new Error('取消投票失败: ' + error.message)
+}
+
+export async function getUserForumVote(postId: string): Promise<string | null> {
+  const { data, error } = await supabase.rpc('get_user_forum_vote', { p_post_id: postId })
+  if (error) return null
+  return data as string | null
+}
+
+export async function updateForumPost(postId: string, title: string, content: string): Promise<void> {
+  const { error } = await supabase.rpc('update_forum_post', {
+    p_post_id: postId,
+    p_title: title.trim(),
+    p_content: content.trim(),
+  })
+  if (error) throw new Error('编辑失败: ' + error.message)
+}
+
+export async function deleteForumComment(commentId: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc('delete_forum_comment', { p_comment_id: commentId })
+  if (error) throw new Error('删除失败: ' + error.message)
+  return !!data
 }

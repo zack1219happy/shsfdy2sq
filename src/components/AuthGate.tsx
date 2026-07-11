@@ -357,19 +357,36 @@ function NotificationBell({ session }: { session: UserSession }) {
             )}
           </div>
           {notifs.length === 0 && <div className={styles.notifEmpty}>暂无通知</div>}
-          {notifs.map(n => (
-            <a
-              key={n.id}
-              className={`${styles.notifItem} ${n.read ? styles.notifRead : ''}`}
-              href={n.page
-                ? `${process.env.NEXT_PUBLIC_BASE_PATH || ''}${n.page === 'home' ? '/' : `/${n.page}/`}#comment-${n.comment_id}`
-                : undefined}
-              onClick={() => handleClick(n.id)}
-            >
-              <span className={styles.notifFrom}>{n.from_username ?? '匿名'}</span>
-              <span className={styles.notifText}>{n.excerpt ?? ''}</span>
-            </a>
-          ))}
+          {notifs.map(n => {
+            // 论坛通知 → 跳转到 forum/post/{id}?comment={cid}
+            const isForum = n.type?.startsWith('forum_')
+            const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''
+            const href = isForum
+              ? `${basePath}/forum/post/${n.page?.replace('forum/', '') || ''}?comment=${n.comment_id}&_=${Date.now()}`
+              : n.page
+                ? `${basePath}${n.page === 'home' ? '/' : `/${n.page}/`}#comment-${n.comment_id}`
+                : undefined
+
+            let label = '评论'
+            if (n.type === 'forum_reply') label = '论坛回复'
+            else if (n.type === 'forum_own_post') label = '帖子动态'
+            else if (n.type === 'forum_post_update') label = '关注更新'
+
+            return (
+              <a
+                key={n.id}
+                className={`${styles.notifItem} ${n.read ? styles.notifRead : ''}`}
+                href={href}
+                onClick={() => handleClick(n.id)}
+              >
+                <span className={styles.notifFrom}>
+                  {n.from_username ?? '匿名'}
+                  <span className={styles.notifType}>{label}</span>
+                </span>
+                <span className={styles.notifText}>{n.excerpt ?? ''}</span>
+              </a>
+            )
+          })}
         </div>
       )}
     </div>

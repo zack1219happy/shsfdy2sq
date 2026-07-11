@@ -396,8 +396,20 @@
   font-weight: 600;
   font-size: 0.85rem;
   color: var(--color-text);
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   margin-bottom: 2px;
+}
+
+.notifType {
+  font-weight: 400;
+  font-size: 0.72rem;
+  color: var(--color-primary);
+  background: var(--color-active-bg);
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
 }
 
 .notifText {
