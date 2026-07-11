@@ -9,7 +9,8 @@ import { renderClient } from '@/lib/render-client'
 import { getSession } from '@/lib/auth'
 import { fetchForumPosts } from '@/lib/gist-api'
 import type { ForumPost } from '@/types/gist'
-import { formatDate, getAuthorColor } from '@/lib/forum'
+import { formatDate } from '@/lib/forum'
+import { UserName } from '@/components/UserName'
 import styles from '@/styles/forum.module.css'
 
 /* ==============================================================
@@ -119,9 +120,7 @@ function PostCard({ post, onClick }: { post: ForumPost; onClick: () => void }) {
       onKeyDown={(e) => { if (e.key === 'Enter') onClick() }}>
       <div className={styles.postTitle} dangerouslySetInnerHTML={{ __html: renderClient(post.title) }} />
       <div className={styles.postMeta}>
-        <span className={`${styles.postAuthor} ${getAuthorColor(post.author_color, post.author_username, styles as any)}`}>
-          {post.author_username}
-        </span>
+        <UserName username={post.author_username} className={styles.postAuthor} />
         <span>{formatDate(post.created_at)}</span>
         <div className={styles.postStats}>
           <span className={styles.statBadge}>

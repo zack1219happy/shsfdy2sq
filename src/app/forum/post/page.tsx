@@ -19,8 +19,10 @@ import {
 } from '@/lib/gist-api'
 import ForumCommentSection from '@/components/ForumCommentSection'
 import type { ForumPost, ForumComment, UserInfo } from '@/types/gist'
-import { formatDate, getAuthorColor } from '@/lib/forum'
+import { formatDate } from '@/lib/forum'
+import { UserName } from '@/components/UserName'
 import { registry } from '@/data/person-registry'
+import { showWarningToast } from '@/lib/toast'
 import styles from '@/styles/forum.module.css'
 
 /** 从 person-registry 查找姓名对应的拼音首字母缩写 */
@@ -113,6 +115,13 @@ export default function ForumPostPage() {
 
   useEffect(() => { load() }, [load])
 
+  /** 如果 URL 带 ?comment=xxx 但评论不存在或已被删除，显示警告 */
+  useEffect(() => {
+    if (loading || !commentId) return
+    const match = comments.find((c) => c.id === commentId)
+    if (!match || match.deleted) showWarningToast('该评论可能已被删除')
+  }, [loading, commentId, comments])
+
   const handleVote = async (type: 'up' | 'down') => {
     if (!post) return
     // 乐观更新：立即反映 UI
@@ -186,7 +195,8 @@ export default function ForumPostPage() {
     try {
       const { deleteForumComment } = await import('@/lib/gist-api')
       await deleteForumComment(commentId)
-      refreshCommentsOnly()
+      // 同时刷新评论和帖子（评论数更新）
+      await Promise.all([refreshCommentsOnly(), refreshPostOnly()])
     } catch (e: any) { setError(e.message) }
   }
 
@@ -243,9 +253,7 @@ export default function ForumPostPage() {
             </div>
           </div>
           <div className={styles.detailMeta}>
-            <span className={`${styles.detailAuthor} ${getAuthorColor(post.author_color, post.author_username, styles as any)}`}>
-              {post.author_username}
-            </span>
+            <UserName username={post.author_username} className={styles.detailAuthor} />
             <span>发布于 {formatDate(post.created_at)}</span>
             {post.updated_at !== post.created_at && (
               <span>编辑于 {formatDate(post.updated_at)}</span>
@@ -416,7 +424,7 @@ function VisibilityModal({ allUsers, usersLoading, excludedIds, onToggle, onClos
                   <label key={u.id} className={styles.visibilityModalItem}>
                     <span className={styles.visibilityModalName}>
                       <span className={styles.visibilityModalInitials}>{getPinyinInitials(u.name)}</span>
-                      <span className={styles.visibilityModalUsername}>@{u.username}</span>
+                      <span className={styles.visibilityModalUsername}>@<UserName username={u.username} /></span>
                     </span>
                     <div
                       className={`${styles.toggleSwitch} ${selected ? styles.toggleOn : ''}`}

@@ -49,6 +49,7 @@ export interface UserInfo {
   username: string
   name: string
   student_id?: string
+  color?: string | null
 }
 
 export interface ForumComment {

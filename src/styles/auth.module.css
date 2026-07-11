@@ -392,6 +392,15 @@
   opacity: 0.5;
 }
 
+.notifDeleted {
+  opacity: 0.4;
+  font-style: italic;
+}
+
+.notifDeleted .notifText {
+  color: var(--color-text-light);
+}
+
 .notifFrom {
   font-weight: 600;
   font-size: 0.85rem;

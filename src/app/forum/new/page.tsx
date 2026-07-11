@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic'
 import FaIcon from '@/components/FaIcon'
 import { getSession } from '@/lib/auth'
 import { createForumPost, fetchAllUsers } from '@/lib/gist-api'
+import { UserName } from '@/components/UserName'
 import type { UserInfo } from '@/types/gist'
 import { registry } from '@/data/person-registry'
 import styles from '@/styles/forum.module.css'
@@ -257,7 +258,7 @@ function VisibilityModal({
                   <label key={u.id} className={styles.visibilityModalItem}>
                     <span className={styles.visibilityModalName}>
                       <span className={styles.visibilityModalInitials}>{getPinyinInitials(u.name)}</span>
-                      <span className={styles.visibilityModalUsername}>@{u.username}</span>
+                      <span className={styles.visibilityModalUsername}>@<UserName username={u.username} /></span>
                     </span>
                     <div
                       className={`${styles.toggleSwitch} ${excluded ? styles.toggleOn : ''}`}
