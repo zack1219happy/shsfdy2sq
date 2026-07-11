@@ -1,7 +1,7 @@
 .toc {
   position: fixed;
   right: 24px;
-  top: 84px;
+  top: 76px;
   width: 240px;
   background: var(--color-toc-bg);
   border-radius: 6px;
