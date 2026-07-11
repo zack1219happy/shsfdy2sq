@@ -172,6 +172,7 @@ export function renderClientWithRegistry(
 
 /**
  * 替换 [[Wiki 链接]] 为 <a> 标签
+ * 跳过 <code>、<pre> 内的内容（行内代码/代码块）
  * 需传入标题→slug 映射表
  */
 export function replaceWikiLinks(
@@ -182,14 +183,22 @@ export function replaceWikiLinks(
   if (!titleSlugMap) return html
   const bp = basePath || ''
 
-  return html.replace(
-    /\[\[([^\]|]+?)(?:\|([^\]|]+?))?\]\]/g,
-    (_match, title, label) => {
-      const slug = titleSlugMap[title.trim()]
-      if (!slug) return _match
-      const href = slug === 'home' ? `${bp}/` : `${bp}/${slug}`
-      return `<a href="${href}" class="wiki-link">${(label || title).trim()}</a>`
-    },
-  )
+  // 将 HTML 按 <code> 和 <pre> 分割，只处理纯文本段
+  const parts = html.split(/(<code[^>]*>[\s\S]*?<\/code>|<pre[^>]*>[\s\S]*?<\/pre>)/gi)
+  return parts
+    .map((part, i) => {
+      // 奇数索引是 code/pre 块，跳过
+      if (i % 2 === 1) return part
+      return part.replace(
+        /\[\[([^\]|]+?)(?:\|([^\]|]+?))?\]\]/g,
+        (_match, title, label) => {
+          const slug = titleSlugMap[title.trim()]
+          if (!slug) return _match
+          const href = slug === 'home' ? `${bp}/` : `${bp}/${slug}`
+          return `<a href="${href}" class="wiki-link">${(label || title).trim()}</a>`
+        },
+      )
+    })
+    .join('')
 }
 

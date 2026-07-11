@@ -1,7 +1,7 @@
 'use client'
 
 import { supabase } from './supabase'
-import type { Comment, CommentsData, ForumPost, ForumComment, NotificationType } from '@/types/gist'
+import type { Comment, CommentsData, ForumPost, ForumComment, NotificationType, UserInfo } from '@/types/gist'
 
 function mapComment(raw: Record<string, unknown>): Comment {
   return {
@@ -140,10 +140,11 @@ export async function fetchForumPost(postId: string): Promise<ForumPost | null> 
   return (data ?? [])[0] ?? null
 }
 
-export async function createForumPost(title: string, content: string): Promise<string> {
+export async function createForumPost(title: string, content: string, excludedVisibility?: string[]): Promise<string> {
   const { data, error } = await supabase.rpc('create_forum_post', {
     p_title: title.trim(),
     p_content: content.trim(),
+    p_excluded_visibility: excludedVisibility && excludedVisibility.length > 0 ? excludedVisibility : [],
   })
   if (error) throw new Error('发帖失败: ' + error.message)
   return data as string
@@ -188,11 +189,12 @@ export async function getUserForumVote(postId: string): Promise<string | null> {
   return data as string | null
 }
 
-export async function updateForumPost(postId: string, title: string, content: string): Promise<void> {
+export async function updateForumPost(postId: string, title: string, content: string, excludedVisibility?: string[] | null): Promise<void> {
   const { error } = await supabase.rpc('update_forum_post', {
     p_post_id: postId,
     p_title: title.trim(),
     p_content: content.trim(),
+    p_excluded_visibility: excludedVisibility !== undefined ? (excludedVisibility ?? []) : null,
   })
   if (error) throw new Error('编辑失败: ' + error.message)
 }
@@ -201,4 +203,14 @@ export async function deleteForumComment(commentId: string): Promise<boolean> {
   const { data, error } = await supabase.rpc('delete_forum_comment', { p_comment_id: commentId })
   if (error) throw new Error('删除失败: ' + error.message)
   return !!data
+}
+
+/* =============================================================
+   Visibility API — 帖子可见性
+   ============================================================= */
+
+export async function fetchAllUsers(): Promise<UserInfo[]> {
+  const { data, error } = await supabase.rpc('get_all_users')
+  if (error) throw new Error('获取用户列表失败: ' + error.message)
+  return (data ?? []) as UserInfo[]
 }

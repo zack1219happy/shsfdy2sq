@@ -41,6 +41,14 @@ export interface ForumPost {
   upvotes: number
   downvotes: number
   comment_count: number
+  excluded_visibility?: string[] | null
+}
+
+export interface UserInfo {
+  id: string
+  username: string
+  name: string
+  student_id?: string
 }
 
 export interface ForumComment {
