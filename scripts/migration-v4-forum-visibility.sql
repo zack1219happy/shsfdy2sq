@@ -87,7 +87,8 @@ RETURNS TABLE(
   updated_at      timestamptz,
   upvotes         integer,
   downvotes       integer,
-  comment_count   integer
+  comment_count   integer,
+  excluded_visibility uuid[]
 )
 LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = public
@@ -105,7 +106,8 @@ BEGIN
     fp.updated_at,
     fp.upvotes,
     fp.downvotes,
-    fp.comment_count
+    fp.comment_count,
+    fp.excluded_visibility
   FROM forum_posts fp
   WHERE
     fp.excluded_visibility IS NULL
@@ -132,7 +134,8 @@ RETURNS TABLE(
   updated_at      timestamptz,
   upvotes         integer,
   downvotes       integer,
-  comment_count   integer
+  comment_count   integer,
+  excluded_visibility uuid[]
 )
 LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = public
@@ -150,7 +153,8 @@ BEGIN
     fp.updated_at,
     fp.upvotes,
     fp.downvotes,
-    fp.comment_count
+    fp.comment_count,
+    fp.excluded_visibility
   FROM forum_posts fp
   WHERE fp.id = p_post_id
     AND (
