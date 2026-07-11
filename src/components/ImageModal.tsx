@@ -7,7 +7,8 @@ import styles from '@/styles/image-modal.module.css'
 /**
  * 图片放大查看弹窗
  *
- * 监听全局自定义事件 'open-image-modal'，展示悬浮放大图片。
+ * 通过事件委托监听所有带 data-image-modal 属性的图片点击，
+ * 展示悬浮放大图片。
  * 适用于静态导出（GitHub Pages），不依赖任何路由或动态导入。
  */
 export default function ImageModal() {
@@ -15,12 +16,16 @@ export default function ImageModal() {
 
   const close = useCallback(() => setSrc(null), [])
 
-  // 监听自定义事件
+  // 事件委托：监听所有带 data-image-modal 的图片点击
   useEffect(() => {
-    const handler = (e: CustomEvent<string>) => setSrc(e.detail)
-    window.addEventListener('open-image-modal', handler as EventListener)
-    return () =>
-      window.removeEventListener('open-image-modal', handler as EventListener)
+    const handler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      if (target.tagName === 'IMG' && target.hasAttribute('data-image-modal')) {
+        setSrc((target as HTMLImageElement).src)
+      }
+    }
+    document.addEventListener('click', handler)
+    return () => document.removeEventListener('click', handler)
   }, [])
 
   // 阻止背景滚动 + ESC 关闭

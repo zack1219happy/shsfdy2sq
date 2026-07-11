@@ -143,10 +143,11 @@ export function renderClient(
 ): string {
   const md = createClientMd(options)
   const raw = md.render(content)
+  const withImages = addImageModalSupport(raw)
   if (sanitize && typeof window !== 'undefined') {
-    return DOMPurify.sanitize(raw)
+    return DOMPurify.sanitize(withImages)
   }
-  return raw
+  return withImages
 }
 
 /**
@@ -160,10 +161,34 @@ export function renderClientWithRegistry(
 ): string {
   const md = createClientMd({ ...options, personRegistry: registry })
   const raw = md.render(content)
+  const withImages = addImageModalSupport(raw)
   if (sanitize && typeof window !== 'undefined') {
-    return DOMPurify.sanitize(raw)
+    return DOMPurify.sanitize(withImages)
   }
-  return raw
+  return withImages
+}
+
+// ============================================================
+// 图片后处理：懒加载 + 点击放大标记
+// ============================================================
+
+/**
+ * 为 HTML 中的所有 <img> 添加懒加载和 data-image-modal 属性。
+ *
+ * data-image-modal 被 ImageModal 组件的事件委托捕获，
+ * 用于点击放大查看。不依赖内联事件处理器，不会被 DOMPurify 剥离。
+ */
+export function addImageModalSupport(html: string): string {
+  return html.replace(
+    /<img\s+([^>]*?)>/gi,
+    (_match, attrs) => {
+      // 防止重复处理
+      if (attrs.includes('data-image-modal')) return _match
+      // 跳过已含 loading 的图片
+      const loadingAttr = attrs.includes('loading=') ? '' : ' loading="lazy"'
+      return `<img ${attrs}${loadingAttr} data-image-modal>`
+    },
+  )
 }
 
 // ============================================================
