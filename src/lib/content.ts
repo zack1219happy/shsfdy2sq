@@ -179,16 +179,17 @@ function extractHeadingsFromHtml(html: string): Heading[] {
 }
 
 /**
- * 为图片添加图注（<figure><figcaption>）和懒加载
+ * 为图片添加图注（<figure><figcaption>）、懒加载和点击放大标记。
+ *
+ * 使用 data-image-modal 属性而非 onclick 事件处理器，
+ * 避免被下游 DOMPurify.sanitize 剥离。ImageModal 组件通过
+ * 事件委托监听 data-image-modal 图标的点击。
  */
 function addImageCaptions(html: string): string {
   return html.replace(
     /<img\s+([^>]*?)alt="([^"]*)"([^>]*)>/gi,
     (match, before, alt, after) => {
-      // 剥离 img 标签中的事件处理器属性
-      const cleanBefore = stripEventHandlers(before)
-      const cleanAfter = stripEventHandlers(after)
-      const imgTag = `<img ${cleanBefore}alt="${alt}"${cleanAfter} loading="lazy" class="clickable-image" onclick="window.dispatchEvent(new CustomEvent('open-image-modal', {detail: this.src}))">`
+      const imgTag = `<img ${before}alt="${alt}"${after} loading="lazy" class="clickable-image" data-image-modal>`
       if (!alt.trim()) return imgTag
       return `<figure class="image-figure">${imgTag}<figcaption>${alt}</figcaption></figure>`
     }
