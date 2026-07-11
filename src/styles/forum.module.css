@@ -390,11 +390,10 @@
   overflow: hidden;
 }
 
-.commentEditorInner {
+.commentEditor .commentEditorInner {
   border: none !important;
   border-radius: 0 !important;
-  min-height: 200px !important;
-  max-height: 50vh !important;
+  height: 200px;
 }
 
 .commentSubmitRow {
@@ -610,11 +609,10 @@
 }
 
 /* 覆写 MarkdownEditor 内层默认边框——外层已负责 */
-.editorNoBorder {
+.editorWrapper .editorNoBorder {
   border: none !important;
   border-radius: 0 !important;
-  min-height: 420px !important;
-  max-height: 70vh !important;
+  height: 420px;
 }
 
 .formActions {

@@ -26,11 +26,10 @@
   overflow: hidden;
 }
 
-.editorWrapInner {
+.editorWrap .editorWrapInner {
   border: none !important;
   border-radius: 0 !important;
-  min-height: 200px !important;
-  max-height: 50vh !important;
+  height: 200px;
 }
 
 .field {
