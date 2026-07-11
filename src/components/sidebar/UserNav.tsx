@@ -10,21 +10,21 @@ interface Props {
 
 export default function UserNav({ collapsed }: Props) {
   return (
-    <ul className={`${styles.tree} ${collapsed ? styles.treeCollapsed : ''}`}>
-      <li className={styles.treeSectionLabel}>
+    <div className={`${styles.tree} ${collapsed ? styles.treeCollapsed : ''}`}>
+      <div className={styles.treeSectionLabel}>
         {!collapsed && <span className={styles.sectionTitle}>设置</span>}
-      </li>
-      <li className={styles.treeNode}>
+      </div>
+      <div className={styles.treeNode}>
         <Link
           href="/user"
           className={styles.nodeContent}
           style={{ paddingLeft: `${8 + (collapsed ? 0 : 0)}px`, textDecoration: 'none', color: 'inherit' }}
         >
-          {!collapsed && <span className={styles.spacer} />}
+          {!collapsed && <span className={styles.spacer}>-</span>}
           <FaIcon name="user" className={styles.treeIcon} title={collapsed ? '账号设置' : undefined} />
           {!collapsed && <span className={styles.treeTitle}>账号设置</span>}
         </Link>
-      </li>
-    </ul>
+      </div>
+    </div>
   )
 }

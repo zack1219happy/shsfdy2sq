@@ -110,16 +110,16 @@
 }
 
 .treeCollapsed {
-  padding: 2px 4px;
+  padding: 2px 4px 2px 5px;
   display: flex;
   flex-direction: column;
-  align-items: center;
   overflow-y: auto;
 }
 
 .treeNode {
   margin: 1px 0;
   user-select: none;
+  display: flex;
 }
 
 .nodeContent {
@@ -131,7 +131,8 @@
   cursor: pointer;
   transition: background-color 0.15s ease;
   color: var(--color-text-secondary);
-  font-size: 0.85rem;
+  font-size: 1.0625rem;
+  width: 100%;
 }
 .nodeContent:hover {
   background-color: var(--color-hover-bg);
@@ -145,15 +146,15 @@
 }
 
 .expandIcon {
-  width: 18px;
-  height: 18px;
+  width: 24px;
+  height: 24px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 .expandIcon i {
-  font-size: 0.7rem;
+  font-size: 1.1rem;
   color: var(--color-text-light);
   transition: transform 0.25s ease;
   display: inline-block;
@@ -163,31 +164,35 @@
 }
 
 .spacer {
-  width: 18px;
-  height: 18px;
+  width: 24px;
+  height: 24px;
   flex-shrink: 0;
+  text-align: center;
+  line-height: 24px;
+  font-size: 1.1rem;
+  color: var(--color-text-light);
 }
 
 .treeIcon {
-  width: 18px;
-  min-width: 18px;
+  width: 24px;
+  min-width: 24px;
   text-align: center;
-  font-size: 0.85rem;
+  font-size: 1.0625rem;
   color: #6c7078;
   flex-shrink: 0;
 }
 
 /* 折叠时图标居中放大 */
 .collapsed .treeIcon {
-  width: 18px;
-  min-width: 18px;
-  font-size: 1rem;
+  width: 24px;
+  min-width: 24px;
+  font-size: 1.0625rem;
   margin: 4px 0;
 }
 
 .treeTitle {
   flex: 1;
-  font-size: 0.85rem;
+  font-size: 1.0625rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -198,7 +203,7 @@
   margin-left: 0;
   max-height: 0;
   overflow: hidden;
-  
+  width: 100%;
 }
 .treeChildrenExpanded {
   max-height: none;
@@ -241,9 +246,13 @@
 
 
 /* 导航区域标题 */
+.treeSectionLabel {
+  width: 100%;
+}
+
 .sectionTitle {
   display: block;
-  padding: 12px 16px 4px;
+  padding: 12px 8px 4px;
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--color-text-light);

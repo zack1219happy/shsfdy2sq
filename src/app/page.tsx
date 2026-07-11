@@ -5,6 +5,7 @@ import Link from 'next/link'
 import FaIcon from '@/components/FaIcon'
 import { UserName } from '@/components/UserName'
 import WikiContent from '@/components/WikiContent'
+import { getSession } from '@/lib/auth'
 import { fetchForumPosts } from '@/lib/gist-api'
 import type { ForumPost } from '@/types/gist'
 import { formatDate } from '@/lib/forum'
@@ -18,7 +19,14 @@ export default function HomePage() {
   useEffect(() => {
     const base = process.env.NEXT_PUBLIC_BASE_PATH || ''
     Promise.all([
-      fetchForumPosts().then((data) => setPosts(data.slice(0, 5))),
+      fetchForumPosts().then((data) => {
+        const session = getSession()
+        const userId = session?.userId
+        const visible = userId
+          ? data.filter((p) => !p.excluded_visibility?.includes(userId))
+          : data
+        setPosts(visible.slice(0, 5))
+      }),
       fetch(`${base}/data/announcement.md?t=${Date.now()}`, { cache: 'no-store' })
         .then((r) => r.ok ? r.text() : '')
         .then((text) => {

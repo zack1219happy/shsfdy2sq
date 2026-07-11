@@ -31,7 +31,7 @@ export default function WikiNav({ tree, collapsed, expandedFolders, onToggleFold
     const isActive = node.pathKey === activePathKey
 
     return (
-      <li key={node.pathKey} className={styles.treeNode}>
+      <div key={node.pathKey} className={styles.treeNode}>
         <div
           className={`${styles.nodeContent} ${isActive ? styles.active : ''}`}
           style={{ paddingLeft: `${8 + (collapsed ? 0 : level * 12)}px` }}
@@ -47,7 +47,7 @@ export default function WikiNav({ tree, collapsed, expandedFolders, onToggleFold
               <FaIcon name="chevron-right" />
             </span>
           ) : (
-            !collapsed && <span className={styles.spacer} />
+            !collapsed && <span className={styles.spacer}>-</span>
           )}
 
           <FaIcon
@@ -72,20 +72,20 @@ export default function WikiNav({ tree, collapsed, expandedFolders, onToggleFold
         </div>
 
         {!collapsed && isFolder && node.children && (
-          <ul
+          <div
             id={`children-${node.id}`}
             className={`${styles.treeChildren} ${isExpanded ? styles.treeChildrenExpanded : ''}`}
           >
             {node.children.map((child) => renderNode(child, level + 1))}
-          </ul>
+          </div>
         )}
-      </li>
+      </div>
     )
   }, [collapsed, activePathKey, expandedFolders, onToggleFolder, router])
 
   return (
-    <ul className={`${styles.tree} ${collapsed ? styles.treeCollapsed : ''}`}>
+    <div className={`${styles.tree} ${collapsed ? styles.treeCollapsed : ''}`}>
       {tree.map((node) => renderNode(node, 0))}
-    </ul>
+    </div>
   )
 }

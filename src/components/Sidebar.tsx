@@ -12,7 +12,7 @@ import UserNav from '@/components/sidebar/UserNav'
 import NoticeNav from '@/components/sidebar/NoticeNav'
 import styles from '@/styles/sidebar.module.css'
 
-const COLLAPSED_WIDTH = 55
+const COLLAPSED_WIDTH = 47.5
 
 interface Props {
   tree: NavNode[]

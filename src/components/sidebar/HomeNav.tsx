@@ -17,9 +17,9 @@ interface Props {
 
 export default function HomeNav({ collapsed }: Props) {
   return (
-    <ul className={`${styles.tree} ${collapsed ? styles.treeCollapsed : ''}`}>
+    <div className={`${styles.tree} ${collapsed ? styles.treeCollapsed : ''}`}>
       {ENTRIES.map((entry) => (
-        <li key={entry.href} className={styles.treeNode}>
+        <div key={entry.href} className={styles.treeNode}>
           <Link
             href={entry.href}
             className={styles.nodeContent}
@@ -29,12 +29,12 @@ export default function HomeNav({ collapsed }: Props) {
               color: 'inherit',
             }}
           >
-            {!collapsed && <span className={styles.spacer} />}
+            {!collapsed && <span className={styles.spacer}>-</span>}
             <FaIcon name={entry.icon} className={styles.treeIcon} title={collapsed ? entry.label : undefined} />
             {!collapsed && <span className={styles.treeTitle}>{entry.label}</span>}
           </Link>
-        </li>
+        </div>
       ))}
-    </ul>
+    </div>
   )
 }
