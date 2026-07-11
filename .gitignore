@@ -36,4 +36,4 @@ CLAUDE.md
 __icon_preview.html
 
 # local migration files (applied via Supabase API)
-scripts/migration-v5-comment-count.sql
+*.sql
