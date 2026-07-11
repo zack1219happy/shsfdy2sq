@@ -254,7 +254,11 @@ function replaceWikiLinks(html: string, currentSlug: string): string {
       const slug = titleMap.get(title.trim())
       if (!slug) return match
       // 跳转到当前页面自身 → 用 # 避免刷新
-      const href = slug === currentSlug ? '#' : `${base}/${slug}`
+      const href = slug === currentSlug
+        ? '#'
+        : slug === 'home'
+          ? `${base}/wiki/`
+          : `${base}/wiki/${slug}`
       return `<a href="${href}" class="wiki-link">${(label || title).trim()}</a>`
     }
   )

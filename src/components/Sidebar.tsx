@@ -2,10 +2,14 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import type { NavNode } from '@/lib/navigation'
-import WikiContent from '@/components/WikiContent'
 import FaIcon from '@/components/FaIcon'
+import HomeNav from '@/components/sidebar/HomeNav'
+import WikiNav from '@/components/sidebar/WikiNav'
+import ForumNav from '@/components/sidebar/ForumNav'
+import UserNav from '@/components/sidebar/UserNav'
+import NoticeNav from '@/components/sidebar/NoticeNav'
 import styles from '@/styles/sidebar.module.css'
 
 const COLLAPSED_WIDTH = 55
@@ -13,27 +17,29 @@ const COLLAPSED_WIDTH = 55
 interface Props {
   tree: NavNode[]
   siteTitle: string
-  announcement: string
   titleSlugMap: Record<string, string>
 }
 
-function getActivePathKey(pathname: string): string {
-  const slug = pathname.replace(/^\//, '').replace(/\/$/, '')
-  return slug || 'home'
+function getSidebarMode(pathname: string): 'home' | 'wiki' | 'forum' | 'user' | 'notice' {
+  if (pathname === '/' || pathname === '') return 'home'
+  if (pathname.startsWith('/wiki')) return 'wiki'
+  if (pathname.startsWith('/forum')) return 'forum'
+  if (pathname.startsWith('/user')) return 'user'
+  if (pathname.startsWith('/notice')) return 'notice'
+  return 'wiki' // default
 }
 
-export default function Sidebar({ tree, siteTitle, announcement, titleSlugMap }: Props) {
+export default function Sidebar({ tree, siteTitle }: Props) {
   const pathname = usePathname()
-  const activePathKey = getActivePathKey(pathname)
+  const mode = getSidebarMode(pathname)
 
-  const router = useRouter()
   const [collapsed, setCollapsed] = useState(false)
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
   const [sidebarWidth, setSidebarWidth] = useState(280)
   const sidebarRef = useRef<HTMLDivElement>(null)
   const resizingRef = useRef(false)
 
-  // 从 localStorage 恢复折叠、宽度和展开状态（hydration 后运行，避免 SSR 不匹配）
+  // 从 localStorage 恢复折叠、宽度和展开状态
   useEffect(() => {
     const saved = localStorage.getItem('sidebarCollapsed')
     if (saved === 'true') setCollapsed(true)
@@ -63,7 +69,7 @@ export default function Sidebar({ tree, siteTitle, announcement, titleSlugMap }:
     }
   }, [sidebarWidth, collapsed])
 
-  // 同步 --sidebar-actual-width 到 <html>，让 layout 的 margin-left 跟随
+  // 同步 --sidebar-actual-width 到 <html>
   useEffect(() => {
     const actual = collapsed ? COLLAPSED_WIDTH : sidebarWidth
     document.documentElement.style.setProperty('--sidebar-actual-width', `${actual}px`)
@@ -107,67 +113,8 @@ export default function Sidebar({ tree, siteTitle, announcement, titleSlugMap }:
     })
   }, [])
 
-  const renderNode = (node: NavNode, level: number) => {
-    const isFolder = node.type === 'folder' && !!node.children?.length
-    const isExpanded = expandedFolders.has(node.id)
-    const isActive = node.pathKey === activePathKey
-
-    return (
-      <li key={node.pathKey} className={styles.treeNode}>
-        <div
-          className={`${styles.nodeContent} ${isActive ? styles.active : ''}`}
-          style={{ paddingLeft: `${8 + (collapsed ? 0 : level * 12)}px` }}
-          onClick={() => {
-            if (isFolder) toggleFolder(node.id)
-            if (node.hasContent) {
-              router.push(node.pathKey === 'home' ? '/' : `/${node.pathKey}`)
-            }
-          }}
-        >
-          {!collapsed && isFolder && node.children ? (
-            <span className={`${styles.expandIcon} ${isExpanded ? styles.rotated : ''}`}>
-              <FaIcon name="chevron-right" />
-            </span>
-          ) : (
-            !collapsed && <span className={styles.spacer} />
-          )}
-
-          <FaIcon
-            name={node.icon || (isFolder ? (isExpanded ? 'folder-open' : 'folder') : 'file-lines')}
-            className={styles.treeIcon}
-            title={collapsed ? node.title : undefined}
-          />
-
-          {!collapsed && (
-            node.hasContent ? (
-              <Link
-                href={node.pathKey === 'home' ? '/' : `/${node.pathKey}`}
-                className={styles.treeTitle}
-                style={{ color: 'inherit', textDecoration: 'none' }}
-              >
-                {node.title}
-              </Link>
-            ) : (
-              <span className={styles.treeTitle}>{node.title}</span>
-            )
-          )}
-        </div>
-
-        {!collapsed && isFolder && node.children && (
-          <ul
-            id={`children-${node.id}`}
-            className={`${styles.treeChildren} ${isExpanded ? styles.treeChildrenExpanded : ''}`}
-          >
-            {node.children.map((child) => renderNode(child, level + 1))}
-          </ul>
-        )}
-      </li>
-    )
-  }
-
   return (
     <>
-      {/* 侧边栏 */}
       <div
         ref={sidebarRef}
         className={`${styles.sidebar} ${collapsed ? styles.collapsed : ''}`}
@@ -175,19 +122,24 @@ export default function Sidebar({ tree, siteTitle, announcement, titleSlugMap }:
       >
         <div className={`${styles.header} ${collapsed ? styles.headerCollapsed : ''}`}>
           {collapsed ? (
-            <button
-              className={styles.toggleBtn}
-              onClick={() => setCollapsed(false)}
-              aria-label="展开侧边栏"
-            >
-              <FaIcon name="bars" />
-            </button>
+            <>
+              <Link href="/" aria-label="首页">
+                <img src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/logo.png`} alt="" className={styles.siteIcon} />
+              </Link>
+              <button
+                className={styles.toggleBtn}
+                onClick={() => setCollapsed(false)}
+                aria-label="展开侧边栏"
+              >
+                <FaIcon name="bars" />
+              </button>
+            </>
           ) : (
             <>
-              <h1>
+              <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', color: 'inherit' }}>
                 <img src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/logo.png`} alt="" className={styles.siteIcon} />
-                {siteTitle}
-              </h1>
+                <h1>{siteTitle}</h1>
+              </Link>
               <button
                 className={styles.toggleBtn}
                 onClick={() => setCollapsed(true)}
@@ -199,27 +151,20 @@ export default function Sidebar({ tree, siteTitle, announcement, titleSlugMap }:
           )}
         </div>
 
-        <ul className={`${styles.tree} ${collapsed ? styles.treeCollapsed : ''}`}>
-          {tree.map((node) => renderNode(node, 0))}
-
-          {/* 讨论区链接（硬编码，非 wiki 页面） */}
-          <li key="forum" className={styles.treeNode}>
-            <Link
-              href="/forum"
-              className={`${styles.nodeContent} ${activePathKey === 'forum' ? styles.active : ''}`}
-              style={{ paddingLeft: `${8 + (collapsed ? 0 : 0)}px`, textDecoration: 'none', color: 'inherit' }}
-            >
-              <span className={styles.spacer} />
-              <FaIcon name="comments" className={styles.treeIcon} title={collapsed ? '讨论区' : undefined} />
-              {!collapsed && <span className={styles.treeTitle}>讨论区</span>}
-            </Link>
-          </li>
-        </ul>
-
-        {!collapsed && <Announcement initialContent={announcement} titleSlugMap={titleSlugMap} />}
+        {mode === 'home' && <HomeNav collapsed={collapsed} />}
+        {mode === 'wiki' && (
+          <WikiNav
+            tree={tree}
+            collapsed={collapsed}
+            expandedFolders={expandedFolders}
+            onToggleFolder={toggleFolder}
+          />
+        )}
+        {mode === 'forum' && <ForumNav collapsed={collapsed} />}
+        {mode === 'user' && <UserNav collapsed={collapsed} />}
+        {mode === 'notice' && <NoticeNav collapsed={collapsed} />}
       </div>
 
-      {/* 拖拽手柄 */}
       {!collapsed && (
         <div
           className={styles.resizeHandle}
@@ -228,43 +173,5 @@ export default function Sidebar({ tree, siteTitle, announcement, titleSlugMap }:
         />
       )}
     </>
-  )
-}
-
-function Announcement({ initialContent, titleSlugMap }: { initialContent: string; titleSlugMap: Record<string, string> }) {
-  const [markdown, setMarkdown] = useState<string>(initialContent)
-
-  const loadAnnouncement = useCallback(async () => {
-    try {
-      const base = process.env.NEXT_PUBLIC_BASE_PATH || ''
-      const resp = await fetch(`${base}/data/announcement.md?t=${Date.now()}`, { cache: 'no-store' })
-      if (!resp.ok) throw new Error('HTTP ' + resp.status)
-      setMarkdown(await resp.text())
-    } catch {
-      // fallback: keep the compiled-in version
-    }
-  }, [])
-
-  return (
-    <div className={styles.announcement}>
-      <div className={styles.announcementHeader}>
-        <FaIcon name="bullhorn" />
-        <span>公告</span>
-        <button
-          className={styles.announcementRefresh}
-          onClick={loadAnnouncement}
-          title="刷新"
-        >
-          <FaIcon name="sync-alt" />
-        </button>
-      </div>
-      {markdown ? (
-        <WikiContent format="markdown" content={markdown} className={styles.announcementContent} titleSlugMap={titleSlugMap} />
-      ) : (
-        <div className={styles.announcementContent}>
-          <FaIcon name="spinner" spin /> 加载中...
-        </div>
-      )}
-    </div>
   )
 }

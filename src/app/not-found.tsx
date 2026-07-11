@@ -24,7 +24,8 @@ export default function NotFound() {
     <div className="not-found-page page-content">
       <h2>404</h2>
       <p>页面不存在</p>
-      <Link href={`${BASE_PATH}/`}>返回首页</Link>
+      <Link href={`${BASE_PATH}/wiki/`}>返回 wiki</Link>
+      <Link href={`${BASE_PATH}/`} style={{ marginLeft: 16 }}>返回首页</Link>
     </div>
   )
 }

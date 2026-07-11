@@ -272,9 +272,7 @@ function buildTitleToSlugMap(): Map<string, string> {
   function walk(nodes: NavNode[], prefix: string[] = []) {
     for (const node of nodes) {
       const slug = [...prefix, node.id].join('/')
-      if (node.id !== 'home') {
-        map.set(node.title, slug)
-      }
+      map.set(node.title, slug)
       if (node.children) walk(node.children, [...prefix, node.id])
     }
   }

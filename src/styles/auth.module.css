@@ -498,3 +498,124 @@
 .modalClose:hover {
   background: var(--color-hover-bg);
 }
+
+/* ---- 用户设置页 ---- */
+
+.settingsPage {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 76px 24px 60px;
+  animation: fadeIn 0.2s ease;
+}
+
+.settingsTitle {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settingsSection {
+  margin-bottom: 28px;
+  padding: 20px 24px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.settingsSectionTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.settingsInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.settingsInfoRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.9rem;
+}
+
+.settingsLabel {
+  min-width: 60px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.logoutBtn {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #dc2626;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.logoutBtn:hover {
+  background: #fee2e2;
+}
+
+/* ---- 通知页 ---- */
+
+.noticePage {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 76px 24px 60px;
+  animation: fadeIn 0.2s ease;
+}
+
+.noticeHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.noticeHeader h2 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.noticeStatus {
+  text-align: center;
+  padding: 48px 16px;
+  color: var(--color-text-light);
+  font-size: 0.9rem;
+}
+
+.noticeStatusError {
+  text-align: center;
+  padding: 48px 16px;
+  color: #dc2626;
+  font-size: 0.9rem;
+}
+
+.noticeList {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  overflow: hidden;
+}

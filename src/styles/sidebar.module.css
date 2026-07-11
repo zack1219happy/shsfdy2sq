@@ -230,54 +230,15 @@
 }
 
 
-/* 公告 */
-.announcement {
-  margin-top: auto;
-  padding: 12px 16px;
-  border-top: 1px solid var(--color-border);
-  background: var(--color-sidebar-bg);
-  font-size: 0.85rem;
-  flex-shrink: 0;
-}
-.announcementHeader {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
+/* 导航区域标题 */
+.sectionTitle {
+  display: block;
+  padding: 12px 16px 4px;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: var(--color-primary);
-}
-.announcementHeader i {
-  font-size: 0.9rem;
-}
-.announcementRefresh {
-  margin-left: auto;
-  background: transparent;
-  border: none;
-  cursor: pointer;
   color: var(--color-text-light);
-  padding: 4px 6px;
-  border-radius: 4px;
-  transition: all 0.2s;
-}
-.announcementRefresh:hover {
-  background: var(--color-hover-bg);
-  color: var(--color-primary);
-}
-.announcementContent {
-  color: var(--color-text-secondary);
-  line-height: 1.5;
-  word-break: break-word;
-  max-height: 300px;
-  overflow-y: auto;
-}
-.announcementContent p {
-  margin: 0 0 8px;
-}
-.announcementContent ul,
-.announcementContent ol {
-  margin: 8px 0;
-  padding-left: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 /* 响应式 */

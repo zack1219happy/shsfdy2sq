@@ -1,6 +1,4 @@
 import type { Metadata } from 'next'
-import fs from 'fs'
-import path from 'path'
 import { getNavTree, getSiteTitle, getTitleToSlugMap } from '@/lib/navigation'
 import Sidebar from '@/components/Sidebar'
 import AuthGate from '@/components/AuthGate'
@@ -27,17 +25,6 @@ export default function RootLayout({
   const siteTitle = getSiteTitle()
   const titleSlugMap = Object.fromEntries(getTitleToSlugMap())
 
-  // 公告内容在构建时编译，无需客户端 fetch
-  let announcementContent = ''
-  try {
-    announcementContent = fs.readFileSync(
-      path.join(process.cwd(), 'data', 'announcement.md'),
-      'utf-8',
-    )
-  } catch {
-    announcementContent = '⚠️ 公告加载失败'
-  }
-
   return (
     <html lang="zh-CN" data-scroll-behavior="smooth">
       <head>
@@ -45,7 +32,7 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://iiiyoafpzfqxpaqheojg.supabase.co" />
       </head>
       <body>
-        <Sidebar tree={tree} siteTitle={siteTitle} announcement={announcementContent} titleSlugMap={titleSlugMap} />
+        <Sidebar tree={tree} siteTitle={siteTitle} titleSlugMap={titleSlugMap} />
 
         <ImageModal />
 

@@ -3,9 +3,10 @@ import type { NavNode } from '@/lib/navigation'
 
 interface Props {
   crumbs: NavNode[]
+  baseHref?: string
 }
 
-export default function Breadcrumb({ crumbs }: Props) {
+export default function Breadcrumb({ crumbs, baseHref = '' }: Props) {
   if (crumbs.length === 0) return null
 
   return (
@@ -18,7 +19,7 @@ export default function Breadcrumb({ crumbs }: Props) {
             {isLast ? (
               <span className="breadcrumb-current">{node.title}</span>
             ) : (
-              <Link href={`/${node.pathKey}`} className="breadcrumb-link">
+              <Link href={`${baseHref}/${node.pathKey}`} className="breadcrumb-link">
                 {node.title}
               </Link>
             )}

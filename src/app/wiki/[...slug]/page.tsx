@@ -26,7 +26,7 @@ function WikiArticle({ node, slug }: { node: NavNode; slug: string[] }) {
         style={{
           maxWidth: '800px',
           margin: '0 auto',
-          padding: '0 24px 60px',
+          padding: '76px 24px 60px',
           flex: 1,
         }}
       >
@@ -40,7 +40,7 @@ function WikiArticle({ node, slug }: { node: NavNode; slug: string[] }) {
           dangerouslySetInnerHTML={{ __html: content.titleHtml }}
         />
 
-        <Breadcrumb crumbs={crumbs} />
+        <Breadcrumb crumbs={crumbs} baseHref="/wiki" />
         <AttributeBox attributes={content.attributes} />
 
         <div className="wiki-body" dangerouslySetInnerHTML={{ __html: content.html }} />

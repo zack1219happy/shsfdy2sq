@@ -1,44 +1,80 @@
-import { getPageContent } from '@/lib/content'
-import { getBreadcrumbs } from '@/lib/navigation'
-import Breadcrumb from '@/components/Breadcrumb'
-import AttributeBox from '@/components/AttributeBox'
-import TableOfContents from '@/components/TableOfContents'
-import CommentSection from '@/components/CommentSection'
+'use client'
+
+import { useCallback, useEffect, useState } from 'react'
+import Link from 'next/link'
+import FaIcon from '@/components/FaIcon'
+import { UserName } from '@/components/UserName'
+import { fetchForumPosts } from '@/lib/gist-api'
+import type { ForumPost } from '@/types/gist'
+import { formatDate } from '@/lib/forum'
+import styles from '@/styles/home.module.css'
 
 export default function HomePage() {
-  const content = getPageContent([])
-  const crumbs = getBreadcrumbs('home')
+  const [posts, setPosts] = useState<ForumPost[]>([])
+  const [announcement, setAnnouncement] = useState('')
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const base = process.env.NEXT_PUBLIC_BASE_PATH || ''
+    Promise.all([
+      fetchForumPosts().then((data) => setPosts(data.slice(0, 5))),
+      fetch(`${base}/data/announcement.md?t=${Date.now()}`, { cache: 'no-store' })
+        .then((r) => r.ok ? r.text() : '')
+        .then((text) => {
+          // 取 announcement.md 里 frontmatter 之后的第一段
+          const body = text.replace(/^---[\s\S]*?---\n?/, '').trim()
+          setAnnouncement(body.split('\n\n')[0] || body)
+        })
+        .catch(() => {}),
+    ]).finally(() => setLoading(false))
+  }, [])
 
   return (
-    <div className="page-content" style={{ display: 'flex', gap: '24px' }}>
-      <article
-        style={{
-          maxWidth: '800px',
-          margin: '0 auto',
-          padding: '0 24px 60px',
-          flex: 1,
-        }}
-      >
-        <h2
-          style={{
-            fontSize: '1.8rem',
-            fontWeight: 600,
-            color: 'var(--color-text)',
-            padding: '32px 0 16px',
-          }}
-        >
-          {content.title}
-        </h2>
+    <div className={styles.page}>
+      <header className={styles.hero}>
+        <h1 className={styles.heroTitle}>上中初二 Wiki</h1>
+        <p className={styles.heroSubtitle}>上海中学 2027 届 8 班 · 班级知识库</p>
+        <div className={styles.heroNav}>
+          <Link href="/wiki" className={styles.heroLink}><FaIcon name="book" /> 知识库</Link>
+          <Link href="/forum" className={styles.heroLink}><FaIcon name="comments" /> 讨论区</Link>
+          <Link href="/user" className={styles.heroLink}><FaIcon name="user" /> 个人设置</Link>
+          <Link href="/notice" className={styles.heroLink}><FaIcon name="bell" /> 通知</Link>
+        </div>
+      </header>
 
-        <Breadcrumb crumbs={crumbs} />
-        <AttributeBox attributes={content.attributes} />
+      {announcement && (
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}><FaIcon name="bullhorn" /> 公告</h2>
+          <div className={styles.announcementCard}>{announcement}</div>
+        </section>
+      )}
 
-        <div className="wiki-body" dangerouslySetInnerHTML={{ __html: content.html }} />
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}><FaIcon name="comments" /> 最新讨论</h2>
+        {loading ? (
+          <p className={styles.status}>加载中…</p>
+        ) : posts.length === 0 ? (
+          <p className={styles.status}>暂无帖子</p>
+        ) : (
+          <div className={styles.postList}>
+            {posts.map((post) => (
+              <Link key={post.id} href={`/forum/post?id=${post.id}`} className={styles.postCard}>
+                <span className={styles.postTitle}>{post.title}</span>
+                <span className={styles.postMeta}>
+                  <UserName username={post.author_username} /> · {formatDate(post.created_at)}
+                </span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
 
-        <CommentSection pageSlug="home" />
-      </article>
-
-      <TableOfContents headings={content.headings} />
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}><FaIcon name="star" /> 每日运势</h2>
+        <div className={styles.placeholderCard}>
+          <p>运势打卡功能即将上线 🚀</p>
+        </div>
+      </section>
     </div>
   )
 }

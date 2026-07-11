@@ -7,6 +7,7 @@ import {
   faArrowDown,
   faArrowUp,
   faBars,
+  faBell,
   faBullhorn,
   faBuilding,
   faCalendarAlt,
@@ -61,6 +62,7 @@ function cssAlias(def: IconDefinition, cssName: string) {
 register(faArrowDown)
 register(faArrowUp)
 register(faBars)
+register(faBell)
 register(faBullhorn)
 register(faBuilding)
 register(faCalendarAlt)

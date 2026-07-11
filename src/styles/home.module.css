@@ -1,0 +1,149 @@
+/* ============================================
+   首页样式
+   ============================================ */
+
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 76px 24px 60px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Hero ---- */
+
+.hero {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.heroTitle {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 4px;
+}
+
+.heroSubtitle {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  margin-bottom: 24px;
+}
+
+.heroNav {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.heroLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.heroLink:hover {
+  background: var(--color-hover-bg);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+/* ---- Sections ---- */
+
+.section {
+  margin-bottom: 32px;
+}
+
+.sectionTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---- Announcement ---- */
+
+.announcementCard {
+  padding: 16px 20px;
+  background: var(--color-active-bg);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-primary);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  white-space: pre-line;
+}
+
+/* ---- Post List ---- */
+
+.status {
+  color: var(--color-text-light);
+  font-size: 0.9rem;
+  padding: 16px 0;
+}
+
+.postList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.postCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.postCard:hover {
+  background: var(--color-hover-bg);
+  border-color: var(--color-primary);
+}
+
+.postTitle {
+  font-size: 0.9rem;
+  color: var(--color-text);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  margin-right: 12px;
+}
+
+.postMeta {
+  font-size: 0.8rem;
+  color: var(--color-text-light);
+  flex-shrink: 0;
+}
+
+/* ---- Placeholder ---- */
+
+.placeholderCard {
+  padding: 32px 20px;
+  border: 1px dashed var(--color-border);
+  border-radius: 8px;
+  text-align: center;
+  color: var(--color-text-light);
+  font-size: 0.9rem;
+}
