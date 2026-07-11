@@ -57,7 +57,10 @@ export default function ForumPostPage() {
   const [allUsers, setAllUsers] = useState<UserInfo[]>([])
   const [usersLoading, setUsersLoading] = useState(true)
   const [showVisibilityModal, setShowVisibilityModal] = useState(false)
+  const [refreshCooldown, setRefreshCooldown] = useState(0)
+  const [spinning, setSpinning] = useState(false)
 
+  /** 全量加载（首次 / 出错时用） */
   const load = useCallback(async () => {
     if (!postId) return
     try {
@@ -79,20 +82,62 @@ export default function ForumPostPage() {
     finally { setLoading(false) }
   }, [postId])
 
+  /** 局部刷新：只重拉帖子 + 我的投票（投票后、编辑后），不触发 loading */
+  const refreshPostOnly = useCallback(async () => {
+    if (!postId) return
+    try {
+      const [p, v] = await Promise.all([
+        fetchForumPost(postId),
+        getUserForumVote(postId).catch(() => null),
+      ])
+      if (p) { setPost(p); setMyVote(v) }
+    } catch {}
+  }, [postId])
+
+  /** 局部刷新：只重拉评论列表（评论增删后），不触发 loading */
+  const refreshCommentsOnly = useCallback(async () => {
+    if (!postId) return
+    try {
+      const c = await fetchForumComments(postId)
+      setComments(c)
+    } catch {}
+  }, [postId])
+
   useEffect(() => { load() }, [load])
 
   const handleVote = async (type: 'up' | 'down') => {
     if (!post) return
+    // 乐观更新：立即反映 UI
+    const prevVote = myVote
+    setPost((p) => {
+      if (!p) return p
+      const next = { ...p }
+      // 撤销之前的投票（如果有）
+      if (prevVote === 'up') next.upvotes = Math.max(0, (next.upvotes ?? 0) - 1)
+      if (prevVote === 'down') next.downvotes = Math.max(0, (next.downvotes ?? 0) - 1)
+      if (type !== prevVote) {
+        // 新投票
+        if (type === 'up') next.upvotes = (next.upvotes ?? 0) + 1
+        if (type === 'down') next.downvotes = (next.downvotes ?? 0) + 1
+        setMyVote(type)
+      } else {
+        setMyVote(null)
+      }
+      return next
+    })
     try {
       if (myVote === type) {
         await removeForumVote(post.id)
-        setMyVote(null)
       } else {
         await voteForumPost(post.id, type)
-        setMyVote(type)
       }
-      load()
-    } catch {}
+      // 后台同步确保一致性
+      refreshPostOnly()
+    } catch {
+      // 回滚
+      setMyVote(prevVote)
+      refreshPostOnly()
+    }
   }
 
   const startEdit = () => {
@@ -116,7 +161,7 @@ export default function ForumPostPage() {
     try {
       await updateForumPost(post.id, editTitle.trim(), editContent.trim(), editExcludedIds)
       setEditing(false)
-      load()
+      refreshPostOnly()
     } catch (e: any) { setError(e.message) }
     finally { setSubmitting(false) }
   }
@@ -124,7 +169,8 @@ export default function ForumPostPage() {
   const handleNewComment = async (content: string, parentId?: string) => {
     try {
       await addForumComment(postId, content, parentId)
-      load()
+      // 只刷新评论列表，不触发全量 loading
+      refreshCommentsOnly()
     } catch (e: any) { setError(e.message) }
   }
 
@@ -132,9 +178,25 @@ export default function ForumPostPage() {
     try {
       const { deleteForumComment } = await import('@/lib/gist-api')
       await deleteForumComment(commentId)
-      load()
+      refreshCommentsOnly()
     } catch (e: any) { setError(e.message) }
   }
+
+  /** 手动刷新评论（10s 冷却） */
+  const handleRefreshComments = useCallback(async () => {
+    if (refreshCooldown > 0) return
+    setSpinning(true)
+    setRefreshCooldown(10)
+    await refreshCommentsOnly()
+    setSpinning(false)
+    // 倒计时冷却
+    const timer = setInterval(() => {
+      setRefreshCooldown((prev) => {
+        if (prev <= 1) { clearInterval(timer); return 0 }
+        return prev - 1
+      })
+    }, 1000)
+  }, [refreshCooldown, refreshCommentsOnly])
 
   const isAuthor = session && post && session.userId === post.author_id
   const editExcludedUsers = allUsers.filter((u) => editExcludedIds.includes(u.id))
@@ -221,7 +283,18 @@ export default function ForumPostPage() {
               <span className={`${styles.voteCount} ${(post.downvotes ?? 0) > 0 ? styles.voteCountNegative : ''}`}>{post.downvotes ?? 0}</span>
             </div>
 
-            <h3 className={styles.commentSectionTitle}>💬 评论</h3>
+            <div className={styles.commentSectionHeader}>
+              <h3 className={styles.commentSectionTitle}>💬 评论</h3>
+              <button
+                className={`${styles.refreshBtn} ${refreshCooldown > 0 ? styles.refreshBtnCooling : ''}`}
+                onClick={handleRefreshComments}
+                disabled={refreshCooldown > 0}
+                title={refreshCooldown > 0 ? `${refreshCooldown}s 后可刷新` : '刷新评论'}
+              >
+                <FaIcon name="sync-alt" spin={spinning} />
+                {refreshCooldown > 0 && <span className={styles.refreshCooldown}>{refreshCooldown}s</span>}
+              </button>
+            </div>
             <ForumCommentSection
               comments={comments}
               onSubmit={handleNewComment}

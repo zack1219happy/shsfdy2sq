@@ -375,6 +375,48 @@
   font-weight: 600;
   color: var(--color-text);
   margin-bottom: 8px;
+  margin-right: auto;
+}
+
+.commentSectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.refreshBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 4px;
+  font-size: 0.82rem;
+  color: var(--color-text-light);
+  cursor: pointer;
+  transition: color 0.2s;
+  line-height: 1;
+}
+
+.refreshBtn:hover:not(:disabled) {
+  color: var(--color-primary);
+}
+
+.refreshBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.refreshBtnCooling {
+  color: var(--color-primary);
+}
+
+.refreshCooldown {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  min-width: 1.6em;
+  text-align: center;
 }
 
 .commentForm {
