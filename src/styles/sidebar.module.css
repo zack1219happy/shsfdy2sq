@@ -14,8 +14,7 @@
 }
 
 .collapsed {
-  overflow-y: visible;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 .collapsed:hover {
   background: #f4f5f7;
@@ -98,6 +97,7 @@
   padding: 8px 4px;
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   min-height: 0;
 }
 

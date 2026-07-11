@@ -61,9 +61,6 @@ a {
 a:visited {
   color: var(--color-primary);
 }
-a:hover {
-  text-decoration: underline;
-}
 
 /* Wiki Link */
 .wiki-link::after {

@@ -1,9 +1,10 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import FaIcon from '@/components/FaIcon'
 import { UserName } from '@/components/UserName'
+import WikiContent from '@/components/WikiContent'
 import { fetchForumPosts } from '@/lib/gist-api'
 import type { ForumPost } from '@/types/gist'
 import { formatDate } from '@/lib/forum'
@@ -21,11 +22,10 @@ export default function HomePage() {
       fetch(`${base}/data/announcement.md?t=${Date.now()}`, { cache: 'no-store' })
         .then((r) => r.ok ? r.text() : '')
         .then((text) => {
-          // 取 announcement.md 里 frontmatter 之后的第一段
+          // 剥离 YAML frontmatter
           const body = text.replace(/^---[\s\S]*?---\n?/, '').trim()
-          setAnnouncement(body.split('\n\n')[0] || body)
+          setAnnouncement(body)
         })
-        .catch(() => {}),
     ]).finally(() => setLoading(false))
   }, [])
 
@@ -45,7 +45,9 @@ export default function HomePage() {
       {announcement && (
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}><FaIcon name="bullhorn" /> 公告</h2>
-          <div className={styles.announcementCard}>{announcement}</div>
+          <div className={styles.announcementCard}>
+            <WikiContent format="markdown" content={announcement} className="wiki-body" />
+          </div>
         </section>
       )}
 

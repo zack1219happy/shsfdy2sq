@@ -84,10 +84,14 @@
   border: 1px solid var(--color-border);
   border-left: 3px solid var(--color-primary);
   border-radius: 8px;
-  font-size: 0.9rem;
-  line-height: 1.6;
-  color: var(--color-text-secondary);
-  white-space: pre-line;
+}
+
+.announcementCard p {
+  margin: 0 0 8px;
+}
+
+.announcementCard p:last-child {
+  margin-bottom: 0;
 }
 
 /* ---- Post List ---- */

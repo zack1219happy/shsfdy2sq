@@ -8,6 +8,7 @@ import {
   faArrowUp,
   faBars,
   faBell,
+  faBook,
   faBullhorn,
   faBuilding,
   faCalendarAlt,
@@ -31,6 +32,7 @@ import {
   faSearch,
   faSignOutAlt,
   faSpinner,
+  faStar,
   faSyncAlt,
   faThumbsDown,
   faThumbsUp,
@@ -63,6 +65,7 @@ register(faArrowDown)
 register(faArrowUp)
 register(faBars)
 register(faBell)
+register(faBook)
 register(faBullhorn)
 register(faBuilding)
 register(faCalendarAlt)
@@ -92,6 +95,7 @@ cssAlias(faSearch, 'search')
 register(faSignOutAlt)
 cssAlias(faSignOutAlt, 'sign-out-alt')
 register(faSpinner)
+register(faStar)
 register(faSyncAlt)
 cssAlias(faSyncAlt, 'sync-alt')
 register(faThumbsDown)

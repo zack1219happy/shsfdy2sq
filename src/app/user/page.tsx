@@ -48,14 +48,12 @@ export default function UserSettingsPage() {
 
       <UsernameForm studentId={session.studentId} currentUsername={session.username} />
 
-      <div className={styles.settingsSection}>
-        <button
-          className={styles.logoutBtn}
-          onClick={() => { clearSession(); router.push('/') }}
-        >
-          <FaIcon name="sign-out-alt" /> 退出登录
-        </button>
-      </div>
+      <button
+        className={styles.logoutBtn}
+        onClick={() => { clearSession(); router.push('/') }}
+      >
+        <FaIcon name="sign-out-alt" /> 退出登录
+      </button>
     </div>
   )
 }

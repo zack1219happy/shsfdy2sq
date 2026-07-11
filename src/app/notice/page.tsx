@@ -49,7 +49,10 @@ export default function NoticePage() {
     <div className={styles.noticePage}>
       <div className={styles.noticeHeader}>
         <h2><FaIcon name="bell" /> 通知</h2>
-        <button className={styles.notifClear} onClick={handleClearAll}>全部已读</button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className={styles.notifClear} onClick={handleClearAll}>全部已读</button>
+          <button className={styles.notifClear} onClick={async () => { /* clear all — future */ }}>清空</button>
+        </div>
       </div>
 
       {loading && <p className={styles.noticeStatus}>加载中…</p>}
