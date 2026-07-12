@@ -1,3 +1,5 @@
+使用前请先阅读 **[用户协议](/agreement/user-agreement)** 和 **[社区规范](/agreement/community-guidelines)**。
+
 我们的界面改版啦！请自行探索。
 
 ## 重大更新
