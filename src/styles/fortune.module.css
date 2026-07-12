@@ -1,0 +1,204 @@
+/* ============================================
+   运势抽卡
+   ============================================ */
+
+.card {
+  flex: 1;
+  padding: 24px 20px;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── 未登录 / 未打卡 闲置状态 ── */
+.idle {
+  background: #fafbfc;
+}
+
+.inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px 0;
+}
+
+/* ── 连续打卡天数 ── */
+.streakText {
+  font-size: 0.9rem;
+  color: var(--color-text-light);
+  margin: 0 0 4px;
+  text-align: center;
+}
+.streakText strong {
+  color: #e67e22;
+  font-size: 1rem;
+}
+
+.bigIcon {
+  font-size: 2.4rem;
+  display: block;
+}
+
+.hint {
+  color: var(--color-text-light);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.btn {
+  margin-top: 4px;
+  padding: 10px 28px;
+  background: var(--color-primary, #4d7cb8);
+  color: #fff;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn:hover {
+  background: #3d6aa0;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+/* ── 结果展示 ── */
+
+.resultHeader {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.symbol {
+  font-size: 8rem;
+  display: block;
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+
+.username {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 8px;
+}
+
+.level {
+  font-size: 2.1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* 吉凶等级颜色 */
+.lvl大吉 {
+  color: #c0392b;
+}
+.lvl吉 {
+  color: #d35400;
+}
+.lvl小吉 {
+  color: #e67e22;
+}
+.lvl平 {
+  color: #7f8c8d;
+}
+.lvl小凶 {
+  color: #7f8c8d;
+}
+.lvl凶 {
+  color: #5d6d7e;
+}
+.lvl大凶 {
+  color: #2c3e50;
+}
+
+/* ── 领域标签 ── */
+
+.domainTag {
+  display: inline-block;
+  font-size: 0.85rem;
+  color: var(--color-text-light);
+  background: var(--color-hover-bg, #f0f2f5);
+  padding: 3px 12px;
+  border-radius: 10px;
+  margin: 0 auto 20px;
+}
+
+/* ── 宜 / 忌 ── */
+
+.adviceGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 32px;
+}
+
+.adviceCol {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+}
+
+.adviceItem {
+  text-align: center;
+}
+
+.adviceLine {
+  font-size: 1.1rem;
+  color: var(--color-text);
+  margin: 0 0 3px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.adviceDetail {
+  font-size: 0.85rem;
+  color: var(--color-text-light);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.tagYi,
+.tagJi {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 3px;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+.tagYi {
+  background: #e8f0fe;
+  color: #1a73e8;
+}
+
+.tagJi {
+  background: #fce8e8;
+  color: #c0392b;
+}
+
+/* ── 特殊状态 ── */
+
+.allGoodText {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #c0392b;
+  margin: 0 0 3px;
+}
+
+.allBadText {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0 0 3px;
+}
