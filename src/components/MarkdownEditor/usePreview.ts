@@ -7,6 +7,7 @@
 import { useRef, useMemo, useEffect } from 'react'
 import { renderClientWithRegistry, replaceWikiLinks } from '@/lib/render-client'
 import { registry, titleSlugMap as defaultTitleSlugMap } from '@/data/person-registry'
+import { BASE_PATH } from '@/lib/constants'
 import { getPreviewLineAtTop } from './scrollSync'
 
 interface UsePreviewOptions {
@@ -37,7 +38,7 @@ export function usePreview({
   titleSlugMap: propMap,
 }: UsePreviewOptions): UsePreviewReturn {
   const previewRef = useRef<HTMLDivElement | null>(null)
-  const basePath = useMemo(() => process.env.NEXT_PUBLIC_BASE_PATH || '', [])
+  const basePath = BASE_PATH
   // 合并默认映射 + 传入的覆盖
   const effectiveMap = useMemo(
     () => propMap ? { ...defaultTitleSlugMap, ...propMap } : defaultTitleSlugMap,

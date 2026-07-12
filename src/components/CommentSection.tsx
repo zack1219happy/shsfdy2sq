@@ -2,232 +2,215 @@
 
 import { forwardRef, useCallback, useEffect, useMemo, useState } from 'react'
 import dynamic from 'next/dynamic'
-import { fetchPageComments, addComment, deleteComment } from '@/lib/gist-api'
 import { getSession, canDeleteComment } from '@/lib/auth'
-import type { Comment } from '@/types/gist'
-import WikiContent from '@/components/WikiContent'
+import type { Comment as WikiComment } from '@/types/gist'
+import { formatDate } from '@/lib/forum'
 import { useCommentAnchor } from '@/hooks/useCommentAnchor'
 import { UserName } from '@/components/UserName'
 import { showWarningToast } from '@/lib/toast'
-import { formatDate } from '@/lib/forum'
-import styles from '@/styles/comment.module.css'
+import WikiContent from '@/components/WikiContent'
+import commentStyles from '@/styles/comment.module.css'
 
-const MarkdownEditor = dynamic(
-  () => import('@/components/MarkdownEditor').then((m) => m.MarkdownEditor),
-  { ssr: false },
-)
+// ============================================================
+// 统一评论类型 — wiki Comment 和 ForumComment 的抽象
+// ============================================================
 
-interface Props {
-  pageSlug: string
+export interface UnifiedComment {
+  id: string
+  parentId: string | null
+  author: string
+  /** 用于删除权限判断的 userId。可选，为空时仅 admin 可删 */
+  authorId?: string
+  content: string
+  createdAt: string
+  deleted: boolean
 }
 
-interface CommentAnchorRequest {
-  pageSlug: string
-  commentId: string
-  nonce: number
+// ============================================================
+// Props
+// ============================================================
+
+interface CommentSectionProps {
+  /**
+   * 评论数据。带 pageSlug 时进入「自取模式」：组件自动从 gist-api
+   * 获取/添加/删除评论。不带时进入「受控模式」：完全由外界管理数据。
+   */
+  pageSlug?: string
+  /** 受控模式：外界提供的评论列表 */
+  comments?: UnifiedComment[]
+  /** 受控模式：添加评论 */
+  onSubmit?: (content: string, parentId?: string) => Promise<void>
+  /** 受控模式：删除评论 */
+  onDelete?: (commentId: string) => Promise<void>
+
+  /** 评论锚点滚动（直接跳转到某条评论） */
+  targetCommentId?: string | null
+  /** 触发锚点滚动刷新的 key */
+  scrollKey?: number
+  /** 隐藏默认的标题栏（由父组件自定义） */
+  hideTitle?: boolean
 }
 
-/* ==============================================================
-   CommentSection — 评论区容器
-   ============================================================== */
-export default function CommentSection({ pageSlug }: Props) {
-  const [comments, setComments] = useState<Comment[]>([])
-  const [loading, setLoading] = useState(true)
+// ============================================================
+// 主组件
+// ============================================================
+
+export default function CommentSection({
+  pageSlug,
+  comments: externalComments,
+  onSubmit: externalOnSubmit,
+  onDelete: externalOnDelete,
+  targetCommentId: externalTargetId,
+  scrollKey: externalScrollKey,
+  hideTitle,
+}: CommentSectionProps) {
+  // ---- 自取模式 vs 受控模式 ----
+  const isSelfManaged = !!pageSlug
+  const [localComments, setLocalComments] = useState<UnifiedComment[]>([])
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [replyTarget, setReplyTarget] = useState<{ id: string; author: string } | null>(null)
 
-  const [anchorRequest, setAnchorRequest] = useState<CommentAnchorRequest | null>(null)
+  const comments = isSelfManaged ? localComments : (externalComments ?? [])
+  const session = getSession()
 
-  // 从 URL 查询参数 ?comment=xxx 读取目标评论，加载时触发滚动
-  // 不清除参数（通知链接自带 _=timestamp cache buster 确保重复点击生效）
+  // 锚点：自取模式从 URL 解析，受控模式从 props 读取
+  const [urlCommentId, setUrlCommentId] = useState<string | null>(null)
+  const [urlNonce, setUrlNonce] = useState(0)
+
   useEffect(() => {
+    if (!isSelfManaged) return
     const params = new URLSearchParams(window.location.search)
     const commentId = params.get('comment')
     if (commentId) {
-      setAnchorRequest((previous) => ({
-        pageSlug,
-        commentId,
-        nonce: (previous?.nonce ?? 0) + 1,
-      }))
+      setUrlCommentId(commentId)
+      setUrlNonce((n) => n + 1)
     } else {
-      setAnchorRequest(null)
+      setUrlCommentId(null)
     }
-  }, [pageSlug])
+  }, [pageSlug, isSelfManaged])
 
-  // 返回 ref 回调：元素进入 DOM 的精确时刻触发滚动 + 高亮
-  const anchorRef = useCommentAnchor(styles.highlight, anchorRequest?.nonce ?? 0)
+  const effectiveTargetId = isSelfManaged ? urlCommentId : externalTargetId
+  const effectiveScrollKey = isSelfManaged ? urlNonce : (externalScrollKey ?? 0)
+  const anchorRef = useCommentAnchor(commentStyles.highlight, effectiveScrollKey)
 
-  const currentCommentId = anchorRequest?.pageSlug === pageSlug ? anchorRequest.commentId : null
-
+  // ---- 自取模式下的数据初始化 ----
   useEffect(() => {
+    if (!isSelfManaged) return
     let cancelled = false
     setLoading(true)
     setError(null)
     setReplyTarget(null)
 
-    fetchPageComments(pageSlug)
-      .then((data) => {
-        if (cancelled) return
-        setComments(data)
-      })
-      .catch((e: Error) => {
-        if (cancelled) return
-        setError(e.message ?? '加载评论失败')
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
+    import('@/lib/gist-api').then(({ fetchPageComments }) =>
+      fetchPageComments(pageSlug!)
+        .then((data) => {
+          if (cancelled) return
+          setLocalComments(normalizeWikiComments(data))
+        })
+        .catch((e: Error) => {
+          if (cancelled) return
+          setError(e.message ?? '加载评论失败')
+        })
+        .finally(() => { if (!cancelled) setLoading(false) })
+    )
 
     return () => { cancelled = true }
-  }, [pageSlug])
+  }, [pageSlug, isSelfManaged])
 
-  /** 如果 URL 带 ?comment=xxx 但评论不存在，显示警告 */
+  // 自取模式：目标评论不存在时警告
   useEffect(() => {
-    if (loading || !currentCommentId) return
-    const match = comments.find((c) => c.id === currentCommentId)
+    if (loading || !urlCommentId) return
+    const match = comments.find((c) => c.id === urlCommentId)
     if (!match || match.deleted) showWarningToast('该评论可能已被删除')
-  }, [loading, currentCommentId, comments])
+  }, [loading, urlCommentId, comments])
 
-  const handleAdd = useCallback(
-    async (input: { author: string; content: string; userId?: string }) => {
-      await addComment(pageSlug, { ...input, parentId: replyTarget?.id })
+  // ---- 操作 ----
+
+  const handleSubmit = useCallback(async (content: string, parentId?: string) => {
+    if (isSelfManaged && pageSlug) {
+      const { addComment, fetchPageComments } = await import('@/lib/gist-api')
+      const session = getSession()
+      await addComment(pageSlug, {
+        author: session?.username || '匿名',
+        content,
+        parentId,
+      })
       setReplyTarget(null)
       const data = await fetchPageComments(pageSlug)
-      setComments(data)
+      setLocalComments(normalizeWikiComments(data))
       window.dispatchEvent(new CustomEvent('new-notification'))
-    },
-    [pageSlug, replyTarget],
-  )
+    } else if (externalOnSubmit) {
+      await externalOnSubmit(content, parentId)
+      setReplyTarget(null)
+    }
+  }, [isSelfManaged, pageSlug, externalOnSubmit])
 
+  const handleDelete = useCallback(async (commentId: string) => {
+    if (isSelfManaged && pageSlug) {
+      const { deleteComment, fetchPageComments } = await import('@/lib/gist-api')
+      await deleteComment(commentId)
+      const data = await fetchPageComments(pageSlug)
+      setLocalComments(normalizeWikiComments(data))
+    } else if (externalOnDelete) {
+      await externalOnDelete(commentId)
+    }
+  }, [isSelfManaged, pageSlug, externalOnDelete])
 
-  const session = getSession()
   const canDelete = useCallback(
-    (commentUserId?: string) => canDeleteComment(session, commentUserId),
+    (authorId?: string) => canDeleteComment(session, authorId),
     [session],
-  )
-
-  const handleDelete = useCallback(
-    async (commentId: string) => {
-      if (!session) return
-      try {
-        await deleteComment(commentId)
-        // 重新拉取（保留软删除标记的评论），确保子评论的树结构完整
-        const data = await fetchPageComments(pageSlug)
-        setComments(data)
-      } catch (e: any) {
-        alert(e?.message || '删除失败')
-      }
-    },
-    [session, pageSlug],
   )
 
   const handleReplyClick = useCallback((id: string, author: string) => {
     setReplyTarget((prev) => (prev?.id === id ? null : { id, author }))
   }, [])
 
-  // ---- 数据整理：顶层评论 + 扁平回复分组 ----
+  // ---- 评论树 ----
 
-  const commentMap = useMemo(() => {
-    const m = new Map<string, Comment>()
-    for (const c of comments) m.set(c.id, c)
-    return m
-  }, [comments])
+  const commentTree = useMemo(() => buildCommentTree(comments), [comments])
 
-  interface ReplyGroup {
-    comment: Comment
-    depth: number
-    parentAuthor?: string
-    parentColor?: string
-  }
-
-  const groups = useMemo(() => {
-    const topLevel = comments.filter((c) => !c.parentId)
-    const groupsByRoot = new Map<string, ReplyGroup[]>()
-
-    for (const c of comments) {
-      if (!c.parentId) continue
-      // 找到最顶层的父评论 ID
-      let topId = c.id
-      let current: Comment | undefined = c
-      while (current?.parentId) {
-        const p = commentMap.get(current.parentId)
-        if (!p) break
-        current = p
-        topId = p.parentId ? topId : current.id
-      }
-      if (!topId) continue
-
-      // 计算深度
-      let depth = 0
-      let cur: Comment | undefined = c
-      while (cur?.parentId) {
-        depth++
-        cur = commentMap.get(cur.parentId)
-      }
-
-      // 找直接父评论的作者和颜色（用于 "xxx 回复 yyy"）
-      const directParent = c.parentId ? commentMap.get(c.parentId) : undefined
-
-      if (!groupsByRoot.has(topId)) groupsByRoot.set(topId, [])
-      groupsByRoot.get(topId)!.push({
-        comment: c,
-        depth,
-        parentAuthor: directParent?.author,
-        parentColor: directParent?.authorColor,
-      })
-    }
-
-    // 每组按时间排序
-    for (const [, list] of groupsByRoot) {
-      list.sort((a, b) => new Date(b.comment.date).getTime() - new Date(a.comment.date).getTime())
-    }
-
-    return { topLevel, groupsByRoot }
-  }, [comments, commentMap])
+  // ---- 渲染 ----
 
   return (
-    <section className={styles.section}>
-      <h2 className={styles.title}>💬 评论区</h2>
+    <section className={commentStyles.section}>
+      {!hideTitle && <h2 className={commentStyles.title}>💬 评论区</h2>}
 
       <CommentForm
-        onSubmit={handleAdd}
+        onSubmit={handleSubmit}
         replyTarget={replyTarget}
         onClearReply={() => setReplyTarget(null)}
       />
 
-      {loading && <p className={styles.loading}>加载评论中…</p>}
-      {error && <p className={styles.error}>❌ {error}</p>}
+      {loading && <p className={commentStyles.loading}>加载评论中…</p>}
+      {error && <p className={commentStyles.error}>❌ {error}</p>}
       {!loading && !error && comments.length === 0 && (
-        <p className={styles.empty}>暂无评论，来写第一条吧 ✏️</p>
+        <p className={commentStyles.empty}>暂无评论，来写第一条吧 ✏️</p>
       )}
 
-      {!loading && !error && groups.topLevel.length > 0 && (
-        <div className={styles.list}>
-          {groups.topLevel.map((top) => {
-            const replies = groups.groupsByRoot.get(top.id) ?? []
+      {!loading && !error && commentTree.topLevel.length > 0 && (
+        <div className={commentStyles.list}>
+          {commentTree.topLevel.map((top) => {
+            const replies = commentTree.repliesByRoot.get(top.id) ?? []
             return (
-              <div key={top.id} className={styles.topGroup}>
-                {/* 顶层评论卡片 */}
+              <div key={top.id} className={commentStyles.topGroup}>
                 <CommentCard
-                  ref={top.id === currentCommentId ? anchorRef : undefined}
+                  ref={top.id === effectiveTargetId ? anchorRef : undefined}
                   comment={top}
                   onReply={handleReplyClick}
-                  canDelete={canDelete(top.userId)}
+                  canDelete={canDelete(top.authorId)}
                   onDelete={handleDelete}
                 />
-
-                {/* 扁平回复列表 */}
                 {replies.length > 0 && (
-                  <div className={styles.replies}>
+                  <div className={commentStyles.replies}>
                     {replies.map((r) => (
                       <UnifiedReply
                         key={r.comment.id}
-                        ref={r.comment.id === currentCommentId ? anchorRef : undefined}
+                        ref={r.comment.id === effectiveTargetId ? anchorRef : undefined}
                         comment={r.comment}
                         parentAuthor={r.parentAuthor}
-                        parentColor={r.parentColor}
                         onReply={handleReplyClick}
-                        canDelete={canDelete(r.comment.userId)}
+                        canDelete={canDelete(r.comment.authorId)}
                         onDelete={handleDelete}
                       />
                     ))}
@@ -242,31 +225,111 @@ export default function CommentSection({ pageSlug }: Props) {
   )
 }
 
-/* ==============================================================
-   CommentForm — 评论输入框（含回复标签 + MarkdownEditor）
-   ============================================================== */
+// ============================================================
+// 构建评论树（顶层评论 + 根部平铺回复）
+// ============================================================
+
+interface ReplyInfo {
+  comment: UnifiedComment
+  parentAuthor?: string
+}
+
+interface CommentTree {
+  topLevel: UnifiedComment[]
+  repliesByRoot: Map<string, ReplyInfo[]>
+}
+
+function buildCommentTree(comments: UnifiedComment[]): CommentTree {
+  const commentMap = new Map<string, UnifiedComment>()
+  for (const c of comments) commentMap.set(c.id, c)
+
+  const topLevel = comments.filter((c) => !c.parentId)
+
+  // 收集每一条回复的根部父评论 id
+  const rootMap = new Map<string, ReplyInfo[]>()
+  for (const c of comments) {
+    if (!c.parentId) continue
+
+    // 找到最顶层父评论的 id
+    let topId = c.id
+    let current: UnifiedComment | undefined = c
+    while (current?.parentId) {
+      const p = commentMap.get(current.parentId)
+      if (!p) break
+      current = p
+      topId = p.parentId ? topId : current.id
+    }
+    if (!topId) continue
+
+    // 找直接父评论的作者
+    const directParent = c.parentId ? commentMap.get(c.parentId) : undefined
+
+    if (!rootMap.has(topId)) rootMap.set(topId, [])
+    rootMap.get(topId)!.push({
+      comment: c,
+      parentAuthor: directParent?.author,
+    })
+  }
+
+  // 每组按时间正序
+  for (const [, list] of rootMap) {
+    list.sort((a, b) =>
+      new Date(a.comment.createdAt).getTime() - new Date(b.comment.createdAt).getTime()
+    )
+  }
+
+  // 顶层按时间倒序（最新在上）
+  topLevel.sort((a, b) =>
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  )
+
+  return { topLevel, repliesByRoot: rootMap }
+}
+
+// ============================================================
+// 归一化：wiki Comment → UnifiedComment
+// ============================================================
+
+function normalizeWikiComments(raw: WikiComment[]): UnifiedComment[] {
+  return raw.map((c) => ({
+    id: c.id,
+    parentId: c.parentId ?? null,
+    author: c.author,
+    authorId: c.userId,
+    content: c.content,
+    createdAt: c.date,
+    deleted: c.deleted ?? false,
+  }))
+}
+
+// ============================================================
+// 子组件
+// ============================================================
+
+const MarkdownEditor = dynamic(
+  () => import('@/components/MarkdownEditor').then((m) => m.MarkdownEditor),
+  { ssr: false },
+)
+
+/* ---------- CommentForm ---------- */
+
 function CommentForm({
   onSubmit,
   replyTarget,
   onClearReply,
 }: {
-  onSubmit: (input: { author: string; content: string; userId?: string }) => Promise<void>
+  onSubmit: (content: string, parentId?: string) => Promise<void>
   replyTarget: { id: string; author: string } | null
   onClearReply: () => void
 }) {
   const [content, setContent] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  // 从登录 session 获取 username 作为评论作者标识
-  const session = getSession()
-  const author = session?.username || '匿名'
-  const userId = session?.userId
-
   const handleSubmit = async () => {
     if (!content.trim()) return
     setSubmitting(true)
     try {
-      await onSubmit({ author, content: content.trim(), userId })
+      await onSubmit(content.trim(), replyTarget?.id)
       setContent('')
     } catch (e: any) {
       alert(e?.message || '提交失败，请稍后重试')
@@ -276,69 +339,68 @@ function CommentForm({
   }
 
   return (
-    <div className={styles.form}>
+    <div className={commentStyles.form}>
       {replyTarget && (
-        <div className={styles.replyTag}>
+        <div className={commentStyles.replyTag}>
           <span>
             回复 <strong>{replyTarget.author}</strong>
           </span>
-          <button type="button" className={styles.replyTagClose} onClick={onClearReply} title="取消回复">
+          <button type="button" className={commentStyles.replyTagClose} onClick={onClearReply} title="取消回复">
             ✕
           </button>
         </div>
       )}
 
-      <div className={styles.editorWrap}>
+      <div className={commentStyles.editorWrap}>
         <MarkdownEditor
           value={content}
           onChange={setContent}
           config={{ preview: false, fullScreen: false, scrollSync: false }}
-          className={styles.editorWrapInner}
+          className={commentStyles.editorWrapInner}
         />
       </div>
 
-      <button className={styles.submitBtn} type="button" onClick={handleSubmit} disabled={submitting || !content.trim()}>
+      <button className={commentStyles.submitBtn} type="button" onClick={handleSubmit} disabled={submitting || !content.trim()}>
         {submitting ? '提交中…' : replyTarget ? '回复' : '发表评论'}
       </button>
     </div>
   )
 }
 
-/* ==============================================================
-   CommentCard — 顶层评论卡片
-   ============================================================== */
+/* ---------- CommentCard ---------- */
+
 const CommentCard = forwardRef<HTMLDivElement, {
-  comment: Comment
+  comment: UnifiedComment
   onReply: (id: string, author: string) => void
   canDelete: boolean
   onDelete: (id: string) => void
 }>(function CommentCard({ comment, onReply, canDelete, onDelete }, ref) {
   if (comment.deleted) {
     return (
-      <div ref={ref} className={`${styles.comment} ${styles.commentDeleted}`} id={`comment-${comment.id}`}>
-        <div className={styles.commentMeta}>
-          <UserName username={comment.author} className={styles.commentAuthor} />
-          <span className={styles.deletedLabel}>该评论已被删除</span>
-          <span className={styles.commentDate}>{formatDate(comment.date)}</span>
+      <div ref={ref} className={`${commentStyles.comment} ${commentStyles.commentDeleted}`} id={`comment-${comment.id}`}>
+        <div className={commentStyles.commentMeta}>
+          <UserName username={comment.author} className={commentStyles.commentAuthor} />
+          <span className={commentStyles.deletedLabel}>该评论已被删除</span>
+          <span className={commentStyles.commentDate}>{formatDate(comment.createdAt)}</span>
         </div>
       </div>
     )
   }
 
   return (
-    <div ref={ref} className={styles.comment} id={`comment-${comment.id}`}>
+    <div ref={ref} className={commentStyles.comment} id={`comment-${comment.id}`}>
       <div
-        className={styles.commentMeta}
+        className={commentStyles.commentMeta}
         role="button"
         tabIndex={0}
         onClick={() => onReply(comment.id, comment.author)}
         onKeyDown={(e) => { if (e.key === 'Enter') onReply(comment.id, comment.author) }}
         style={{ cursor: 'pointer' }}
       >
-        <UserName username={comment.author} className={styles.commentAuthor} />
+        <UserName username={comment.author} className={commentStyles.commentAuthor} />
         {canDelete && (
           <button
-            className={styles.deleteBtn}
+            className={commentStyles.deleteBtn}
             onClick={(e) => { e.stopPropagation(); onDelete(comment.id) }}
             title="删除"
           >
@@ -347,56 +409,54 @@ const CommentCard = forwardRef<HTMLDivElement, {
             </svg>
           </button>
         )}
-        <span className={styles.commentDate}>{formatDate(comment.date)}</span>
+        <span className={commentStyles.commentDate}>{formatDate(comment.createdAt)}</span>
       </div>
-      <div className={styles.commentBody}>
+      <div className={commentStyles.commentBody}>
         <WikiContent content={comment.content} />
       </div>
     </div>
   )
 })
 
-/* ==============================================================
-   UnifiedReply — 所有回复统一格式（两行：meta + 多行内容）
-   ============================================================== */
+/* ---------- UnifiedReply ---------- */
+
 const UnifiedReply = forwardRef<HTMLDivElement, {
-  comment: Comment
+  comment: UnifiedComment
   parentAuthor?: string
-  parentColor?: string
   onReply: (id: string, author: string) => void
   canDelete: boolean
   onDelete: (id: string) => void
-}>(function UnifiedReply({ comment, parentAuthor, parentColor, onReply, canDelete, onDelete }, ref) {
+}>(function UnifiedReply({ comment, parentAuthor, onReply, canDelete, onDelete }, ref) {
   if (comment.deleted) {
     return (
-      <div ref={ref} className={`${styles.unifiedReply} ${styles.commentDeleted}`} id={`comment-${comment.id}`}>
-        <div className={styles.replyMeta}>
-          <UserName username={comment.author} className={styles.replyAuthor} />
-          <span className={styles.replyVerb}> 回复 </span>
-          {parentAuthor ? <UserName username={parentAuthor} className={styles.replyTarget} /> : <span className={styles.replyTarget}>未知</span>}
-          <span className={styles.deletedLabel}>该评论已被删除</span>
-          <span className={styles.replyDate}>{formatDate(comment.date)}</span>
+      <div ref={ref} className={`${commentStyles.unifiedReply} ${commentStyles.commentDeleted}`} id={`comment-${comment.id}`}>
+        <div className={commentStyles.replyMeta}>
+          <UserName username={comment.author} className={commentStyles.replyAuthor} />
+          <span className={commentStyles.replyVerb}> 回复 </span>
+          {parentAuthor ? <UserName username={parentAuthor} className={commentStyles.replyTarget} /> : <span className={commentStyles.replyTarget}>未知</span>}
+          <span className={commentStyles.deletedLabel}>该评论已被删除</span>
+          <span className={commentStyles.replyDate}>{formatDate(comment.createdAt)}</span>
         </div>
       </div>
     )
   }
 
   return (
-    <div ref={ref} className={styles.unifiedReply} id={`comment-${comment.id}`}>
+    <div ref={ref} className={commentStyles.unifiedReply} id={`comment-${comment.id}`}>
       <div
-        className={styles.replyMeta}
+        className={commentStyles.replyMeta}
         role="button"
         tabIndex={0}
         onClick={() => onReply(comment.id, comment.author)}
         onKeyDown={(e) => { if (e.key === 'Enter') onReply(comment.id, comment.author) }}
         style={{ cursor: 'pointer' }}
       >
-        <UserName username={comment.author} className={styles.replyAuthor} />
-        <span className={styles.replyVerb}> 回复 </span>
-        {parentAuthor ? <UserName username={parentAuthor} className={styles.replyTarget} /> : <span className={styles.replyTarget}>未知</span>}
+        <UserName username={comment.author} className={commentStyles.replyAuthor} />
+        <span className={commentStyles.replyVerb}> 回复 </span>
+        {parentAuthor ? <UserName username={parentAuthor} className={commentStyles.replyTarget} /> : <span className={commentStyles.replyTarget}>未知</span>}
         {canDelete && (
           <button
-            className={styles.deleteBtn}
+            className={commentStyles.deleteBtn}
             onClick={(e) => { e.stopPropagation(); onDelete(comment.id) }}
             title="删除"
           >
@@ -405,15 +465,11 @@ const UnifiedReply = forwardRef<HTMLDivElement, {
             </svg>
           </button>
         )}
-        <span className={styles.replyDate}>{formatDate(comment.date)}</span>
+        <span className={commentStyles.replyDate}>{formatDate(comment.createdAt)}</span>
       </div>
-      <div className={styles.replyContent}>
+      <div className={commentStyles.replyContent}>
         <WikiContent content={comment.content} />
       </div>
     </div>
   )
 })
-
-/* ==============================================================
-   工具函数
-   ============================================================== */

@@ -18,11 +18,14 @@ import {
   updateForumPost,
   fetchAllUsers,
 } from '@/lib/gist-api'
-import ForumCommentSection from '@/components/ForumCommentSection'
+import CommentSection from '@/components/CommentSection'
+import type { UnifiedComment } from '@/components/CommentSection'
+import VisibilityBar from '@/components/VisibilityBar'
+import VisibilityModal from '@/components/VisibilityModal'
 import type { ForumPost, ForumComment, UserInfo } from '@/types/gist'
 import { formatDate } from '@/lib/forum'
 import { UserName } from '@/components/UserName'
-import { getPinyinInitials } from '@/lib/people'
+import { loadPinyinInitialsFromDB } from '@/lib/people'
 import { showWarningToast } from '@/lib/toast'
 import styles from '@/styles/forum.module.css'
 
@@ -107,6 +110,9 @@ export default function ForumPostPage() {
   }, [postId])
 
   useEffect(() => { load() }, [load])
+
+  // 客户端初始化：加载拼音首字母
+  useEffect(() => { loadPinyinInitialsFromDB() }, [])
 
   /** 如果 URL 带 ?comment=xxx 但评论不存在或已被删除，显示警告 */
   useEffect(() => {
@@ -210,6 +216,15 @@ export default function ForumPostPage() {
 
   const isAuthor = session && post && session.userId === post.author_id
   const editExcludedUsers = allUsers.filter((u) => editExcludedIds.includes(u.id))
+  const unifiedComments = useMemo(() => comments.map((c): UnifiedComment => ({
+    id: c.id,
+    parentId: c.parent_id ?? null,
+    author: c.author_username,
+    authorId: c.author_id,
+    content: c.content,
+    createdAt: c.created_at,
+    deleted: c.deleted,
+  })), [comments])
 
   if (!postId) return <div className={styles.page}><p>缺少帖子 ID</p></div>
   if (loading) return <div className={styles.page}><p className={styles.loading}>加载中&hellip;</p></div>
@@ -260,7 +275,6 @@ export default function ForumPostPage() {
           <div className={styles.newPostForm}>
             <VisibilityBar
               excludedUsers={editExcludedUsers}
-              allUsers={allUsers}
               onOpenModal={() => setShowVisibilityModal(true)}
               onRemoveExclude={(userId) =>
                 setEditExcludedIds((prev) => prev.filter((id) => id !== userId))
@@ -303,12 +317,13 @@ export default function ForumPostPage() {
                 {refreshCooldown > 0 && <span className={styles.refreshCooldown}>{refreshCooldown}s</span>}
               </button>
             </div>
-            <ForumCommentSection
-              comments={comments}
+            <CommentSection
+              comments={unifiedComments}
               onSubmit={handleNewComment}
               onDelete={handleDeleteComment}
               targetCommentId={scrollReady ? commentId : null}
               scrollKey={scrollReady ? (requestKey ? requestKey.length : 0) : 0}
+              hideTitle
             />
           </div>
         )}
@@ -318,7 +333,7 @@ export default function ForumPostPage() {
         <VisibilityModal
           allUsers={allUsers}
           usersLoading={usersLoading}
-          excludedIds={editExcludedIds}
+          excludedUserIds={editExcludedIds}
           onToggle={(userId) =>
             setEditExcludedIds((prev) =>
               prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId],
@@ -331,112 +346,3 @@ export default function ForumPostPage() {
   )
 }
 
-function VisibilityBar({ excludedUsers, allUsers, onOpenModal, onRemoveExclude }: {
-  excludedUsers: UserInfo[]
-  allUsers: UserInfo[]
-  onOpenModal: () => void
-  onRemoveExclude: (userId: string) => void
-}) {
-  return (
-    <div className={styles.visibilityBar}>
-      <span className={styles.visibilityLabel}>可见性</span>
-      <div className={styles.visibilityTags}>
-        {excludedUsers.length === 0 ? (
-          <span className={styles.visibilityTagAll}>所有人可见</span>
-        ) : (
-          excludedUsers.map((u) => (
-            <span key={u.id} className={styles.visibilityTag}>
-              隐藏: {u.name || u.username}
-              <button
-                type="button"
-                className={styles.visibilityTagRemove}
-                onClick={() => onRemoveExclude(u.id)}
-                title="移除此人"
-              >
-                ✕
-              </button>
-            </span>
-          ))
-        )}
-      </div>
-      <button
-        type="button"
-        className={styles.visibilityAddBtn}
-        onClick={onOpenModal}
-        title="设置可见性"
-      >
-        + 标签
-      </button>
-    </div>
-  )
-}
-
-function VisibilityModal({ allUsers, usersLoading, excludedIds, onToggle, onClose }: {
-  allUsers: UserInfo[]
-  usersLoading?: boolean
-  excludedIds: string[]
-  onToggle: (userId: string) => void
-  onClose: () => void
-}) {
-  const [search, setSearch] = useState('')
-  const filtered = allUsers.filter(
-    (u) =>
-      !search.trim() ||
-      u.name.toLowerCase().includes(search.toLowerCase()) ||
-      u.username.toLowerCase().includes(search.toLowerCase()) ||
-      getPinyinInitials(u.name).toLowerCase().includes(search.toLowerCase()),
-  )
-
-  return (
-    <div className={styles.modalOverlay} onClick={onClose}>
-      <div className={styles.visibilityModal} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.visibilityModalHeader}>
-          <h3>选择不可见用户</h3>
-          <button className={styles.visibilityModalClose} onClick={onClose}>&times;</button>
-        </div>
-        <div className={styles.visibilityModalSearch}>
-          <input
-            type="text"
-            placeholder="搜索用户…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            autoFocus
-          />
-        </div>
-        <div className={styles.visibilityModalList}>
-          {usersLoading ? (
-            <div className={styles.visibilityModalEmpty}>加载中…</div>
-          ) : filtered.length === 0 ? (
-            <div className={styles.visibilityModalEmpty}>没有匹配的用户</div>
-          ) : (
-            <>
-              {filtered.map((u) => {
-                const selected = excludedIds.includes(u.id)
-                return (
-                  <label key={u.id} className={styles.visibilityModalItem}>
-                    <span className={styles.visibilityModalName}>
-                      <span className={styles.visibilityModalInitials}>{getPinyinInitials(u.name)}</span>
-                      <span className={styles.visibilityModalUsername}>@<UserName username={u.username} /></span>
-                    </span>
-                    <div
-                      className={`${styles.toggleSwitch} ${selected ? styles.toggleOn : ''}`}
-                      onClick={() => onToggle(u.id)}
-                    >
-                      <div className={styles.toggleSlider} />
-                    </div>
-                  </label>
-                )
-              })}
-            </>
-          )}
-        </div>
-        <div className={styles.visibilityModalFooter}>
-          <span className={styles.visibilityModalHint}>
-            开启开关 = 该用户<strong>不可见</strong>此帖子
-          </span>
-          <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={onClose}>完成</button>
-        </div>
-      </div>
-    </div>
-  )
-}

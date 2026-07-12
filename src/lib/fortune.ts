@@ -43,44 +43,62 @@ function todayStr(): string {
   return `${y}-${m}-${day}`
 }
 
-/** 判断今天是否在 [start, end] 日期范围内（含两端） */
-function isBetween(startMMDD: string, endMMDD: string): boolean {
-  const now = new Date()
-  const y = now.getFullYear()
-  const start = new Date(`${y}-${startMMDD}`)
-  const end = new Date(`${y}-${endMMDD}`)
-  // 处理跨年范围
-  if (start <= end) {
-    return now >= start && now <= end
-  } else {
-    return now >= start || now <= end
+// ── 考试/假日日期，从数据库加载 ──
+// 格式 { start: "MM-DD", end?: "MM-DD" }
+interface FortuneDateEntry {
+  type: 'exam' | 'holiday'
+  start: string
+  end?: string
+}
+
+let fortuneDates: FortuneDateEntry[] = []
+
+let dbLoaded = false
+
+/**
+ * 从 Supabase 加载考试/假日日期，覆盖硬编码默认值
+ */
+export async function loadFortuneDatesFromDB(): Promise<void> {
+  if (dbLoaded) return
+  try {
+    const { supabase } = await import('@/lib/supabase')
+    const { data, error } = await supabase.rpc('get_fortune_dates', { p_type: null })
+    if (error) {
+      console.warn('加载考试/假日日期失败:', error.message)
+      return
+    }
+    fortuneDates = (data ?? []).map((r: any) => ({
+      type: r.date_type as 'exam' | 'holiday',
+      start: r.start_date ? String(r.start_date).slice(5) : '',
+      end: r.end_date ? String(r.end_date).slice(5) : undefined,
+    }))
+    dbLoaded = true
+  } catch (e) {
+    console.warn('加载考试/假日日期异常:', e)
   }
 }
 
-// ── 考试日期列表，格式 "MM-DD" ──
-// 由用户维护更新
-let examDates: string[] = [
-  '09-01', // 摸底考（2026-09-01）
-]
-
-// ── 放假日期范围 ──
-const HOLIDAY_RANGES: [string, string][] = [
-  ['07-01', '08-31'], // 暑假
-]
-
 /**
- * 判断今天的领域
+ * 判断今天的领域（完全由数据库日期决定，无硬编码 fallback）
  */
 export function getTodayDomain(): FortuneDomain {
   const now = new Date()
   const mmdd = `${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 
   // 1. 考试日优先
-  if (examDates.includes(mmdd)) return 'exam'
+  for (const d of fortuneDates) {
+    if (d.type === 'exam' && d.start === mmdd) return 'exam'
+  }
 
-  // 2. 放假
-  for (const [start, end] of HOLIDAY_RANGES) {
-    if (isBetween(start, end)) return 'holiday'
+  // 2. 放假（含跨年范围）
+  for (const d of fortuneDates) {
+    if (d.type !== 'holiday') continue
+    if (d.end && d.start <= d.end) {
+      if (mmdd >= d.start && mmdd <= d.end) return 'holiday'
+    } else if (d.end) {
+      // 跨年：如 12-25 ~ 01-05
+      if (mmdd >= d.start || mmdd <= d.end) return 'holiday'
+    }
   }
 
   // 3. 周末
@@ -145,7 +163,3 @@ export function drawFortune(studentId: string): FortuneResult {
   }
 }
 
-/** 设置考试日期（由用户调用维护） */
-export function setExamDates(dates: string[]) {
-  examDates = dates
-}

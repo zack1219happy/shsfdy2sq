@@ -33,19 +33,12 @@ export interface PersonRegistry {
 }
 
 // ============================================================
-// 拼音首字母查找
+// 拼音首字母查找（数据库驱动，带本地 fallback）
 // ============================================================
 
-import { registry } from '@/data/person-registry'
+import { BASE_PATH } from './constants'
 
-const _initialsMap = new Map<string, string>()
-for (const e of registry.students) _initialsMap.set(e.name, e.initials)
-for (const e of registry.teachers) _initialsMap.set(e.name, e.initials)
-
-/** 从 person-registry 查找姓名对应的拼音首字母缩写 */
-export function getPinyinInitials(name: string): string {
-  return _initialsMap.get(name) ?? ''
-}
+export { getPinyinInitials, loadPinyinInitialsFromDB } from './pinyin-init-db'
 
 // ============================================================
 // 解析结果
@@ -80,9 +73,7 @@ export function resolvePerson(
 
   const isTeacher = type === 'tch'
   const entries = isTeacher ? registry.teachers : registry.students
-  const basePath = typeof process !== 'undefined'
-    ? (process.env.NEXT_PUBLIC_BASE_PATH || '')
-    : ''
+  const basePath = BASE_PATH
 
   // 辅助：尝试唯一匹配
   function uniqueMatch(matched: (PersonEntry | TeacherEntry)[]): ResolveResult {

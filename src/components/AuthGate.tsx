@@ -14,6 +14,7 @@ import { registry } from '@/data/person-registry'
 import styles from '@/styles/auth.module.css'
 import FaIcon from '@/components/FaIcon'
 import { UserColorProvider } from '@/lib/user-colors'
+import { BASE_PATH } from '@/lib/constants'
 import { UserName } from '@/components/UserName'
 
 /* ==============================================================
@@ -127,7 +128,7 @@ function LoginScreen({
   return (
     <div className={styles.overlay}>
       <div className={styles.card}>
-        <img src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/logo.png`} alt="" className={styles.cardLogo} />
+        <img src={`${BASE_PATH}/logo.png`} alt="" className={styles.cardLogo} />
 
         <h1>上中二旦社区</h1>
         <p className={styles.cardSubtitle}>上海中学二旦班 · 班级知识库</p>

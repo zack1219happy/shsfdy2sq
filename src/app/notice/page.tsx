@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { getSession } from '@/lib/auth'
 import { fetchNotifications, getUnreadCount, markNotificationRead, clearAllNotifications, deleteNotifications } from '@/lib/gist-api'
 import { registry } from '@/data/person-registry'
+import { BASE_PATH } from '@/lib/constants'
 import FaIcon from '@/components/FaIcon'
 import { UserName } from '@/components/UserName'
 import type { Notification } from '@/lib/gist-api'
@@ -89,7 +90,7 @@ export default function NoticePage() {
         <div className={styles.noticeList}>
           {filtered.map((n) => {
             const isForum = n.type?.startsWith('forum_')
-            const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''
+            const basePath = BASE_PATH
             const page = n.page ? (registry.oldToNewSlug[n.page] ?? n.page) : undefined
             const href = isForum
               ? `${basePath}/forum/post?id=${n.page?.replace('forum/', '') || ''}&comment=${n.comment_id}&_=${Date.now()}`

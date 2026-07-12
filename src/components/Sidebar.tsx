@@ -2,9 +2,8 @@
 
 import Link from 'next/link'
 import NavEntries from './sidebar/NavEntries'
+import { BASE_PATH } from '@/lib/constants'
 import styles from '@/styles/sidebar.module.css'
-
-const bp = process.env.NEXT_PUBLIC_BASE_PATH || ''
 
 export default function Sidebar() {
   return (
@@ -12,7 +11,7 @@ export default function Sidebar() {
       {/* 顶部 logo */}
       <div className={styles.topSection}>
         <Link href="/" className={styles.logoLink}>
-          <img src={`${bp}/logo.webp`} alt="" className={styles.logo} />
+          <img src={`${BASE_PATH}/logo.webp`} alt="" className={styles.logo} />
         </Link>
       </div>
 

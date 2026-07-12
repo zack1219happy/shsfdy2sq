@@ -927,22 +927,6 @@
   transform: translateX(18px);
 }
 
-/* ---- 彩色用户名（复用 comment 样式） ---- */
-.colorWz {
-  color: #1a73e8;
-}
-
-.colorTqy {
-  color: #1a73e8;
-}
-
-.colorZyj {
-  color: #dc2626;
-}
-
-.colorDouDou {
-  color: #16a34a;
-}
 
 /* ---- 评论锚点高亮 ---- */
 @keyframes commentAnchorHighlight {

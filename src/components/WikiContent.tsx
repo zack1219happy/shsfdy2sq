@@ -3,6 +3,7 @@
 import { useMemo, useRef, useEffect } from 'react'
 import { renderClientWithRegistry, replaceWikiLinks } from '@/lib/render-client'
 import { registry, titleSlugMap as defaultTitleSlugMap } from '@/data/person-registry'
+import { BASE_PATH } from '@/lib/constants'
 
 interface Props {
   /** 原始内容（markdown 或 HTML） */
@@ -25,7 +26,7 @@ interface Props {
  */
 export default function WikiContent({ content, format, className, titleSlugMap: propMap }: Props) {
   const ref = useRef<HTMLDivElement>(null)
-  const basePath = useMemo(() => process.env.NEXT_PUBLIC_BASE_PATH || '', [])
+  const basePath = BASE_PATH
   // 优先使用传入的映射，否则使用自动生成的默认映射
   const effectiveMap = propMap ?? defaultTitleSlugMap
   const html = useMemo(() => {

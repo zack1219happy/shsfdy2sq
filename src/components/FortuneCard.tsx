@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { getSession } from '@/lib/auth'
-import { drawFortune } from '@/lib/fortune'
+import { drawFortune, loadFortuneDatesFromDB } from '@/lib/fortune'
 import { checkIn } from '@/lib/check-in'
 import type { FortuneResult } from '@/lib/fortune'
 import styles from '@/styles/fortune.module.css'
@@ -21,8 +21,9 @@ export default function FortuneCard() {
   const [hasDrawn, setHasDrawn] = useState(false)
   const [streak, setStreak] = useState(0)
 
-  // 初始化 session 和缓存
+  // 初始化 session、缓存和日期数据
   useEffect(() => {
+    loadFortuneDatesFromDB()
     setSession(getSession())
 
     const today = new Date().toISOString().slice(0, 10)

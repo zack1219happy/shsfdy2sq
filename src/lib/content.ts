@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import MarkdownIt from 'markdown-it'
+import { BASE_PATH } from './constants'
 // 只注册需要用到的语言，与 render-client.ts 保持一致
 import hljs from 'highlight.js/lib/core'
 import bash from 'highlight.js/lib/languages/bash'
@@ -180,7 +181,7 @@ export function getAgreementContent(slug: string[]): PageContent {
  *   campus/dormitory.md    → slug "campus/dormitory", 前缀 /data/wiki/campus/
  */
 function fixImagePaths(html: string, slugPath: string): string {
-  const base = process.env.NEXT_PUBLIC_BASE_PATH || ''
+  const base = BASE_PATH
   const contentsDir = WIKI_DIR
   const segments = slugPath.split('/')
 
@@ -269,7 +270,7 @@ function renderAttributesFromFrontmatter(data: Record<string, unknown>): Record<
  */
 function replaceWikiLinks(html: string, currentSlug: string): string {
   const titleMap = getTitleToSlugMap()
-  const base = process.env.NEXT_PUBLIC_BASE_PATH || ''
+  const base = BASE_PATH
 
   return html.replace(
     /\[\[([^\]|]+?)(?:\|([^\]|]+?))?\]\]/g,

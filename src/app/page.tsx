@@ -10,6 +10,7 @@ import { fetchForumPosts } from '@/lib/gist-api'
 import type { ForumPost } from '@/types/gist'
 import { formatDate } from '@/lib/forum'
 import { titleSlugMap } from '@/data/person-registry'
+import { BASE_PATH } from '@/lib/constants'
 import styles from '@/styles/home.module.css'
 
 /** 从数组中随机选取 n 个不重复元素 */
@@ -31,7 +32,7 @@ export default function HomePage() {
   const [randomPages, setRandomPages] = useState<{ title: string; slug: string }[]>([])
 
   useEffect(() => {
-    const base = process.env.NEXT_PUBLIC_BASE_PATH || ''
+    const base = BASE_PATH
     Promise.all([
       fetchForumPosts().then((data) => {
         setPosts(data.slice(0, 5))
@@ -59,7 +60,7 @@ export default function HomePage() {
       <header className={styles.hero}>
         <h1 className={styles.heroTitle}>
           <img
-            src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/logo.webp`}
+            src={`${BASE_PATH}/logo.webp`}
             alt="Logo"
             className={styles.logo}
           />

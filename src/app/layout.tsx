@@ -4,6 +4,7 @@ import Sidebar from '@/components/Sidebar'
 import FilePad from '@/components/FilePad'
 import AuthGate from '@/components/AuthGate'
 import ImageModal from '@/components/ImageModal'
+import ToastProvider from '@/components/ToastProvider'
 import { config } from '@fortawesome/fontawesome-svg-core'
 import '@fortawesome/fontawesome-svg-core/styles.css'
 // 阻止 FA 自动注入 CSS（Next.js 已手动导入）
@@ -31,12 +32,13 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://iiiyoafpzfqxpaqheojg.supabase.co" />
       </head>
       <body>
-        <Sidebar />
-        <FilePad tree={tree} />
+        <ToastProvider>
+          <Sidebar />
+          <FilePad tree={tree} />
 
-        <ImageModal />
+          <ImageModal />
 
-        <AuthGate>
+          <AuthGate>
           <div
             style={{
               marginLeft: 'calc(var(--sidebar-width) + var(--filepad-width, 0px))',
@@ -46,6 +48,7 @@ export default function RootLayout({
             {children}
           </div>
         </AuthGate>
+          </ToastProvider>
       </body>
     </html>
   )
