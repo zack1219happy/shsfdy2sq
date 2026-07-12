@@ -12,8 +12,6 @@
 :root {
   --sidebar-width: 60px;
   --filepad-width: 300px;
-  --sidebar-min-width: 180px;
-  --sidebar-max-width: 400px;
   --color-bg: #ffffff;
   --color-sidebar-bg: #f4f6f8;
   --color-border: #eaecef;
@@ -27,12 +25,9 @@
   --color-active-bg: #e8f0fe;
   --color-attr-bg: #f6f8fa;
   --color-toc-bg: #fafbfc;
-  --color-bottom-bar-bg: #f8f9fa;
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter',
     'Helvetica Neue', sans-serif;
   --content-max-width: 800px;
-  --wrapper-max-width: 1400px;
-  --bottom-bar-height: 50px;
   --border-radius: 8px;
   --border-radius-lg: 8px;
 }
