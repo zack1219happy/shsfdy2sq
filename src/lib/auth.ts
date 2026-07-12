@@ -44,8 +44,18 @@ export function clearSession(): void {
   supabase.auth.signOut().catch(() => {});
 }
 
-export function isLoggedIn(): boolean {
-  return getSession() !== null;
+/**
+ * 判断当前用户是否有权限删除指定用户的评论
+ */
+export function canDeleteComment(
+  session: UserSession | null,
+  commentUserId?: string,
+): boolean {
+  if (!session) return false
+  if (session.role === 'super_admin') return true
+  if (session.role === 'admin' && commentUserId !== session.userId) return true
+  if (commentUserId && commentUserId === session.userId) return true
+  return false
 }
 
 export interface LoginResult {

@@ -4,7 +4,7 @@ import { forwardRef, useCallback, useMemo, useState } from 'react'
 import dynamic from 'next/dynamic'
 import FaIcon from '@/components/FaIcon'
 import WikiContent from '@/components/WikiContent'
-import { getSession } from '@/lib/auth'
+import { getSession, canDeleteComment } from '@/lib/auth'
 import { deleteComment } from '@/lib/gist-api'
 import { useCommentAnchor } from '@/hooks/useCommentAnchor'
 import { UserName } from '@/components/UserName'
@@ -48,13 +48,10 @@ export default function ForumCommentSection({ comments, onSubmit, onDelete, plac
   // 返回 ref 回调：元素进入 DOM 的精确时刻触发滚动 + 高亮
   const anchorRef = useCommentAnchor(styles.highlight, scrollKey ?? 0)
 
-  const canDelete = useCallback((commentUserId?: string) => {
-    if (!session) return false
-    if (session.role === 'super_admin') return true
-    if (session.role === 'admin' && commentUserId !== session.userId) return true
-    if (commentUserId && commentUserId === session.userId) return true
-    return false
-  }, [session])
+  const canDelete = useCallback(
+    (commentUserId?: string) => canDeleteComment(session, commentUserId),
+    [session],
+  )
 
   const handleDelete = useCallback(async (commentId: string) => {
     if (!onDelete) return

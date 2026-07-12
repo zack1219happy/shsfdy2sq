@@ -13,7 +13,6 @@ interface UseToolbarOptions {
   toggleState: ToggleState
   setToggleState: (fn: (prev: ToggleState) => ToggleState) => void
   openDialog: (request: DialogRequest) => void
-  onDialogFinish: (fn: (data: Record<string, string>) => string) => void
 }
 
 interface ToolbarAPI {
@@ -34,7 +33,6 @@ export function useToolbar({
   toggleState,
   setToggleState,
   openDialog,
-  onDialogFinish,
 }: UseToolbarOptions): ToolbarAPI {
   const handleAction = useCallback(
     (btn: ToolbarBtn) => {

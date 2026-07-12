@@ -12,6 +12,7 @@ import { formatDate } from '@/lib/forum'
 import { titleSlugMap } from '@/data/person-registry'
 import styles from '@/styles/home.module.css'
 
+/** 从数组中随机选取 n 个不重复元素 */
 function pickRandom<T>(arr: T[], n: number): T[] {
   const copy = [...arr]
   const result: T[] = []

@@ -3,12 +3,13 @@
 import { forwardRef, useCallback, useEffect, useMemo, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { fetchPageComments, addComment, deleteComment } from '@/lib/gist-api'
-import { getSession } from '@/lib/auth'
+import { getSession, canDeleteComment } from '@/lib/auth'
 import type { Comment } from '@/types/gist'
 import WikiContent from '@/components/WikiContent'
 import { useCommentAnchor } from '@/hooks/useCommentAnchor'
 import { UserName } from '@/components/UserName'
 import { showWarningToast } from '@/lib/toast'
+import { formatDate } from '@/lib/forum'
 import styles from '@/styles/comment.module.css'
 
 const MarkdownEditor = dynamic(
@@ -101,13 +102,7 @@ export default function CommentSection({ pageSlug }: Props) {
 
   const session = getSession()
   const canDelete = useCallback(
-    (commentUserId?: string) => {
-      if (!session) return false
-      if (session.role === "super_admin") return true
-      if (session.role === "admin" && commentUserId !== session.userId) return true
-      if (commentUserId && commentUserId === session.userId) return true
-      return false
-    },
+    (commentUserId?: string) => canDeleteComment(session, commentUserId),
     [session],
   )
 
@@ -422,17 +417,3 @@ const UnifiedReply = forwardRef<HTMLDivElement, {
 /* ==============================================================
    工具函数
    ============================================================== */
-function formatDate(iso: string): string {
-  try {
-    const d = new Date(iso)
-    return d.toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  } catch {
-    return iso
-  }
-}

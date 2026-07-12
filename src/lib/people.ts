@@ -33,6 +33,21 @@ export interface PersonRegistry {
 }
 
 // ============================================================
+// 拼音首字母查找
+// ============================================================
+
+import { registry } from '@/data/person-registry'
+
+const _initialsMap = new Map<string, string>()
+for (const e of registry.students) _initialsMap.set(e.name, e.initials)
+for (const e of registry.teachers) _initialsMap.set(e.name, e.initials)
+
+/** 从 person-registry 查找姓名对应的拼音首字母缩写 */
+export function getPinyinInitials(name: string): string {
+  return _initialsMap.get(name) ?? ''
+}
+
+// ============================================================
 // 解析结果
 // ============================================================
 

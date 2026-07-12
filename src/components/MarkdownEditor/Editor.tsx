@@ -14,7 +14,7 @@ import Dialog from './Dialog'
 import { DEFAULT_CONFIG } from './config'
 import { findLineInPreview } from './scrollSync'
 import styles from '@/styles/markdown-editor.module.css'
-import type { EditorProps, MarkdownEditorConfig, ToggleState } from './types'
+import type { EditorProps, MarkdownEditorConfig, ToggleState, DialogRequest } from './types'
 
 export default function Editor({
   value,
@@ -47,7 +47,7 @@ export default function Editor({
   const dialogFnRef = useRef<((data: Record<string, string>) => string) | null>(null)
 
   const handleOpenDialog = useCallback(
-    (req: any) => {
+    (req: DialogRequest) => {
       dialogFnRef.current = req.fn
       openDialog(req)
     },
@@ -125,7 +125,6 @@ export default function Editor({
     toggleState,
     setToggleState,
     openDialog: handleOpenDialog,
-    onDialogFinish: handleOpenDialog,
   })
 
   // 7. onChange

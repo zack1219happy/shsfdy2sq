@@ -8,16 +8,8 @@ import { getSession } from '@/lib/auth'
 import { createForumPost, fetchAllUsers } from '@/lib/gist-api'
 import { UserName } from '@/components/UserName'
 import type { UserInfo } from '@/types/gist'
-import { registry } from '@/data/person-registry'
+import { getPinyinInitials } from '@/lib/people'
 import styles from '@/styles/forum.module.css'
-
-/** 从 person-registry 查找姓名对应的拼音首字母缩写 */
-const _initialsMap = new Map<string, string>()
-for (const e of registry.students) _initialsMap.set(e.name, e.initials)
-for (const e of registry.teachers) _initialsMap.set(e.name, e.initials)
-function getPinyinInitials(name: string): string {
-  return _initialsMap.get(name) ?? ''
-}
 
 const MarkdownEditor = dynamic(
   () => import('@/components/MarkdownEditor').then((m) => m.MarkdownEditor),

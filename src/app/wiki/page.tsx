@@ -26,9 +26,8 @@ export default function WikiHomePage() {
             color: 'var(--color-text)',
             padding: '32px 0 16px',
           }}
-        >
-          {content.title}
-        </h2>
+          dangerouslySetInnerHTML={{ __html: content.titleHtml }}
+        />
 
         <Breadcrumb crumbs={crumbs} baseHref="/wiki" />
         <AttributeBox attributes={content.attributes} />

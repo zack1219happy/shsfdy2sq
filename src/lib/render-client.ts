@@ -171,6 +171,7 @@ export function renderClient(
 
 /**
  * 渲染 Markdown 为 HTML（同时启用 person 引用插件）
+ * 相当于 renderClient(content, { ...options, personRegistry: registry }, sanitize)
  */
 export function renderClientWithRegistry(
   content: string,
@@ -178,13 +179,7 @@ export function renderClientWithRegistry(
   options?: ClientMdOptions,
   sanitize = true,
 ): string {
-  const md = createClientMd({ ...options, personRegistry: registry })
-  const raw = md.render(content)
-  const withImages = addImageModalSupport(raw)
-  if (sanitize && typeof window !== 'undefined') {
-    return DOMPurify.sanitize(withImages)
-  }
-  return withImages
+  return renderClient(content, { ...options, personRegistry: registry }, sanitize)
 }
 
 // ============================================================

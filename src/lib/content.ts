@@ -245,11 +245,6 @@ function addImageCaptions(html: string): string {
   )
 }
 
-/** 剥离 HTML 属性中的 on* 事件处理器 */
-function stripEventHandlers(attrs: string): string {
-  return attrs.replace(/\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '')
-}
-
 /**
  * 从 gray-matter frontmatter 提取 attributes 属性表
  * 使用完整的 markdown-it + KaTeX 管线渲染键和值

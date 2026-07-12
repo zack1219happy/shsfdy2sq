@@ -11,6 +11,7 @@ import {
   fetchForumPost,
   fetchForumComments,
   addForumComment,
+  deleteForumComment,
   voteForumPost,
   removeForumVote,
   getUserForumVote,
@@ -21,17 +22,9 @@ import ForumCommentSection from '@/components/ForumCommentSection'
 import type { ForumPost, ForumComment, UserInfo } from '@/types/gist'
 import { formatDate } from '@/lib/forum'
 import { UserName } from '@/components/UserName'
-import { registry } from '@/data/person-registry'
+import { getPinyinInitials } from '@/lib/people'
 import { showWarningToast } from '@/lib/toast'
 import styles from '@/styles/forum.module.css'
-
-/** 从 person-registry 查找姓名对应的拼音首字母缩写 */
-const _initialsMap = new Map<string, string>()
-for (const e of registry.students) _initialsMap.set(e.name, e.initials)
-for (const e of registry.teachers) _initialsMap.set(e.name, e.initials)
-function getPinyinInitials(name: string): string {
-  return _initialsMap.get(name) ?? ''
-}
 
 const MarkdownEditor = dynamic(
   () => import('@/components/MarkdownEditor').then((m) => m.MarkdownEditor),
@@ -193,7 +186,6 @@ export default function ForumPostPage() {
 
   const handleDeleteComment = async (commentId: string) => {
     try {
-      const { deleteForumComment } = await import('@/lib/gist-api')
       await deleteForumComment(commentId)
       // 同时刷新评论和帖子（评论数更新）
       await Promise.all([refreshCommentsOnly(), refreshPostOnly()])

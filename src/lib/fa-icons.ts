@@ -125,5 +125,7 @@ export function resolveIcon(name: string): IconDefinition | undefined {
     .replace(/^fa-/, '')
     .trim()
 
-  return registry.get(clean)
+  const found = registry.get(clean)
+  if (!found) console.warn(`[fa-icons] 找不到图标: "${name}" (clean: "${clean}")`)
+  return found
 }

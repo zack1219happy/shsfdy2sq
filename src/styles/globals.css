@@ -398,12 +398,6 @@ img {
   background: var(--color-primary-hover);
 }
 
-/* ---------- 拖拽中全局状态 ---------- */
-.resizing {
-  user-select: none;
-  cursor: ew-resize;
-}
-
 /* ---------- 页面加载动画 ---------- */
 @keyframes fadeInUp {
   from {
