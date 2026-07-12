@@ -1,5 +1,5 @@
 /**
- * 构建时扫描 data/contents/**\/*.md 中的 frontmatter icon 值，
+ * 构建时扫描 data/**\/*.md 中的 frontmatter icon 值，
  * 自动补全 src/lib/fa-icons.ts 的注册表（只添加不删除）。
  *
  * 用法：node scripts/scan-icons.js
@@ -8,7 +8,8 @@
 const fs = require('fs')
 const path = require('path')
 
-const CONTENTS_DIR = path.join(process.cwd(), 'data', 'contents')
+const CONTENTS_DIR = path.join(process.cwd(), 'data', 'wiki')
+const AGREEMENT_DIR = path.join(process.cwd(), 'data', 'agreement')
 const ICONS_FILE = path.join(process.cwd(), 'src', 'lib', 'fa-icons.ts')
 
 // ---------- 工具 ----------
@@ -59,6 +60,7 @@ function scanIconNames() {
     }
   }
   walk(CONTENTS_DIR)
+  if (fs.existsSync(AGREEMENT_DIR)) walk(AGREEMENT_DIR)
   return [...names].sort()
 }
 

@@ -83,7 +83,7 @@ zack1219happy（[stu:wz]）是我们的创始人大大！
 
 **第 1 步：进入目标目录**
 
-1. 打开 https://github.com/zack1219happy/shsfdy2sq/tree/main/data/contents
+1. 打开 https://github.com/zack1219happy/shsfdy2sq/tree/main/data/wiki
 2. 点进你要添加页面的分类目录（如 `people`、`campus`、`daily`）
 
 **第 2 步：新建文件**
@@ -168,10 +168,10 @@ git checkout -b my-edit-branch
 
 ### 第三步：修改内容
 
-所有内容文件在 `data/contents/` 目录下：
+所有内容文件在 `data/wiki/` 和 `data/agreement/` 目录下：
 
 ```
-data/contents/
+data/wiki/
 ├── home.md              # 首页
 ├── campus.md            # 校园分类页
 ├── campus/map.md        # 校园地图
@@ -179,8 +179,12 @@ data/contents/
 ├── campus/gym.md        # 体育馆
 ├── campus/_assets/      # 校园相关的图片
 ├── people/              # 人物
-├── daily/               # 日常
-└── notice/              # 通告
+└── daily/               # 日常
+
+data/agreement/          # 协议与帮助
+├── user-agreement.md    # 用户协议
+├── community-guidelines.md # 社区规范
+└── markdown-helper.md   # Markdown 帮助
 ```
 
 ### 第四步：本地预览

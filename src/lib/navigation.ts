@@ -5,8 +5,8 @@ import { loadRegistry } from './people-server'
 import { resolveText } from './people'
 
 // ============================================================
-//  导航树 —— 自动扫描 data/contents/ 下所有 .md 文件
-//  id = 相对于 data/contents/ 的路径（不含 .md）
+//  导航树 —— 自动扫描 data/ 下各目录的 .md 文件
+//  id = 相对于目录的路径（不含 .md）
 //  title / icon 来自 YAML frontmatter
 //  ============================================================
 
@@ -24,7 +24,8 @@ export interface NavNode {
 
 export const SITE_TITLE = '上中二旦社区'
 
-const CONTENTS_DIR = path.join(process.cwd(), 'data', 'contents')
+const WIKI_DIR = path.join(process.cwd(), 'data', 'wiki')
+const AGREEMENT_DIR = path.join(process.cwd(), 'data', 'agreement')
 
 // ---------- 读取 frontmatter ----------
 
@@ -60,7 +61,7 @@ interface FileEntry {
   meta: PageMeta
 }
 
-function scanAllMdFiles(): FileEntry[] {
+function scanAllMdFiles(dir: string): FileEntry[] {
   const entries: FileEntry[] = []
 
   function walk(dir: string, relSegments: string[]) {
@@ -85,7 +86,7 @@ function scanAllMdFiles(): FileEntry[] {
     }
   }
 
-  walk(CONTENTS_DIR, [])
+  walk(dir, [])
   return entries
 }
 
@@ -188,20 +189,33 @@ function buildTree(entries: FileEntry[]): NavNode[] {
 
 // ---------- 缓存 ----------
 
-let cachedTree: NavNode[] | null = null
+let cachedWikiTree: NavNode[] | null = null
+let cachedAgreementTree: NavNode[] | null = null
 
-function getTree(): NavNode[] {
-  if (!cachedTree) {
-    const entries = scanAllMdFiles()
-    cachedTree = buildTree(entries)
+function getWikiTreeInternal(): NavNode[] {
+  if (!cachedWikiTree) {
+    const entries = scanAllMdFiles(WIKI_DIR)
+    cachedWikiTree = buildTree(entries)
   }
-  return cachedTree
+  return cachedWikiTree
+}
+
+function getAgreementTreeInternal(): NavNode[] {
+  if (!cachedAgreementTree) {
+    const entries = scanAllMdFiles(AGREEMENT_DIR)
+    cachedAgreementTree = buildTree(entries)
+  }
+  return cachedAgreementTree
 }
 
 // ---------- 公开 API ----------
 
 export function getNavTree(): NavNode[] {
-  return getTree()
+  return getWikiTreeInternal()
+}
+
+export function getAgreementTree(): NavNode[] {
+  return getAgreementTreeInternal()
 }
 
 export function getSiteTitle(): string {
@@ -220,7 +234,7 @@ export function findNodeBySlug(slugPath: string): NavNode | null {
     return rest.length === 0 ? node : find(node.children ?? [], rest)
   }
 
-  return find(getTree(), segments)
+  return find(getWikiTreeInternal(), segments)
 }
 
 export function getAllSlugs(): string[][] {
@@ -238,13 +252,13 @@ export function getAllSlugs(): string[][] {
     }
   }
 
-  walk(getTree())
+  walk(getWikiTreeInternal())
   return slugs
 }
 
 export function getBreadcrumbs(slugPath: string): NavNode[] {
   if (!slugPath) return []
-  const tree = getTree()
+  const tree = getWikiTreeInternal()
   let segments = slugPath.split('/')
   let curr = tree
 
@@ -277,7 +291,7 @@ function buildTitleToSlugMap(): Map<string, string> {
     }
   }
 
-  walk(getTree())
+  walk(getWikiTreeInternal())
   return map
 }
 

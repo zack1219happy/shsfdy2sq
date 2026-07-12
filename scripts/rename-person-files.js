@@ -1,11 +1,11 @@
 /**
- * 将 data/contents/people/ 下的学生页从全拼音重命名为缩写
+ * 将 data/wiki/people/ 下的学生页从全拼音重命名为缩写
  * 例如: wang-zi.md → wz.md
  */
 const fs = require('fs')
 const path = require('path')
 
-const peopleDir = path.join(__dirname, '..', 'data', 'contents', 'people')
+const peopleDir = path.join(__dirname, '..', 'data', 'wiki', 'people')
 const registryPath = path.join(__dirname, '..', 'data', 'person-registry.json')
 
 const registry = JSON.parse(fs.readFileSync(registryPath, 'utf-8'))

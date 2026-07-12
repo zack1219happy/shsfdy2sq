@@ -1,5 +1,5 @@
 /**
- * 从 data/person-registry.json + 扫描 data/contents/ 生成客户端数据文件
+ * 从 data/person-registry.json + 扫描 data/ 生成客户端数据文件
  * - person-registry.ts：人名注册表 + 标题→slug 映射
  */
 const fs = require('fs')
@@ -7,7 +7,7 @@ const path = require('path')
 const matter = require('gray-matter')
 
 const registryPath = path.join(__dirname, '..', 'data', 'person-registry.json')
-const contentsDir = path.join(__dirname, '..', 'data', 'contents')
+const contentsDir = path.join(__dirname, '..', 'data', 'wiki')
 const outPath = path.join(__dirname, '..', 'src', 'data', 'person-registry.ts')
 
 // 1. 读注册表

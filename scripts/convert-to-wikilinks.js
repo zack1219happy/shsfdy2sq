@@ -13,7 +13,7 @@ const fs = require('fs')
 const path = require('path')
 const matter = require('gray-matter')
 
-const CONTENTS_DIR = path.join(process.cwd(), 'data', 'contents')
+const CONTENTS_DIR = path.join(process.cwd(), 'data', 'wiki')
 
 // ---------- 构建 slug → title 映射 ----------
 

@@ -7,6 +7,7 @@ import WikiFilePad from './filepad/WikiFilePad'
 import ForumFilePad from './filepad/ForumFilePad'
 import NoticeFilePad from './filepad/NoticeFilePad'
 import UserFilePad from './filepad/UserFilePad'
+import AgreementFilePad from './filepad/AgreementFilePad'
 import styles from '@/styles/filepad.module.css'
 
 interface Props {
@@ -30,6 +31,7 @@ export default function FilePad({ tree }: Props) {
     pathname.startsWith('/wiki') ? 'wiki' :
     pathname.startsWith('/forum') ? 'forum' :
     pathname.startsWith('/notice') ? 'notice' :
+    pathname.startsWith('/agreement') ? 'agreement' :
     pathname.startsWith('/user') ? 'user' : null
 
   return (
@@ -37,6 +39,7 @@ export default function FilePad({ tree }: Props) {
       {mode === 'wiki' && <WikiFilePad tree={tree} />}
       {mode === 'forum' && <ForumFilePad />}
       {mode === 'notice' && <NoticeFilePad />}
+      {mode === 'agreement' && <AgreementFilePad />}
       {mode === 'user' && <UserFilePad />}
     </aside>
   )

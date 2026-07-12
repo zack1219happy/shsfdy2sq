@@ -2,7 +2,7 @@
 title: Markdown 帮助
 icon: fas fa-markdown
 attributes:
-  文件位置: "`data/contents/notice/markdown-helper.md`"
+  文件位置: "`data/agreement/markdown-helper.md`"
   渲染引擎: markdown-it + highlight.js + KaTeX
 ---
 
@@ -78,7 +78,7 @@ attributes:           # 可选 — 属性表（渲染为键值对表格）
 ![图注文字](_assets/文件名.png)
 ```
 
-- 图片放在**分类级别的 `_assets/`** 目录下。例如 `campus/map.md` 和 `campus.md` 共用 `data/contents/campus/_assets/`。允许不同分类各自拥有独立的 `_assets/` 目录，互不干扰。
+- 图片放在**分类级别的 `_assets/`** 目录下。例如 `campus/map.md` 和 `campus.md` 共用 `data/wiki/campus/_assets/`。允许不同分类各自拥有独立的 `_assets/` 目录，互不干扰。
 - 图片命名最好有语义。
 - 路径用相对路径引用（`_assets/xxx.png`），构建时自动修正为绝对路径。
 - **alt 文字**（`![...]` 中的内容）会被渲染为 `<figcaption>` 图注。

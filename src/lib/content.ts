@@ -86,7 +86,8 @@ const md: MarkdownIt = new MarkdownIt({
 calloutPlugin(md)
 personPlugin(md, loadRegistry())
 
-const DATA_DIR = path.join(process.cwd(), 'data')
+const WIKI_DIR = path.join(process.cwd(), 'data', 'wiki')
+const AGREEMENT_DIR = path.join(process.cwd(), 'data', 'agreement')
 
 /**
  * 根据 slug 路径加载页面内容
@@ -94,10 +95,12 @@ const DATA_DIR = path.join(process.cwd(), 'data')
  *   []                → home.md
  *   ['campus']        → campus.md
  *   ['campus','map']  → campus/map.md
+ *
+ * 从 data/wiki/ 读取（对应路由 /wiki/*）
  */
 export function getPageContent(slug: string[]): PageContent {
   const slugPath = slug.length === 0 ? 'home' : slug.join('/')
-  const mdPath = path.join(DATA_DIR, 'contents', slugPath + '.md')
+  const mdPath = path.join(WIKI_DIR, slugPath + '.md')
 
   if (!fs.existsSync(mdPath)) {
     return { title: '未找到', titleHtml: '未找到', html: '<p>页面不存在</p>', rawContent: '页面不存在', attributes: {}, headings: [] }
@@ -143,26 +146,51 @@ export function getPageContent(slug: string[]): PageContent {
 }
 
 /**
+ * 加载协议与帮助内容（从 data/agreement/ 读取，对应路由 /agreement/*）
+ */
+export function getAgreementContent(slug: string[]): PageContent {
+  const slugPath = slug.length === 0 ? 'index' : slug.join('/')
+  const mdPath = path.join(AGREEMENT_DIR, slugPath + '.md')
+
+  if (!fs.existsSync(mdPath)) {
+    return { title: '未找到', titleHtml: '未找到', html: '<p>页面不存在</p>', rawContent: '页面不存在', attributes: {}, headings: [] }
+  }
+
+  const raw = fs.readFileSync(mdPath, 'utf-8')
+  const { data, content } = matter(raw)
+
+  const title = (data.title as string) || slug[slug.length - 1] || '协议与帮助'
+  const titleHtml = DOMPurify.sanitize(md.renderInline(title)).trim()
+
+  let html = md.render(content)
+  html = DOMPurify.sanitize(html)
+  const headings = extractHeadingsFromHtml(html)
+  const attributes = renderAttributesFromFrontmatter(data)
+
+  return { title, titleHtml, html, rawContent: raw, attributes, headings }
+}
+
+/**
  * 修正图片路径：从 MD 文件所在目录向上查找 `_assets/`，
  * 以正确应对扁平内容结构中多页面共享同一 `_assets/` 目录的情况。
  *
  * 示例：
- *   campus.md              → slug "campus",   前缀 /data/contents/campus/
- *   campus/map.md          → slug "campus/map",前缀 /data/contents/campus/
- *   campus/dormitory.md    → slug "campus/dormitory", 前缀 /data/contents/campus/
+ *   campus.md              → slug "campus",   前缀 /data/wiki/campus/
+ *   campus/map.md          → slug "campus/map",前缀 /data/wiki/campus/
+ *   campus/dormitory.md    → slug "campus/dormitory", 前缀 /data/wiki/campus/
  */
 function fixImagePaths(html: string, slugPath: string): string {
   const base = process.env.NEXT_PUBLIC_BASE_PATH || ''
-  const contentsDir = path.join(process.cwd(), 'data', 'contents')
+  const contentsDir = WIKI_DIR
   const segments = slugPath.split('/')
 
   // 从最长到最短依次尝试各目录层级，找到第一个包含 _assets/ 的
-  let assetPrefix = `${base}/data/contents/${slugPath}/`
+  let assetPrefix = `${base}/data/wiki/${slugPath}/`
   for (let i = segments.length; i > 0; i--) {
     const candidateDir = path.join(contentsDir, ...segments.slice(0, i))
     if (fs.existsSync(path.join(candidateDir, '_assets'))) {
       const rel = segments.slice(0, i).join('/')
-      assetPrefix = `${base}/data/contents/${rel}/`
+      assetPrefix = `${base}/data/wiki/${rel}/`
       break
     }
   }

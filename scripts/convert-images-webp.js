@@ -1,5 +1,5 @@
 /**
- * 将 data/contents/ 下所有 PNG/JPG 转为 WebP（原地生成 .webp 副本）。
+ * 将 data/wiki/ 和 data/agreement/ 下所有 PNG/JPG 转为 WebP（原地生成 .webp 副本）。
  * 保留原始文件作为 fallback。
  *
  * 用法: node scripts/convert-images-webp.js
@@ -10,7 +10,10 @@ const fs = require('fs')
 const path = require('path')
 
 // ---- 配置 ----
-const ROOTS = [path.join(__dirname, '..', 'data', 'contents')]
+const ROOTS = [
+  path.join(__dirname, '..', 'data', 'wiki'),
+  path.join(__dirname, '..', 'data', 'agreement'),
+]
 const QUALITY = 80 // WebP quality 0-100
 
 // ---- 扩展 ----

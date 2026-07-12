@@ -11,7 +11,7 @@ attributes:
 
 前往 gitHub 仓库以 Star 本 Wiki，或进行内容修改。
 
-使用前先阅读 **[[通告]]** 以确保你理解本 Wiki 的用户政策。
+使用前先阅读 **[用户协议](/agreement/user-agreement)** 以了解本社区的用户政策。
 
 如有侵权、不满请到 Github 上提交 Issue 或联系管理员。
 
