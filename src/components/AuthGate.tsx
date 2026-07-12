@@ -129,8 +129,8 @@ function LoginScreen({
       <div className={styles.card}>
         <img src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/logo.png`} alt="" className={styles.cardLogo} />
 
-        <h1>上中初二 Wiki</h1>
-        <p className={styles.cardSubtitle}>上海中学 2027 届 8 班 · 班级知识库</p>
+        <h1>上中二旦社区</h1>
+        <p className={styles.cardSubtitle}>上海中学二旦班 · 班级知识库</p>
 
         <form className={styles.form} onSubmit={handleSubmit}>
           <div className={styles.field}>

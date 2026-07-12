@@ -13,7 +13,7 @@ import '@/styles/globals.css'
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: getSiteTitle(),
-    description: '上中初二 Wiki - 班级内部知识库',
+    description: '上中二旦社区 - 班级内部知识库',
   }
 }
 

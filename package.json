@@ -2,7 +2,7 @@
   "name": "shsg8c1wiki",
   "version": "1.0.0",
   "private": true,
-  "description": "上中初二 Wiki - 班级知识库",
+  "description": "上中二旦社区 - 班级知识库",
   "scripts": {
     "dev": "next dev",
     "predev": "node scripts/copy-data-dev.js && node scripts/generate-person-ts.js && node scripts/convert-images-webp.js",

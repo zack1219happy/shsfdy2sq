@@ -1,4 +1,4 @@
-# 🏫 上中初二 Wiki
+# 🏫 上中二旦社区
 
 班级 Wiki，基于 Next.js 16 静态导出，部署于 GitHub Pages。
 

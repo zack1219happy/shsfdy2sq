@@ -6,7 +6,6 @@ import FaIcon from '@/components/FaIcon'
 import { UserName } from '@/components/UserName'
 import WikiContent from '@/components/WikiContent'
 import FortuneCard from '@/components/FortuneCard'
-import { getSession } from '@/lib/auth'
 import { fetchForumPosts } from '@/lib/gist-api'
 import type { ForumPost } from '@/types/gist'
 import { formatDate } from '@/lib/forum'
@@ -34,12 +33,7 @@ export default function HomePage() {
     const base = process.env.NEXT_PUBLIC_BASE_PATH || ''
     Promise.all([
       fetchForumPosts().then((data) => {
-        const session = getSession()
-        const userId = session?.userId
-        const visible = userId
-          ? data.filter((p) => !p.excluded_visibility?.includes(userId))
-          : data
-        setPosts(visible.slice(0, 5))
+        setPosts(data.slice(0, 5))
       }),
       fetch(`${base}/data/announcement.md?t=${Date.now()}`, { cache: 'no-store' })
         .then((r) => (r.ok ? r.text() : ''))
@@ -68,9 +62,9 @@ export default function HomePage() {
             alt="Logo"
             className={styles.logo}
           />
-          上中初二 Wiki
+          上中二旦社区
         </h1>
-        <p className={styles.heroSubtitle}>上海中学 2027 届 8 班 · 班级知识库</p>
+        <p className={styles.heroSubtitle}>上海中学二旦班 · 班级知识库</p>
       </header>
 
       {/* ═══ 第二行：两栏 — 公告 | 运势抽卡 ═══ */}

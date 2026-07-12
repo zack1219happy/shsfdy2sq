@@ -2,10 +2,10 @@
 title: 首页
 icon: fas fa-home
 attributes:
-  gitHub 仓库: "[zack1219happy/shsfdy2sq: 上中初二wiki](https://github.com/zack1219happy/shsfdy2sq)"
+  gitHub 仓库: "[zack1219happy/shsfdy2sq: 上中二旦社区](https://github.com/zack1219happy/shsfdy2sq)"
 ---
 
-## 欢迎来到上中初二 Wiki
+## 欢迎来到上中二旦社区
 
 这里是上中初二一班的专属知识库，收录校园生活的方方面面。
 

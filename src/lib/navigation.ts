@@ -22,7 +22,7 @@ export interface NavNode {
   pathKey?: string
 }
 
-export const SITE_TITLE = '上中初二 Wiki'
+export const SITE_TITLE = '上中二旦社区'
 
 const CONTENTS_DIR = path.join(process.cwd(), 'data', 'contents')
 

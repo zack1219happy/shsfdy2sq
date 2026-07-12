@@ -16,6 +16,6 @@
 
 fund from 金主爸爸（THebestfake, Zack-wz），特此致谢。
 
-© 上中初二 Wiki
+© 上中二旦社区
 
 *更新时间：2026-07-11 下午*

@@ -15,7 +15,7 @@ const registry = JSON.parse(fs.readFileSync(registryPath, 'utf-8'))
 
 // 2. 构建标题→slug 映射（与 navigation.ts 一致）
 const titleSlugMap = {}
-const SITE_TITLE = '上中初二 Wiki'
+const SITE_TITLE = '上中二旦社区'
 
 function scanMd(dir, relSegments) {
   let list
