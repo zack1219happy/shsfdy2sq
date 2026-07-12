@@ -134,6 +134,14 @@ export async function fetchForumPosts(): Promise<ForumPost[]> {
   return (data ?? []) as ForumPost[]
 }
 
+export async function fetchLikedPostIds(): Promise<string[]> {
+  const s = (await import('@/lib/auth')).getSession()
+  if (!s) return []
+  const { data, error } = await supabase.rpc('get_user_liked_posts', { p_user_id: s.userId })
+  if (error) throw new Error('获取赞过的帖子失败: ' + error.message)
+  return (data ?? []).map((r: { post_id: string }) => r.post_id)
+}
+
 export async function fetchForumPost(postId: string): Promise<ForumPost | null> {
   const { data, error } = await supabase.rpc('get_forum_post', { p_post_id: postId })
   if (error) throw new Error('获取帖子失败: ' + error.message)

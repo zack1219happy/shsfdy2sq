@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
-import { getNavTree, getSiteTitle, getTitleToSlugMap } from '@/lib/navigation'
+import { getSiteTitle, getNavTree } from '@/lib/navigation'
 import Sidebar from '@/components/Sidebar'
+import FilePad from '@/components/FilePad'
 import AuthGate from '@/components/AuthGate'
 import ImageModal from '@/components/ImageModal'
 import { config } from '@fortawesome/fontawesome-svg-core'
@@ -22,8 +23,6 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   const tree = getNavTree()
-  const siteTitle = getSiteTitle()
-  const titleSlugMap = Object.fromEntries(getTitleToSlugMap())
 
   return (
     <html lang="zh-CN" data-scroll-behavior="smooth">
@@ -32,14 +31,15 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://iiiyoafpzfqxpaqheojg.supabase.co" />
       </head>
       <body>
-        <Sidebar tree={tree} siteTitle={siteTitle} titleSlugMap={titleSlugMap} />
+        <Sidebar />
+        <FilePad tree={tree} />
 
         <ImageModal />
 
         <AuthGate>
           <div
             style={{
-              marginLeft: 'var(--sidebar-actual-width, var(--sidebar-width))',
+              marginLeft: 'calc(var(--sidebar-width) + var(--filepad-width, 0px))',
               minHeight: '100vh',
             }}
           >

@@ -10,7 +10,8 @@
 
 /* ---------- CSS 变量 ---------- */
 :root {
-  --sidebar-width: 280px;
+  --sidebar-width: 60px;
+  --filepad-width: 300px;
   --sidebar-min-width: 180px;
   --sidebar-max-width: 400px;
   --color-bg: #ffffff;
