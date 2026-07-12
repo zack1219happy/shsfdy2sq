@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { getSession } from '@/lib/auth'
-import { fetchNotifications, getUnreadCount, markNotificationRead, clearAllNotifications } from '@/lib/gist-api'
+import { fetchNotifications, getUnreadCount, markNotificationRead, clearAllNotifications, deleteNotifications } from '@/lib/gist-api'
 import { registry } from '@/data/person-registry'
 import FaIcon from '@/components/FaIcon'
 import { UserName } from '@/components/UserName'
@@ -18,6 +18,16 @@ export default function NoticePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const loadedRef = useRef(false)
+
+  const typeTitle = typeFilter
+    ? ({
+        comment_reply: '评论回复',
+        page_owner: '页面动态',
+        forum_reply: '论坛回复',
+        forum_own_post: '帖子动态',
+        forum_post_update: '关注更新',
+      } as Record<string, string>)[typeFilter] ?? '通知'
+    : '通知'
 
   useEffect(() => {
     const s = getSession()
@@ -41,17 +51,30 @@ export default function NoticePage() {
   }, [])
 
   const handleClearAll = useCallback(async () => {
-    await clearAllNotifications()
-    setNotifs((prev) => prev.map((n) => ({ ...n, read: true })))
-  }, [])
+    await clearAllNotifications(typeFilter ?? undefined)
+    setNotifs((prev) =>
+      typeFilter
+        ? prev.map((n) => n.type === typeFilter ? { ...n, read: true } : n)
+        : prev.map((n) => ({ ...n, read: true })),
+    )
+  }, [typeFilter])
+
+  const handleDelete = useCallback(async () => {
+    await deleteNotifications(typeFilter ?? undefined)
+    setNotifs((prev) =>
+      typeFilter
+        ? prev.filter((n) => n.type !== typeFilter)
+        : [],
+    )
+  }, [typeFilter])
 
   return (
     <div className={styles.noticePage}>
       <div className={styles.noticeHeader}>
-        <h2><FaIcon name="bell" /> 通知</h2>
+        <h2><FaIcon name="bell" /> {typeTitle}</h2>
         <div style={{ display: 'flex', gap: 8 }}>
           <button className={styles.notifClear} onClick={handleClearAll}>全部已读</button>
-          <button className={styles.notifClear} onClick={async () => { /* clear all — future */ }}>清空</button>
+          <button className={styles.notifClear} onClick={handleDelete}>清空</button>
         </div>
       </div>
 

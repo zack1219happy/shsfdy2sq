@@ -12,7 +12,7 @@ export default function Sidebar() {
       {/* 顶部 logo */}
       <div className={styles.topSection}>
         <Link href="/" className={styles.logoLink}>
-          <img src={`${bp}/logo.png`} alt="" className={styles.logo} />
+          <img src={`${bp}/logo.webp`} alt="" className={styles.logo} />
         </Link>
       </div>
 

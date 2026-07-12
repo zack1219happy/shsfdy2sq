@@ -109,8 +109,20 @@ export async function markNotificationRead(notificationId: string): Promise<void
   await supabase.rpc('mark_notification_read', { p_notification_id: notificationId })
 }
 
-export async function clearAllNotifications(): Promise<void> {
-  await supabase.rpc('clear_all_notifications')
+export async function clearAllNotifications(type?: string): Promise<void> {
+  if (type) {
+    await supabase.rpc('clear_notifications_by_type', { p_type: type })
+  } else {
+    await supabase.rpc('clear_all_notifications')
+  }
+}
+
+export async function deleteNotifications(type?: string): Promise<void> {
+  if (type) {
+    await supabase.rpc('delete_notifications', { p_type: type })
+  } else {
+    await supabase.rpc('delete_notifications')
+  }
 }
 
 export async function deleteComment(commentId: string): Promise<boolean> {

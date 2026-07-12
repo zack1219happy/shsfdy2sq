@@ -85,9 +85,6 @@ export default function ForumListPage() {
           >
             <FaIcon name="search" />
           </button>
-          <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => router.push('/forum/new')}>
-            <FaIcon name="plus" /> 发帖
-          </button>
         </div>
       </div>
 

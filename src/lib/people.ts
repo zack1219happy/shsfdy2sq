@@ -81,8 +81,8 @@ export function resolvePerson(
     const entry = matched[0]
     const displayText = entry.initials
     const href = isTeacher
-      ? `${basePath}/people/teachers#${entry.initials}`
-      : `${basePath}/${(entry as PersonEntry).newSlug}`
+      ? `${basePath}/wiki/people/teachers#${entry.initials}`
+      : `${basePath}/wiki/${(entry as PersonEntry).newSlug}`
     return { displayText, href, entry }
   }
 

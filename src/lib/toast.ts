@@ -37,7 +37,7 @@ export function showWarningToast(message: string): void {
     background: '#dc2626',
     color: '#fff',
     padding: '10px 24px',
-    borderRadius: '6px',
+    borderRadius: '4px',
     fontSize: '0.9rem',
     fontWeight: '500',
     boxShadow: '0 4px 16px rgba(220, 38, 38, 0.3)',

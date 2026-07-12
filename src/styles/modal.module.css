@@ -20,7 +20,7 @@
   max-width: 500px;
   width: 90%;
   padding: 24px;
-  border-radius: 16px;
+  border-radius: var(--border-radius);
   max-height: 80vh;
   overflow-y: auto;
   position: relative;
