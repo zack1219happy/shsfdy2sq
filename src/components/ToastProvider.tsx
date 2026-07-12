@@ -21,6 +21,11 @@ let nextToastId = 0
  */
 export default function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const addToast = useCallback((message: string) => {
     const id = nextToastId++
@@ -50,7 +55,7 @@ export default function ToastProvider({ children }: { children: React.ReactNode 
   return (
     <>
       {children}
-      {typeof document !== 'undefined' &&
+      {mounted &&
         createPortal(
           <div
             style={{
