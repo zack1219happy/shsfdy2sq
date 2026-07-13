@@ -64,7 +64,7 @@ export interface ForumComment {
   deleted: boolean
 }
 
-export type NotificationType = 'comment_reply' | 'page_owner' | 'forum_reply' | 'forum_post_update' | 'forum_own_post'
+export type NotificationType = 'comment_reply' | 'page_owner' | 'forum_reply' | 'forum_post_update' | 'forum_own_post' | 'dm'
 
 export interface ForumNotification extends Notification {
   type: NotificationType

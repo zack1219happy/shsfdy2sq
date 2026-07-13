@@ -34,7 +34,8 @@ CREATE TABLE IF NOT EXISTS private_messages (
   created_at      timestamptz NOT NULL DEFAULT now(),
   recalled_at     timestamptz,          -- null = 未撤回, 非 null = 撤回时间
   sender_deleted  boolean NOT NULL DEFAULT false,
-  recipient_deleted boolean NOT NULL DEFAULT false
+  recipient_deleted boolean NOT NULL DEFAULT false,
+  participants      uuid[]               -- Realtime RLS 需要冗余存储参与者
 );
 
 CREATE INDEX IF NOT EXISTS idx_pm_conv ON private_messages(conversation_id, created_at);
@@ -57,6 +58,9 @@ ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE private_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE conversation_read_status ENABLE ROW LEVEL SECURITY;
 
+-- Realtime 需要表级 SELECT 权限才能广播变更
+GRANT SELECT ON private_messages TO anon, authenticated;
+
 -- conversations: 只看到自己参与的
 DROP POLICY IF EXISTS conv_select ON conversations;
 CREATE POLICY conv_select ON conversations
@@ -71,15 +75,13 @@ DROP POLICY IF EXISTS pm_select ON private_messages;
 CREATE POLICY pm_select ON private_messages
   FOR SELECT USING (
     auth.uid() = sender_id
-    OR auth.uid() IN (
-      SELECT user1_id FROM conversations c WHERE c.id = conversation_id AND (c.user1_id = auth.uid() OR c.user2_id = auth.uid())
-    )
+    OR auth.uid() = ANY(participants)
   );
 
 DROP POLICY IF EXISTS pm_insert ON private_messages;
 CREATE POLICY pm_insert ON private_messages
-  FOR INSERT WITH CHECK (auth.uid() IN (
-    SELECT user1_id FROM conversations c WHERE c.id = conversation_id AND (c.user1_id = auth.uid() OR c.user2_id = auth.uid())
+  FOR INSERT WITH CHECK (EXISTS (
+    SELECT 1 FROM conversations c WHERE c.id = conversation_id AND (c.user1_id = auth.uid() OR c.user2_id = auth.uid())
   ));
 
 DROP POLICY IF EXISTS pm_update ON private_messages;
@@ -146,8 +148,8 @@ BEGIN
 
   v_conv_id := get_or_create_conversation(p_other_user_id);
 
-  INSERT INTO private_messages (conversation_id, sender_id, content)
-  VALUES (v_conv_id, v_uid, p_content)
+  INSERT INTO private_messages (conversation_id, sender_id, content, participants)
+  VALUES (v_conv_id, v_uid, p_content, ARRAY[v_uid, p_other_user_id])
   RETURNING id INTO v_msg_id;
 
   -- 更新对话预览
@@ -156,9 +158,7 @@ BEGIN
     last_message_at = now()
   WHERE id = v_conv_id;
 
-  -- 发通知
-  INSERT INTO notifications (user_id, from_user_id, type, page, excerpt)
-  VALUES (p_other_user_id, v_uid, 'dm', '/dm', left(p_content, 100));
+  -- 通知统一由接收端 Realtime 事件驱动，DM 不走 notifications 表
 
   RETURN v_msg_id;
 END;
@@ -260,7 +260,6 @@ DECLARE
   v_sender uuid;
   v_created timestamptz;
   v_conv_id uuid;
-  v_recipient_id uuid;
 BEGIN
   v_uid := auth.uid();
   IF v_uid IS NULL THEN RAISE EXCEPTION 'Not authenticated'; END IF;
@@ -279,15 +278,6 @@ BEGIN
 
   -- 更新对话预览
   UPDATE conversations SET last_message = '【消息已撤回】' WHERE id = v_conv_id;
-
-  -- 更新已有通知
-  SELECT CASE WHEN c.user1_id = v_uid THEN c.user2_id ELSE c.user1_id END INTO v_recipient_id
-  FROM conversations c WHERE c.id = v_conv_id;
-
-  UPDATE notifications SET excerpt = '消息已撤回'
-  WHERE from_user_id = v_uid AND user_id = v_recipient_id AND type = 'dm'
-    AND created_at > now() - interval '2 minutes'
-    AND read = false;
 END;
 $$;
 
