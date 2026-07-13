@@ -3,12 +3,13 @@
 /**
  * PlazaFilePad — 文章广场左侧目录
  *
+ * - 分类数据从数据库动态加载（不再硬编码 PLAZA_CATEGORIES）
  * - 文件夹点击标题 → 跳转并展开
  * - 文件夹点击 chevron → 展开/折叠子项（rotate(90deg)）
  * - URL 带有 category 参数时自动展开祖先文件夹
  */
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -18,23 +19,31 @@ import {
   faFolderOpen,
   faChevronRight,
   faFileLines,
+  faBook,
   faBookOpen,
   faRunning,
   faLightbulb,
   faPalette,
+  faPen,
+  faStar,
+  faPlus,
 } from '@fortawesome/free-solid-svg-icons'
-import { PLAZA_CATEGORIES } from '@/types/plaza'
+import { fetchPlazaCategories } from '@/lib/gist-api'
+import type { IconDefinition } from '@fortawesome/free-solid-svg-icons'
+import type { PlazaCategory, PlazaCategoryTreeNode } from '@/types/plaza'
+import { buildCategoryTree } from '@/types/plaza'
 import styles from '@/styles/filepad.module.css'
 
 /* ==============================================================
-   数据
+   图标映射
    ============================================================== */
 
-const categoryIcons: Record<string, typeof faBookOpen> = {
+const categoryIcons: Record<string, IconDefinition> = {
   '学习笔记': faBookOpen,
   '活动记录': faRunning,
   '经验分享': faLightbulb,
   '创作展示': faPalette,
+  '小说': faBook,
 }
 
 interface PlazaNavNode {
@@ -42,49 +51,52 @@ interface PlazaNavNode {
   title: string
   type: 'folder' | 'page'
   href?: string
-  icon?: typeof faBookOpen
+  icon?: IconDefinition
   children?: PlazaNavNode[]
 }
 
-function buildTree(): PlazaNavNode[] {
+function buildNavTree(categories: PlazaCategory[]): PlazaNavNode[] {
+  const tree = buildCategoryTree(categories)
+
+  // 固定项（我写的 / 我赞的 / 发表文章）
+  const fixed: PlazaNavNode[] = [
+    { id: 'my', title: '我写的', type: 'page', href: '/plaza?my=1', icon: faPen },
+    { id: 'liked', title: '我赞的', type: 'page', href: '/plaza?liked=1', icon: faStar },
+    { id: 'new', title: '发表文章', type: 'page', href: '/plaza/new', icon: faPlus },
+  ]
+
+  // 将分类树转为导航节点
+  function convertTree(nodes: PlazaCategoryTreeNode[]): PlazaNavNode[] {
+    return nodes.map((cat): PlazaNavNode => {
+      if (cat.children.length === 0) {
+        // 叶子 → 页面
+        return {
+          id: cat.id,
+          title: cat.name,
+          type: 'page',
+          href: `/plaza?category=${encodeURIComponent(cat.name)}`,
+          icon: categoryIcons[cat.name],
+        }
+      }
+      return {
+        id: cat.id,
+        title: cat.name,
+        type: 'folder',
+        href: `/plaza?category=${encodeURIComponent(cat.name)}`,
+        icon: categoryIcons[cat.name],
+        children: convertTree(cat.children),
+      }
+    })
+  }
+
   return [
-    { id: 'my', title: '我写的', type: 'page', href: '/plaza?my=1' },
-    { id: 'liked', title: '我赞的', type: 'page', href: '/plaza?liked=1' },
-    { id: 'new', title: '发表文章', type: 'page', href: '/plaza/new' },
+    ...fixed,
     {
       id: 'articles',
       title: '文章',
       type: 'folder',
       href: '/plaza',
-      children: PLAZA_CATEGORIES.map((cat): PlazaNavNode => {
-        const subs = (cat.subCategories as readonly (string | null)[]).filter(
-          (s): s is string => s !== null,
-        )
-        if (subs.length === 0) {
-          return {
-            id: cat.name,
-            title: cat.name,
-            type: 'page' as const,
-            href: `/plaza?category=${encodeURIComponent(cat.name)}`,
-            icon: categoryIcons[cat.name],
-          }
-        }
-        return {
-          id: cat.name,
-          title: cat.name,
-          type: 'folder' as const,
-          href: `/plaza?category=${encodeURIComponent(cat.name)}`,
-          icon: categoryIcons[cat.name],
-          children: subs.map(
-            (sub): PlazaNavNode => ({
-              id: `${cat.name}/${sub}`,
-              title: sub,
-              type: 'page' as const,
-              href: `/plaza?category=${encodeURIComponent(cat.name)}&sub=${encodeURIComponent(sub)}`,
-            }),
-          ),
-        }
-      }),
+      children: convertTree(tree),
     },
   ]
 }
@@ -96,7 +108,15 @@ function buildTree(): PlazaNavNode[] {
 export default function PlazaFilePad() {
   const pathname = usePathname()
 
+  const [categories, setCategories] = useState<PlazaCategory[]>([])
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
+
+  // 加载分类
+  useEffect(() => {
+    fetchPlazaCategories()
+      .then(setCategories)
+      .catch(() => {})
+  }, [])
 
   // URL 带有 category 参数时自动展开祖先文件夹（仅追加，不覆盖手动折叠）
   useEffect(() => {
@@ -107,11 +127,26 @@ export default function PlazaFilePad() {
       setExpanded((prev) => {
         const next = new Set(prev)
         next.add('articles')
-        next.add(category)
+        // 找到该分类的节点 ID
+        const cat = categories.find((c) => c.name === category)
+        if (cat) {
+          // 展开到该分类的父级
+          let parentId = cat.parent_id
+          while (parentId) {
+            next.add(parentId)
+            const parent = categories.find((c) => c.id === parentId)
+            parentId = parent?.parent_id || null
+          }
+          if (cat.parent_id) {
+            // 如果是子分类，展开父级
+            next.add(cat.parent_id)
+          }
+        }
+        next.add('articles')
         return next
       })
     }
-  }, [pathname])
+  }, [pathname, categories])
 
   /** 点击文件夹标题 → 展开并跳转 */
   const handleFolderClick = useCallback((folderId: string) => {
@@ -132,7 +167,7 @@ export default function PlazaFilePad() {
     })
   }, [])
 
-  const tree = buildTree()
+  const tree = useMemo(() => buildNavTree(categories), [categories])
 
   return (
     <>

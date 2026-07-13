@@ -2,7 +2,7 @@
 
 import { supabase } from './supabase'
 import type { Comment, CommentsData, ForumPost, ForumComment, NotificationType, UserInfo } from '@/types/gist'
-import type { PlazaArticle, PlazaArticleDetail, PlazaArticleListResult, PlazaComment } from '@/types/plaza'
+import type { PlazaArticle, PlazaArticleDetail, PlazaArticleListResult, PlazaComment, PlazaCategory } from '@/types/plaza'
 
 function mapComment(raw: Record<string, unknown>): Comment {
   return {
@@ -308,11 +308,19 @@ export async function leaveConversation(conversationId: string): Promise<void> {
 
 /* =============================================================
    Plaza API — 文章广场
+   - 分类从 plaza_categories 表动态读取，不再硬编码
    - 列表支持分类筛选、搜索、我写的/我赞的 标签页
    - 可见性只有公开 / 私密两态（is_public: boolean），
      没有论坛的 excluded_visibility 数组
    - 点赞走 toggle_plaza_like RPC（乐观更新）
    ============================================================= */
+
+/** 获取所有分类（扁平列表，前端自行构建树结构） */
+export async function fetchPlazaCategories(): Promise<PlazaCategory[]> {
+  const { data, error } = await supabase.rpc('get_plaza_categories')
+  if (error) throw new Error('获取分类失败: ' + error.message)
+  return (data ?? []) as PlazaCategory[]
+}
 
 export async function fetchPlazaArticles(
   category?: string,

@@ -946,6 +946,206 @@
   100% { background-color: transparent; }
 }
 
+/* ---- 分类选择模态框 ---- */
+.catPickerOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.catPickerModal {
+  background: var(--color-bg, #fff);
+  border-radius: var(--border-radius);
+  width: 90vw;
+  max-width: 480px;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+  animation: slideUp 0.2s ease-out;
+}
+
+.catPickerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 8px;
+}
+
+.catPickerHeader h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.catPickerClose {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: var(--color-text-light);
+  padding: 4px;
+  border-radius: var(--border-radius);
+  line-height: 1;
+}
+
+.catPickerClose:hover {
+  background: var(--color-hover-bg);
+  color: var(--color-text);
+}
+
+.catPickerSearch {
+  padding: 8px 20px;
+}
+
+.catPickerSearch input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  font-size: 0.85rem;
+  background: var(--color-bg);
+  color: var(--color-text);
+  outline: none;
+}
+
+.catPickerSearch input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
+}
+
+.catPickerBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 12px 8px;
+}
+
+.catPickerEmpty {
+  text-align: center;
+  color: var(--color-text-light);
+  font-size: 0.85rem;
+  padding: 24px 0;
+}
+
+/* 树节点 */
+.catNode {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background 0.1s;
+  user-select: none;
+}
+
+.catNode:hover {
+  background: var(--color-hover-bg);
+}
+
+.catNodeSelected {
+  background: #dbeafe;
+  font-weight: 600;
+}
+
+.catNodeSelected:hover {
+  background: #c7d9f0;
+}
+
+.catNodeChevron {
+  width: 14px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  color: var(--color-text-light);
+  transition: transform 0.15s;
+}
+
+.catNodeChevronOpen {
+  transform: rotate(90deg);
+}
+
+.catNodeIcon {
+  font-size: 0.85rem;
+  width: 18px;
+  flex-shrink: 0;
+  color: var(--color-text-light);
+}
+
+.catNodeName {
+  flex: 1;
+  font-size: 0.88rem;
+  color: var(--color-text);
+}
+
+.catNodeSelected .catNodeName {
+  color: var(--color-primary);
+}
+
+.catNodeCheck {
+  font-size: 0.8rem;
+  color: var(--color-primary);
+}
+
+/* 子节点容器 */
+.catChildren {
+  overflow: hidden;
+}
+
+/* 分类触发按钮（表单中显示已选分类的字段） */
+.catPickerTrigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--color-text);
+  background: var(--color-bg);
+  transition: border-color 0.15s;
+  min-width: 160px;
+  font-family: var(--font-sans);
+}
+
+.catPickerTrigger:hover {
+  border-color: var(--color-primary);
+}
+
+.catPickerTriggerIcon {
+  font-size: 0.85rem;
+  color: var(--color-text-light);
+}
+
+.catPickerTriggerText {
+  flex: 1;
+}
+
+.catPickerTriggerPlaceholder {
+  color: var(--color-text-light);
+}
+
+.catPickerTriggerChevron {
+  font-size: 0.7rem;
+  color: var(--color-text-light);
+  transition: transform 0.15s;
+}
+
+/* ---- 评论锚点高亮 ---- */
+@keyframes commentAnchorHighlight {
+  0% { background-color: rgba(26, 115, 232, 0.2); }
+  100% { background-color: transparent; }
+}
+
 .highlight {
   border-radius: var(--border-radius);
   animation: commentAnchorHighlight 1s steps(1) forwards;

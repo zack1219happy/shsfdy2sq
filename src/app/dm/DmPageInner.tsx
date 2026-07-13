@@ -45,9 +45,9 @@ export default function DmPageInner() {
   return (
     <div className={styles.page}>
       {convId ? (
-        <DmChatView conversationId={convId} currentUserId={session.userId} />
+        <DmChatView key={convId} conversationId={convId} currentUserId={session.userId} />
       ) : userId ? (
-        <NewChatView otherUserId={userId} currentUserId={session.userId} />
+        <NewChatView key={userId} otherUserId={userId} currentUserId={session.userId} />
       ) : (
         <DmEmptyState />
       )}
