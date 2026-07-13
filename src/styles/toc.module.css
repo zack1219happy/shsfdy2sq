@@ -2,7 +2,7 @@
   position: fixed;
   right: 24px;
   top: 125px;
-  width: 240px;
+  width: var(--toc-actual-width, 240px);
   background: var(--color-toc-bg);
   border-radius: var(--border-radius);
   padding: 16px 12px;
@@ -10,6 +10,12 @@
   max-height: calc(100vh - 145px);
   overflow-y: auto;
   z-index: 500;
+  display: none; /* JS 动态控制显隐 */
+}
+
+/* JS 检测到足够空间时显示 */
+html[data-toc-visible="true"] .toc {
+  display: block;
 }
 
 .titleRow {
@@ -114,8 +120,4 @@
   padding: 4px 8px;
 }
 
-@media (max-width: 1600px) {
-  .toc {
-    display: none;
-  }
-}
+/* TOC 显隐由 JS 根据实际可用空间动态决定（见 TableOfContents.tsx） */

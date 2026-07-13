@@ -403,8 +403,9 @@
 }
 
 /* ---- TOC 可见时补偿 ---- */
-@media (min-width: 1601px) {
-  .page {
-    padding-right: 308px;
-  }
+html[data-toc-visible="true"] .page,
+html[data-toc-visible="true"] .detailHeaderInner,
+html[data-toc-visible="true"] .detailBody {
+  margin-left: auto;
+  margin-right: calc(24px + var(--toc-actual-width, 240px) + 24px);
 }

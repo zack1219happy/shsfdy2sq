@@ -1150,3 +1150,10 @@
   border-radius: var(--border-radius);
   animation: commentAnchorHighlight 1s steps(1) forwards;
 }
+
+/* ---- TOC 可见时补偿 ---- */
+html[data-toc-visible="true"] .page,
+html[data-toc-visible="true"] .detailHeaderInner {
+  margin-left: auto;
+  margin-right: calc(24px + var(--toc-actual-width, 240px) + 24px);
+}

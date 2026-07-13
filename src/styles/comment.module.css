@@ -352,3 +352,39 @@
   border-radius: var(--border-radius);
   animation: highlightFade 1s steps(1) forwards;
 }
+
+/* ---------- 移动端适配 ---------- */
+
+@media (max-width: 768px) {
+  .section {
+    margin-top: 32px;
+    padding-top: 16px;
+  }
+
+  .title {
+    font-size: 1.1rem;
+    margin-bottom: 14px;
+  }
+
+  .form {
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .editorWrap .editorWrapInner {
+    height: 140px;
+  }
+
+  .commentBody {
+    font-size: 0.85rem;
+  }
+
+  .replies {
+    margin-left: 10px;
+    padding-left: 10px;
+  }
+
+  .replyContent {
+    font-size: 0.82rem;
+  }
+}

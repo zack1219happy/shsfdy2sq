@@ -30,6 +30,10 @@
   --content-max-width: 800px;
   --border-radius: 8px;
   --border-radius-lg: 12px;
+
+  /* 移动端响应式变量 */
+  --bottom-tab-height: 56px;
+  --filepad-mobile-width: 280px;
 }
 
 /* ---------- 重置 ---------- */
@@ -438,8 +442,56 @@ h1, h2, h3, h4, h5 {
 }
 
 /* TOC 可见时，补偿右 padding，让内容居中在 sidebar 和 TOC 之间 */
-@media (min-width: 1601px) {
+html[data-toc-visible="true"] .page-content {
+  padding-right: calc(var(--toc-actual-width, 240px) + 48px); /* TOC + right-gap(24px) + content-gap(24px) */
+}
+
+/* ============================================
+   移动端全局适配
+   ============================================ */
+
+@media (max-width: 768px) {
+  body {
+    padding-bottom: calc(var(--bottom-tab-height) + env(safe-area-inset-bottom, 0px));
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .content-area {
+    margin-left: 0 !important;
+    padding-top: 48px;
+  }
+
+  /* 桌面端页面顶部 padding 在移动端缩减（汉堡按钮的 48px 已由 .content-area 提供） */
+  .content-area > article {
+    padding-top: 8px !important;
+  }
+  .content-area > [class*="page"] {
+    padding-top: 8px !important;
+  }
+
   .page-content {
-    padding-right: 308px; /* 260px TOC + 48px gap */
+    padding-right: 0;
+  }
+
+  /* Wiki 内容表格横向滚动 */
+  .wiki-body table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .wiki-body h1 { font-size: 1.35rem; }
+  .wiki-body h2 { font-size: 1.15rem; }
+  .wiki-body h3 { font-size: 1rem; }
+  .wiki-body h4 { font-size: 0.9rem; }
+
+  .wiki-body blockquote {
+    padding: 0.4rem 0.8rem;
+  }
+
+  .wiki-body ul,
+  .wiki-body ol {
+    margin-left: 1.25rem;
   }
 }

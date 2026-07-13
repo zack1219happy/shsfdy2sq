@@ -29,6 +29,7 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" data-scroll-behavior="smooth">
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="preconnect" href="https://iiiyoafpzfqxpaqheojg.supabase.co" />
         <link rel="dns-prefetch" href="https://iiiyoafpzfqxpaqheojg.supabase.co" />
       </head>
@@ -42,6 +43,7 @@ export default function RootLayout({
 
           <AuthGate>
           <div
+            className="content-area"
             style={{
               marginLeft: 'calc(var(--sidebar-width) + var(--filepad-width, 0px))',
               minHeight: '100vh',

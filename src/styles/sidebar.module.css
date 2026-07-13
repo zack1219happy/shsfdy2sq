@@ -111,3 +111,80 @@ a.navItem:active {
   line-height: 1;
   margin: 0;
 }
+
+/* ---------- 移动端：隐藏次要导航项 ---------- */
+.hideOnMobile {}
+
+@media (max-width: 768px) {
+  .hideOnMobile {
+    display: none;
+  }
+}
+
+/* ---------- 移动端：底部 TabBar ---------- */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    width: 100%;
+    height: calc(var(--bottom-tab-height) + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    background: #f4f6f8;
+    z-index: 1100;
+    box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.08);
+  }
+
+  .topSection {
+    width: auto;
+    padding: 0;
+    margin: 0;
+    background: none;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+  }
+
+  .logo {
+    width: 28px;
+    height: 28px;
+  }
+
+  .navItem,
+  a.navItem:link,
+  a.navItem:visited {
+    flex: 0 0 auto;
+    width: auto;
+    padding: 4px 6px;
+    margin: 0;
+    flex-direction: column;
+    align-items: center;
+    border-radius: var(--border-radius);
+  }
+
+  .navItem + .navItem {
+    margin-top: 0;
+  }
+
+  .navIcon {
+    font-size: 1.15rem;
+  }
+
+  .navLabel {
+    font-size: 0.6rem;
+    margin-top: 3px;
+  }
+
+  .navBadge {
+    top: -5px;
+    right: -10px;
+    min-width: 14px;
+    height: 14px;
+    font-size: 0.55rem;
+  }
+}

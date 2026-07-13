@@ -5,6 +5,64 @@ import type { Heading } from '@/lib/content'
 import FaIcon from '@/components/FaIcon'
 import styles from '@/styles/toc.module.css'
 
+/**
+ * 计算 TOC 是否可见：内容右边缘 + TOC 宽度 + gap ≤ 视口宽度
+ *
+ * 内容右边缘 = marginLeft + 内容 max-width + padding
+ * 对于 wiki/agreement 页面：文章 max-width: 800px, padding: 24px, gap: 24px
+ * 文章居中在 flex:1 容器内，但实际位置取决于容器可用空间
+ *
+ * 这里采用保守策略：用 document.body 的第一个 .page-content 测量内容区域右边界
+ */
+function checkTocSpace(): boolean {
+  if (typeof document === 'undefined') return false
+
+  const html = document.documentElement
+  const style = getComputedStyle(html)
+  const sidebarW = parseFloat(style.getPropertyValue('--sidebar-width')) || 60
+  const filepadW = parseFloat(style.getPropertyValue('--filepad-width')) || 0
+  const contentMax = parseFloat(style.getPropertyValue('--content-max-width')) || 800
+
+  // 内容区域起始 = sidebar + filepad
+  const contentStart = sidebarW + filepadW
+
+  // 内容实际可用空间 = 视口 - contentStart
+  const availableForContent = window.innerWidth - contentStart
+
+  // 如果内容区连 max-width 都放不下，那 TOC 更没空间
+  if (availableForContent < contentMax) return false
+
+  // TOC 需要：width + right gap(24px) + 与内容间距(24px)
+  const tocW = html.getAttribute('data-toc-visible') === 'true'
+    ? (parseFloat(html.style.getPropertyValue('--toc-actual-width')) || 240)
+    : 240
+  const tocNeed = tocW + 24 + 24
+
+  // 内容区需要的实际宽度 = min(contentMax, availableForContent中扣除TOC后的)
+  // 如果 availableForContent >= contentMax + tocNeed，则 TOC 可以显示
+  return availableForContent >= contentMax + tocNeed
+}
+
+function updateTocVisibility() {
+  if (typeof document === 'undefined') return
+  const visible = checkTocSpace()
+  const html = document.documentElement
+  html.setAttribute('data-toc-visible', visible ? 'true' : 'false')
+
+  // 同步设置 TOC 宽度为视口比例
+  if (visible) {
+    const contentStart = (parseFloat(getComputedStyle(html).getPropertyValue('--sidebar-width')) || 60)
+      + (parseFloat(getComputedStyle(html).getPropertyValue('--filepad-width')) || 0)
+    const availableForContent = window.innerWidth - contentStart
+    const contentMax = parseFloat(getComputedStyle(html).getPropertyValue('--content-max-width')) || 800
+    // TOC 占用剩余空间中合理比例的部分
+    const remaining = availableForContent - contentMax - 24 - 24 // gap between content and toc, and toc right gap
+    // TOC 宽度在 180px ~ 280px 之间，按剩余空间缩放
+    const tocWidth = Math.max(180, Math.min(280, remaining))
+    html.style.setProperty('--toc-actual-width', `${tocWidth}px`)
+  }
+}
+
 interface Props {
   headings: Heading[]
   /** 是否处于编辑模式（可选，用于原子编辑器） */
@@ -42,6 +100,28 @@ export default function TableOfContents({ headings, isEditing, onToggleEdit }: P
     return () => {
       clearTimeout(timer)
       observerRef.current?.disconnect()
+    }
+  }, [headings])
+
+  // TOC 显隐：根据实际可用空间动态计算（感知 FilePad 折叠 + 窗口大小）
+  useEffect(() => {
+    if (headings.length === 0) {
+      document.documentElement.removeAttribute('data-toc-visible')
+      return
+    }
+
+    const handle = () => updateTocVisibility()
+    handle()
+
+    window.addEventListener('resize', handle)
+    // FilePad 折叠/展开会触发 transition，用 MutationObserver 监听 --filepad-width 变化
+    const mo = new MutationObserver(() => handle())
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] })
+
+    return () => {
+      window.removeEventListener('resize', handle)
+      mo.disconnect()
+      document.documentElement.removeAttribute('data-toc-visible')
     }
   }, [headings])
 

@@ -631,3 +631,59 @@
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04);
 }
+
+/* ---------- 移动端适配 ---------- */
+
+@media (max-width: 768px) {
+  .card {
+    width: 100%;
+    max-width: 95vw;
+    padding: 32px 20px;
+  }
+
+  .cardLogo {
+    width: 120px;
+    height: 120px;
+  }
+
+  .card h1 {
+    font-size: 1.3rem;
+  }
+
+  .cardSubtitle {
+    font-size: 0.85rem;
+    margin-bottom: 20px;
+  }
+
+  /* 右上角桌面按钮在移动端隐藏（已在底部 TabBar） */
+  .bellBtn,
+  .userBtn {
+    display: none;
+  }
+
+  .settingsPage {
+    padding: 16px 16px 80px;
+  }
+
+  .settingsTitle {
+    font-size: 1.2rem;
+  }
+
+  .settingsSection {
+    padding: 16px;
+  }
+
+  .noticePage {
+    padding: 16px 16px 80px;
+  }
+
+  .noticeHeader h2 {
+    font-size: 1.2rem;
+  }
+
+  .modalCard {
+    width: 100%;
+    max-width: 95vw;
+    padding: 24px 18px;
+  }
+}
