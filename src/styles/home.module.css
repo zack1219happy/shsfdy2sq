@@ -47,7 +47,7 @@
 
 .twoCol {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 24px;
   margin-bottom: 24px;
 }
@@ -57,6 +57,7 @@
 .section {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .sectionTitle {
@@ -84,6 +85,9 @@
 .announcementCard {
   border-left: 3px solid var(--color-primary);
   background: var(--color-active-bg);
+  overflow-wrap: break-word;
+  word-break: break-word;
+  min-width: 0;
 }
 
 .announcementCard p {

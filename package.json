@@ -1,5 +1,5 @@
 {
-  "name": "shsg8c1wiki",
+  "name": "shsfdy2sq",
   "version": "1.0.0",
   "private": true,
   "description": "上中二旦社区 - 班级知识库",
@@ -25,6 +25,7 @@
     "dompurify": "^3.4.11",
     "gray-matter": "^4.0.3",
     "highlight.js": "^11.11.1",
+    "install": "^0.13.0",
     "isomorphic-dompurify": "^3.18.0",
     "katex": "^0.17.0",
     "markdown-it": "^14.3.0",
