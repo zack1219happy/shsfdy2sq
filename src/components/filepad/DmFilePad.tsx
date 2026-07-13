@@ -12,6 +12,7 @@ import {
 import type { UserInfo } from '@/types/gist'
 import { getPinyinInitials } from '@/lib/people'
 import FaIcon from '@/components/FaIcon'
+import { UserName } from '@/components/UserName'
 import styles from '@/styles/dm-filepad.module.css'
 
 export default function DmFilePad() {
@@ -165,13 +166,13 @@ export default function DmFilePad() {
                       }}
                     >
                       <span className={styles.userItemName}>
-                        {u.name || u.username}
+                        <UserName username={u.username} />
                         {existingConv && (
                           <span className={styles.userItemHint}>已有对话</span>
                         )}
                       </span>
                       <span className={styles.userItemUsername}>
-                        @{u.username}
+                        @<UserName username={u.username} />
                       </span>
                     </button>
                   )
@@ -196,7 +197,7 @@ export default function DmFilePad() {
               >
                 <div className={styles.itemTop}>
                   <span className={styles.itemName}>
-                    {conv.other_name}
+                    <UserName username={conv.other_username} />
                     {conv.unread_count > 0 && (
                       <span className={styles.unreadBadge}>
                         {conv.unread_count > 99 ? '99+' : conv.unread_count}

@@ -7,6 +7,7 @@ import { fetchNotifications, markNotificationRead, clearAllNotifications, delete
 import { registry } from '@/data/person-registry'
 import { BASE_PATH } from '@/lib/constants'
 import FaIcon from '@/components/FaIcon'
+import { UserName } from '@/components/UserName'
 import type { Notification } from '@/lib/gist-api'
 import styles from '@/styles/auth.module.css'
 
@@ -116,7 +117,7 @@ export default function NoticePage() {
                 style={isDeleted ? { pointerEvents: 'none' } : undefined}
               >
                 <span className={styles.notifFrom}>
-                  {n.from_username ?? '匿名'}
+                  {n.from_username ? <UserName username={n.from_username} /> : '匿名'}
                   <span className={styles.notifType}>{label}</span>
                 </span>
                 <span className={styles.notifText}>{n.excerpt ?? ''}</span>

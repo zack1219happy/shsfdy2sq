@@ -112,12 +112,12 @@ function NewChatView({
     }
   }, [input, otherUserId, sending, router])
 
-  const otherName = otherUser?.name || otherUser?.username || '加载中…'
-
   return (
     <div className={styles.chatView}>
       <div className={styles.chatHeader}>
-        <span className={styles.chatHeaderName}>{otherName}</span>
+        <span className={styles.chatHeaderName}>
+          {otherUser ? <UserName username={otherUser.username} /> : '加载中…'}
+        </span>
       </div>
 
       <div className={styles.messageList}>
@@ -365,13 +365,13 @@ function DmChatView({
     return () => window.removeEventListener('click', h)
   }, [])
 
-  const otherName = otherUser?.name || otherUser?.username || '加载中…'
-
   return (
     <div className={styles.chatView}>
       {/* 头部 */}
       <div className={styles.chatHeader}>
-        <span className={styles.chatHeaderName}>{otherName}</span>
+        <span className={styles.chatHeaderName}>
+          {otherUser ? <UserName username={otherUser.username} /> : '加载中…'}
+        </span>
       </div>
 
       {/* 消息列表 */}

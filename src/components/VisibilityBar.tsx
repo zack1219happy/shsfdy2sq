@@ -1,6 +1,7 @@
 'use client'
 
 import type { UserInfo } from '@/types/gist'
+import { UserName } from '@/components/UserName'
 import styles from '@/styles/forum.module.css'
 
 interface VisibilityBarProps {
@@ -28,7 +29,7 @@ export default function VisibilityBar({
         ) : (
           excludedUsers.map((u) => (
             <span key={u.id} className={styles.visibilityTag}>
-              隐藏: {u.name || u.username}
+              隐藏: <UserName username={u.username} />
               <button
                 type="button"
                 className={styles.visibilityTagRemove}
