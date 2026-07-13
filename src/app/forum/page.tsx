@@ -149,9 +149,6 @@ function PostCard({ post, onClick }: { post: ForumPost; onClick: () => void }) {
           <span className={`${styles.statBadge} ${score > 0 ? styles.statBadgeUpvoted : ''}`}>
             ️ {score > 0 ? '+' + score : score}
           </span>
-          <span className={styles.statBadge}>
-            💬 {post.comment_count}
-          </span>
         </div>
       </div>
     </div>

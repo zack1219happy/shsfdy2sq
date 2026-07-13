@@ -4,8 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import FaIcon from '@/components/FaIcon'
 import { renderClient } from '@/lib/render-client'
-import { getSession } from '@/lib/auth'
-import { fetchPlazaArticles, fetchLikedPlazaIds, votePlazaArticle, removePlazaVote } from '@/lib/gist-api'
+import { fetchPlazaArticles } from '@/lib/gist-api'
 import type { PlazaArticleListResult } from '@/types/plaza'
 import { UserName } from '@/components/UserName'
 import styles from '@/styles/forum.module.css'
@@ -13,14 +12,13 @@ import styles from '@/styles/forum.module.css'
 /* ==============================================================
    广场列表页 — 文章卡片
    - 支持分类筛选（?category= & ?sub=）和 tab 切换（?my=1 / ?liked=1）
-   - 点赞按钮在卡片内联，乐观更新
+   - 静态度量展示，跟 forum/PostCard 一致
    ============================================================== */
 
 export default function PlazaListPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [articles, setArticles] = useState<PlazaArticleListResult[]>([])
-  const [likedIds, setLikedIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -41,86 +39,34 @@ export default function PlazaListPage() {
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
-    Promise.all([
+    const timer = setTimeout(() => {
+      setLoading(true)
       fetchPlazaArticles(
         category || undefined,
         subCategory || undefined,
-        undefined,
+        searchQuery.trim() || undefined,
         100,
         0,
         tab === 'my' ? true : undefined,
         tab === 'liked' ? true : undefined,
-      ),
-      tab !== 'my' ? fetchLikedPlazaIds() : Promise.resolve([]),
-    ])
-      .then(([data, liked]) => {
-        if (cancelled) return
-        setArticles(data)
-        if (liked.length) setLikedIds(new Set(liked))
-      })
-      .catch((e: Error) => { if (!cancelled) setError(e.message) })
-      .finally(() => { if (!cancelled) setLoading(false) })
-    return () => { cancelled = true }
-  }, [category, subCategory, tab])
+      )
+        .then((data) => {
+          if (cancelled) return
+          setArticles(data)
+        })
+        .catch((e: Error) => { if (!cancelled) setError(e.message) })
+        .finally(() => { if (!cancelled) setLoading(false) })
+    }, 300)
+    return () => { cancelled = true; clearTimeout(timer) }
+  }, [category, subCategory, tab, searchQuery])
 
-  const filtered = useMemo(() => {
-    if (!searchQuery.trim()) return articles
-    const q = searchQuery.toLowerCase()
-    return articles.filter(
-      (a) =>
-        a.title.toLowerCase().includes(q) ||
-        a.author_username.toLowerCase().includes(q),
-    )
-  }, [articles, searchQuery])
+  const displayArticles = articles
 
   const showSearch = searchOpen || searchQuery.length > 0
 
   const goToArticle = useCallback((slug: string) => {
     router.push('/plaza/post?slug=' + encodeURIComponent(slug))
   }, [router])
-
-  const handleLike = useCallback(async (e: React.MouseEvent, articleId: string) => {
-    e.stopPropagation()
-    // 先判定当前是否已赞
-    const wasLiked = likedIds.has(articleId)
-    // 乐观更新
-    setLikedIds((prev) => {
-      const next = new Set(prev)
-      if (wasLiked) next.delete(articleId)
-      else next.add(articleId)
-      return next
-    })
-    setArticles((prev) =>
-      prev.map((a) =>
-        a.id === articleId
-          ? { ...a, like_count: wasLiked ? Math.max(0, a.like_count - 1) : a.like_count + 1 }
-          : a,
-      ),
-    )
-    try {
-      if (wasLiked) {
-        await removePlazaVote(articleId)
-      } else {
-        await votePlazaArticle(articleId, 'up')
-      }
-    } catch {
-      // 回滚
-      setLikedIds((prev) => {
-        const next = new Set(prev)
-        if (wasLiked) next.add(articleId)
-        else next.delete(articleId)
-        return next
-      })
-      setArticles((prev) =>
-        prev.map((a) =>
-          a.id === articleId
-            ? { ...a, like_count: wasLiked ? a.like_count + 1 : Math.max(0, a.like_count - 1) }
-            : a,
-        ),
-      )
-    }
-  }, [likedIds])
 
   return (
     <div className={styles.page}>
@@ -143,14 +89,14 @@ export default function PlazaListPage() {
           <input
             className={styles.searchInput}
             type="text"
-            placeholder="搜索标题或作者…"
+            placeholder="搜索标题、内容或作者…"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             autoFocus
           />
           {searchQuery.trim() && (
             <span className={styles.searchCount}>
-              找到 {filtered.length} 条结果
+              找到 {displayArticles.length} 条结果
             </span>
           )}
         </div>
@@ -158,21 +104,19 @@ export default function PlazaListPage() {
 
       {loading && <p className={styles.loading}>加载中…</p>}
       {error && <p className={styles.error}>❌ {error}</p>}
-      {!loading && !error && filtered.length === 0 && (
+      {!loading && !error && displayArticles.length === 0 && (
         <p className={styles.empty}>
           {searchQuery.trim() ? '没有找到匹配的文章' : '还没有文章，来发第一篇吧 ✍️'}
         </p>
       )}
 
-      {!loading && !error && filtered.length > 0 && (
+      {!loading && !error && displayArticles.length > 0 && (
         <div className={styles.list}>
-          {filtered.map((article) => (
+          {displayArticles.map((article) => (
             <ArticleCard
               key={article.id}
               article={article}
-              liked={likedIds.has(article.id)}
               onClick={() => goToArticle(article.slug)}
-              onLike={(e) => handleLike(e, article.id)}
             />
           ))}
         </div>
@@ -186,17 +130,8 @@ export default function PlazaListPage() {
    复用论坛 postCard 样式，带内联赞按钮和点赞数
    ============================================================== */
 
-function ArticleCard({
-  article,
-  liked,
-  onClick,
-  onLike,
-}: {
-  article: PlazaArticleListResult
-  liked: boolean
-  onClick: () => void
-  onLike: (e: React.MouseEvent) => void
-}) {
+function ArticleCard({ article, onClick }: { article: PlazaArticleListResult; onClick: () => void }) {
+  const score = (article.like_count ?? 0) - (article.downvote_count ?? 0)
   return (
     <div
       className={styles.postCard}
@@ -213,17 +148,15 @@ function ArticleCard({
         <UserName username={article.author_username} className={styles.postAuthor} />
         <span>{formatDate(article.created_at)}</span>
         {!article.is_public && <span style={{ color: '#b35a00', fontSize: '0.78rem' }}>🔒 私密</span>}
-        <span className={styles.statBadge}>💬 {article.comment_count ?? 0}</span>
         <div className={styles.postStats}>
-          <button
-            className={`${styles.voteIcon} ${liked ? styles.voteIconActiveUp : ''}`}
-            onClick={onLike}
-            title={liked ? '取消赞' : '赞'}
-          >
-            <FaIcon name="thumbs-up" />
-          </button>
-          <span className={`${styles.voteCount} ${(article.like_count ?? 0) > 0 ? styles.voteCountPositive : ''}`}>
-            {article.like_count ?? 0}
+          <span className={styles.statBadge}>
+            <FaIcon name="thumbs-up" /> {article.like_count ?? 0}
+          </span>
+          <span className={styles.statBadge}>
+            <FaIcon name="thumbs-down" /> {article.downvote_count ?? 0}
+          </span>
+          <span className={`${styles.statBadge} ${score > 0 ? styles.statBadgeUpvoted : ''}`}>
+            ️ {score > 0 ? '+' + score : score}
           </span>
         </div>
       </div>
