@@ -27,6 +27,7 @@ import { formatDate } from '@/lib/forum'
 import { UserName } from '@/components/UserName'
 import { loadPinyinInitialsFromDB } from '@/lib/people'
 import { showWarningToast } from '@/lib/toast'
+import { useAutoSave, loadDraft } from '@/hooks/useAutoSave'
 import styles from '@/styles/forum.module.css'
 
 const MarkdownEditor = dynamic(
@@ -114,6 +115,32 @@ export default function ForumPostPage() {
   // 客户端初始化：加载拼音首字母
   useEffect(() => { loadPinyinInitialsFromDB() }, [])
 
+  // 编辑模式草稿恢复
+  useEffect(() => {
+    if (!postId) return
+    interface DraftData {
+      title: string
+      content: string
+      excludedUserIds: string[]
+    }
+    const draft = loadDraft<DraftData>(`forum_edit_${postId}`)
+    if (draft && postId) {
+      // 有草稿时自动进入编辑模式
+      if (draft.title) setEditTitle(draft.title)
+      if (draft.content) setEditContent(draft.content)
+      if (draft.excludedUserIds) setEditExcludedIds(draft.excludedUserIds)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // 编辑模式自动保存草稿
+  const editHasContent = editTitle.trim() !== '' || editContent.trim() !== ''
+  const { clearDraft: clearEditDraft } = useAutoSave({
+    key: `forum_edit_${postId}`,
+    data: { title: editTitle, content: editContent, excludedUserIds: editExcludedIds },
+    enabled: editing && editHasContent,
+  })
+
   /** 如果 URL 带 ?comment=xxx 但评论不存在或已被删除，显示警告 */
   useEffect(() => {
     if (loading || !commentId) return
@@ -169,6 +196,7 @@ export default function ForumPostPage() {
     setEditTitle('')
     setEditContent('')
     setEditExcludedIds([])
+    clearEditDraft()
   }
 
   const submitEdit = async () => {
@@ -176,6 +204,7 @@ export default function ForumPostPage() {
     setSubmitting(true)
     try {
       await updateForumPost(post.id, editTitle.trim(), editContent.trim(), editExcludedIds)
+      clearEditDraft()
       setEditing(false)
       refreshPostOnly()
     } catch (e: any) { setError(e.message) }

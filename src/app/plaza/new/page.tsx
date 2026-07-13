@@ -8,6 +8,7 @@ import CategoryPickerModal from '@/components/CategoryPickerModal'
 import { getSession } from '@/lib/auth'
 import { createPlazaArticle, fetchPlazaCategories } from '@/lib/gist-api'
 import { loadPinyinInitialsFromDB } from '@/lib/people'
+import { useAutoSave, loadDraft } from '@/hooks/useAutoSave'
 import type { PlazaCategory } from '@/types/plaza'
 import Styles from '@/styles/forum.module.css'
 
@@ -46,6 +47,33 @@ export default function NewArticlePage() {
       .catch(() => {})
   }, [])
 
+  // 恢复草稿
+  useEffect(() => {
+    interface DraftData {
+      title: string
+      content: string
+      categoryId: string | null
+      categoryName: string | null
+      isPublic: boolean
+    }
+    const draft = loadDraft<DraftData>('plaza_new')
+    if (draft) {
+      if (draft.title) setTitle(draft.title)
+      if (draft.content) setContent(draft.content)
+      if (draft.categoryId) setCategoryId(draft.categoryId)
+      if (draft.categoryName) setCategoryName(draft.categoryName)
+      if (draft.isPublic !== undefined) setIsPublic(draft.isPublic)
+    }
+  }, [])
+
+  // 自动保存草稿
+  const hasContent = title.trim() !== '' || content.trim() !== ''
+  const { clearDraft } = useAutoSave({
+    key: 'plaza_new',
+    data: { title, content, categoryId, categoryName, isPublic },
+    enabled: hasContent,
+  })
+
   // 分类显示文本
   const categoryLabel = useMemo(() => {
     if (!categoryName) return null
@@ -81,6 +109,7 @@ export default function NewArticlePage() {
         '-' +
         Date.now().toString(36)
       await createPlazaArticle(title.trim(), slug, content.trim(), categoryId, isPublic)
+      clearDraft()
       router.push('/plaza/post?slug=' + encodeURIComponent(slug))
     } catch (e: any) {
       setError(e?.message || '发布失败')

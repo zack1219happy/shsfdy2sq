@@ -28,6 +28,7 @@ import { getCategoryPathById } from '@/types/plaza'
 import type { UnifiedComment } from '@/components/CommentSection'
 import { UserName } from '@/components/UserName'
 import { showWarningToast } from '@/lib/toast'
+import { useAutoSave, loadDraft } from '@/hooks/useAutoSave'
 import { extractHeadingsFromHtml } from '@/lib/plaza-headings'
 import styles from '@/styles/forum.module.css'
 
@@ -94,6 +95,31 @@ export default function PlazaArticlePage() {
     fetchPlazaCategories().then(setCategories).catch(() => {})
   }, [])
 
+  // 编辑草稿恢复
+  useEffect(() => {
+    if (!slug) return
+    interface DraftData {
+      title: string
+      content: string
+      isPublic: boolean
+    }
+    const draft = loadDraft<DraftData>(`plaza_edit_${slug}`)
+    if (draft) {
+      if (draft.title) setEditTitle(draft.title)
+      if (draft.content) setEditContent(draft.content)
+      if (draft.isPublic !== undefined) setEditIsPublic(draft.isPublic)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // 编辑模式自动保存草稿
+  const editHasContent = editTitle.trim() !== '' || editContent.trim() !== ''
+  const { clearDraft: clearEditDraft } = useAutoSave({
+    key: `plaza_edit_${slug}`,
+    data: { title: editTitle, content: editContent, isPublic: editIsPublic },
+    enabled: editing && editHasContent,
+  })
+
   const isAuthor = session && article && session.userId === article.author_id
 
   const startEdit = () => {
@@ -109,6 +135,7 @@ export default function PlazaArticlePage() {
     setEditTitle('')
     setEditContent('')
     setEditIsPublic(true)
+    clearEditDraft()
   }
 
   const submitEdit = async () => {
@@ -122,6 +149,7 @@ export default function PlazaArticlePage() {
         article.category_id,
         editIsPublic,
       )
+      clearEditDraft()
       setEditing(false)
       setArticle((prev) =>
         prev

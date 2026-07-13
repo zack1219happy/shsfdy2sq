@@ -9,6 +9,7 @@ import { createForumPost, fetchAllUsers } from '@/lib/gist-api'
 import { loadPinyinInitialsFromDB } from '@/lib/people'
 import VisibilityBar from '@/components/VisibilityBar'
 import VisibilityModal from '@/components/VisibilityModal'
+import { useAutoSave, loadDraft } from '@/hooks/useAutoSave'
 import type { UserInfo } from '@/types/gist'
 import Styles from '@/styles/forum.module.css'
 
@@ -40,6 +41,29 @@ export default function NewPostPage() {
       .finally(() => setUsersLoading(false))
   }, [])
 
+  // 恢复草稿
+  useEffect(() => {
+    interface DraftData {
+      title: string
+      content: string
+      excludedUserIds: string[]
+    }
+    const draft = loadDraft<DraftData>('forum_new')
+    if (draft) {
+      if (draft.title) setTitle(draft.title)
+      if (draft.content) setContent(draft.content)
+      if (draft.excludedUserIds) setExcludedUserIds(draft.excludedUserIds)
+    }
+  }, [])
+
+  // 自动保存草稿
+  const hasContent = title.trim() !== '' || content.trim() !== ''
+  const { clearDraft } = useAutoSave({
+    key: 'forum_new',
+    data: { title, content, excludedUserIds },
+    enabled: hasContent,
+  })
+
   /** 从 excludedUserIds 反查 UserInfo */
   const excludedUsers = useMemo(
     () => allUsers.filter((u) => excludedUserIds.includes(u.id)),
@@ -51,7 +75,8 @@ export default function NewPostPage() {
     setSubmitting(true)
     setError(null)
     try {
-      const id = await createForumPost(title, content, excludedUserIds)
+      const id = await createForumPost(title.trim(), content.trim(), excludedUserIds)
+      clearDraft()
       router.push('/forum/post?id=' + id)
     } catch (e: any) {
       setError(e?.message || '发帖失败')

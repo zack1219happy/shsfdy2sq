@@ -5,6 +5,7 @@ import FilePad from '@/components/FilePad'
 import AuthGate from '@/components/AuthGate'
 import ImageModal from '@/components/ImageModal'
 import ToastProvider from '@/components/ToastProvider'
+import ExternalLinkHandler from '@/components/ExternalLinkHandler'
 import { config } from '@fortawesome/fontawesome-svg-core'
 import '@fortawesome/fontawesome-svg-core/styles.css'
 // 阻止 FA 自动注入 CSS（Next.js 已手动导入）
@@ -33,6 +34,7 @@ export default function RootLayout({
       </head>
       <body>
         <ToastProvider>
+          <ExternalLinkHandler>
           <Sidebar />
           <FilePad tree={tree} />
 
@@ -48,6 +50,7 @@ export default function RootLayout({
             {children}
           </div>
         </AuthGate>
+          </ExternalLinkHandler>
           </ToastProvider>
       </body>
     </html>
