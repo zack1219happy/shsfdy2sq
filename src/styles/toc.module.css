@@ -37,11 +37,14 @@
   padding: 4px 6px;
   border-radius: var(--border-radius);
   font-size: 0.8rem;
-  transition: all 0.15s;
+  transition: color 0.15s, background-color 0.15s, transform 0.15s;
 }
 .navBtn:hover {
   color: var(--color-primary);
   background: var(--color-active-bg);
+}
+.navBtn:active {
+  transform: scale(0.96);
 }
 
 /* 编辑模式切换按钮 */
@@ -83,7 +86,7 @@
   display: block;
   padding: 4px 8px;
   border-radius: var(--border-radius);
-  transition: all 0.1s;
+  transition: color 0.1s, background-color 0.1s;
 }
 
 .list a:hover {

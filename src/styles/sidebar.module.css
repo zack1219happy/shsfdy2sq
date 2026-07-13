@@ -39,7 +39,7 @@ a.navItem:visited {
   cursor: pointer;
   color: #4d7cb8;
   text-decoration: none;
-  transition: background 0.1s;
+  transition: background 0.1s, transform 0.1s;
   border: none;
   background: none;
 }
@@ -53,6 +53,7 @@ a.navItem:hover {
 .navItem:active,
 a.navItem:active {
   background: #d0d4da;
+  transform: scale(0.96);
 }
 
 .navIcon {
@@ -80,6 +81,7 @@ a.navItem:active {
   align-items: center;
   justify-content: center;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 .navLabel {

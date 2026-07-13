@@ -33,12 +33,24 @@
   font-size: 1.1rem;
   color: #4d7cb8;
   border-radius: var(--border-radius);
-  transition: background 0.1s;
+  transition: background 0.1s, transform 0.1s;
   line-height: 1;
+  position: relative;
+}
+
+.newBtn::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: inherit;
 }
 
 .newBtn:hover {
   background: #eaecef;
+}
+
+.newBtn:active {
+  transform: scale(0.96);
 }
 
 .newBtnActive {
@@ -124,11 +136,15 @@
   border-radius: var(--border-radius);
   cursor: pointer;
   text-align: left;
-  transition: background 0.1s;
+  transition: background 0.1s, transform 0.1s;
 }
 
 .item:hover {
   background: #eaecef;
+}
+
+.item:active {
+  transform: scale(0.96);
 }
 
 .itemActive {
@@ -208,11 +224,15 @@
   border-radius: var(--border-radius);
   cursor: pointer;
   text-align: left;
-  transition: background 0.1s;
+  transition: background 0.1s, transform 0.1s;
 }
 
 .userItem:hover {
   background: #eaecef;
+}
+
+.userItem:active {
+  transform: scale(0.96);
 }
 
 .userItemName {

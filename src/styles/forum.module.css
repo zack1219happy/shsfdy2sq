@@ -47,9 +47,13 @@
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background-color 0.15s, box-shadow 0.15s, transform 0.15s, color 0.15s;
   text-decoration: none;
   color: #fff;
+}
+
+.btn:active {
+  transform: scale(0.96);
 }
 
 .btnPrimary {
@@ -79,12 +83,16 @@
   font-size: 1rem;
   padding: 6px 8px;
   border-radius: var(--border-radius);
-  transition: all 0.15s;
+  transition: background-color 0.15s, color 0.15s, transform 0.15s;
 }
 
 .searchToggle:hover {
   background: var(--color-hover-bg);
   color: var(--color-text);
+}
+
+.searchToggle:active {
+  transform: scale(0.96);
 }
 
 .searchToggleActive {
@@ -152,18 +160,17 @@
 .postCard {
   display: block;
   padding: 16px 20px;
-  border: 1px solid var(--color-border);
   border-radius: var(--border-radius);
   text-decoration: none;
   color: inherit;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: box-shadow 0.15s, transform 0.15s;
   background: var(--color-bg);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04);
 }
 
 .postCard:hover {
-  border-color: var(--color-primary);
-  box-shadow: 0 2px 12px rgba(26, 115, 232, 0.08);
+  box-shadow: 0 2px 12px rgba(26, 115, 232, 0.12), 0 0 0 1px rgba(26, 115, 232, 0.15);
   transform: translateY(-1px);
 }
 
@@ -351,6 +358,7 @@
   min-width: 16px;
   text-align: center;
   margin-right: 12px;
+  font-variant-numeric: tabular-nums;
 }
 
 .voteCount:last-child {
@@ -739,13 +747,17 @@
   padding: 3px 12px;
   border-radius: var(--border-radius);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: border-color 0.15s, color 0.15s, transform 0.15s;
   white-space: nowrap;
 }
 
 .visibilityAddBtn:hover {
   border-color: var(--color-primary);
   color: var(--color-primary);
+}
+
+.visibilityAddBtn:active {
+  transform: scale(0.96);
 }
 
 /* ---- 模态框（可见性选择） ---- */
@@ -901,7 +913,7 @@
   width: 40px;
   height: 22px;
   background: #ccc;
-  border-radius: var(--border-radius);
+  border-radius: 999px;
   cursor: pointer;
   transition: background 0.2s;
   flex-shrink: 0;

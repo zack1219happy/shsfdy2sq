@@ -75,8 +75,8 @@
   flex: 1;
   padding: 16px 20px;
   background: #fff;
-  border: 1px solid var(--color-border);
   border-radius: var(--border-radius);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04);
 }
 
 /* ---- Announcement ---- */
@@ -108,7 +108,11 @@
   padding: 10px 0;
   border-bottom: 1px solid var(--color-border);
   text-decoration: none;
-  transition: all 0.15s;
+  transition: color 0.15s, transform 0.15s;
+}
+
+.listItem:active {
+  transform: scale(0.96);
 }
 
 .listItem:last-child {
