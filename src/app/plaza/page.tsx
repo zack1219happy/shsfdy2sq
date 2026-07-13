@@ -5,20 +5,22 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import FaIcon from '@/components/FaIcon'
 import { renderClient } from '@/lib/render-client'
 import { getSession } from '@/lib/auth'
-import { fetchPlazaArticles } from '@/lib/gist-api'
-import { PLAZA_CATEGORIES } from '@/types/plaza'
+import { fetchPlazaArticles, fetchLikedPlazaIds, votePlazaArticle, removePlazaVote } from '@/lib/gist-api'
 import type { PlazaArticleListResult } from '@/types/plaza'
 import { UserName } from '@/components/UserName'
-import styles from '@/styles/plaza.module.css'
+import styles from '@/styles/forum.module.css'
 
 /* ==============================================================
-   广场列表页
+   广场列表页 — 文章卡片
+   - 支持分类筛选（?category= & ?sub=）和 tab 切换（?my=1 / ?liked=1）
+   - 点赞按钮在卡片内联，乐观更新
    ============================================================== */
 
 export default function PlazaListPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [articles, setArticles] = useState<PlazaArticleListResult[]>([])
+  const [likedIds, setLikedIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -26,21 +28,41 @@ export default function PlazaListPage() {
 
   const category = searchParams.get('category') || null
   const subCategory = searchParams.get('sub') || null
+  const tab = searchParams.get('my') ? 'my' : searchParams.get('liked') ? 'liked' : 'all'
+
+  // 根据当前筛选动态标题
+  const headerTitle = useMemo(() => {
+    if (subCategory) return subCategory
+    if (category) return category
+    if (tab === 'my') return '我写的'
+    if (tab === 'liked') return '我赞的'
+    return '文章广场'
+  }, [category, subCategory, tab])
 
   useEffect(() => {
     let cancelled = false
     setLoading(true)
-    fetchPlazaArticles(
-      category || undefined,
-      subCategory || undefined,
-      undefined,
-      100,
-    )
-      .then((data) => { if (!cancelled) setArticles(data) })
+    Promise.all([
+      fetchPlazaArticles(
+        category || undefined,
+        subCategory || undefined,
+        undefined,
+        100,
+        0,
+        tab === 'my' ? true : undefined,
+        tab === 'liked' ? true : undefined,
+      ),
+      tab !== 'my' ? fetchLikedPlazaIds() : Promise.resolve([]),
+    ])
+      .then(([data, liked]) => {
+        if (cancelled) return
+        setArticles(data)
+        if (liked.length) setLikedIds(new Set(liked))
+      })
       .catch((e: Error) => { if (!cancelled) setError(e.message) })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
-  }, [category, subCategory])
+  }, [category, subCategory, tab])
 
   const filtered = useMemo(() => {
     if (!searchQuery.trim()) return articles
@@ -52,32 +74,70 @@ export default function PlazaListPage() {
     )
   }, [articles, searchQuery])
 
+  const showSearch = searchOpen || searchQuery.length > 0
+
   const goToArticle = useCallback((slug: string) => {
-    router.push('/plaza/' + slug)
+    router.push('/plaza/post?slug=' + encodeURIComponent(slug))
   }, [router])
+
+  const handleLike = useCallback(async (e: React.MouseEvent, articleId: string) => {
+    e.stopPropagation()
+    // 先判定当前是否已赞
+    const wasLiked = likedIds.has(articleId)
+    // 乐观更新
+    setLikedIds((prev) => {
+      const next = new Set(prev)
+      if (wasLiked) next.delete(articleId)
+      else next.add(articleId)
+      return next
+    })
+    setArticles((prev) =>
+      prev.map((a) =>
+        a.id === articleId
+          ? { ...a, like_count: wasLiked ? Math.max(0, a.like_count - 1) : a.like_count + 1 }
+          : a,
+      ),
+    )
+    try {
+      if (wasLiked) {
+        await removePlazaVote(articleId)
+      } else {
+        await votePlazaArticle(articleId, 'up')
+      }
+    } catch {
+      // 回滚
+      setLikedIds((prev) => {
+        const next = new Set(prev)
+        if (wasLiked) next.add(articleId)
+        else next.delete(articleId)
+        return next
+      })
+      setArticles((prev) =>
+        prev.map((a) =>
+          a.id === articleId
+            ? { ...a, like_count: wasLiked ? a.like_count + 1 : Math.max(0, a.like_count - 1) }
+            : a,
+        ),
+      )
+    }
+  }, [likedIds])
 
   return (
     <div className={styles.page}>
       <div className={styles.header}>
-        <h2><FaIcon name="newspaper" /> 文章广场</h2>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <h2><FaIcon name="newspaper" /> {headerTitle}</h2>
+        <div className={styles.headerActions}>
           <button
-            className={`${styles.searchToggle} ${searchOpen ? styles.searchToggleActive : ''}`}
-            onClick={() => { setSearchOpen(!searchOpen); if (searchOpen) setSearchQuery(''); }}
+            className={`${styles.searchToggle} ${showSearch ? styles.searchToggleActive : ''}`}
+            onClick={() => { setSearchOpen(!showSearch); if (showSearch) setSearchQuery(''); }}
             title="搜索文章"
           >
             <FaIcon name="search" />
           </button>
-          <button
-            className={`${styles.btn} ${styles.btnOutline}`}
-            onClick={() => router.push('/plaza/new')}
-          >
-            <FaIcon name="plus" /> 写文章
-          </button>
         </div>
       </div>
 
-      {searchOpen && (
+      {showSearch && (
         <div className={styles.searchBar}>
           <FaIcon name="search" className={styles.searchIcon} />
           <input
@@ -96,28 +156,6 @@ export default function PlazaListPage() {
         </div>
       )}
 
-      {/* 分类筛选 */}
-      <div className={styles.categoryFilter}>
-        <button
-          className={`${styles.catBtn} ${!category && !subCategory ? styles.catBtnActive : ''}`}
-          onClick={() => { router.push('/plaza'); window.history.replaceState(null, '', '/plaza') }}
-        >
-          全部
-        </button>
-        {PLAZA_CATEGORIES.map((cat) => (
-          <button
-            key={cat.name}
-            className={`${styles.catBtn} ${category === cat.name && !subCategory ? styles.catBtnActive : ''}`}
-            onClick={() => {
-              router.push(`/plaza?category=${encodeURIComponent(cat.name)}`)
-              window.history.replaceState(null, '', `/plaza?category=${encodeURIComponent(cat.name)}`)
-            }}
-          >
-            {cat.name}
-          </button>
-        ))}
-      </div>
-
       {loading && <p className={styles.loading}>加载中…</p>}
       {error && <p className={styles.error}>❌ {error}</p>}
       {!loading && !error && filtered.length === 0 && (
@@ -132,7 +170,9 @@ export default function PlazaListPage() {
             <ArticleCard
               key={article.id}
               article={article}
+              liked={likedIds.has(article.id)}
               onClick={() => goToArticle(article.slug)}
+              onLike={(e) => handleLike(e, article.id)}
             />
           ))}
         </div>
@@ -142,27 +182,50 @@ export default function PlazaListPage() {
 }
 
 /* ==============================================================
-   ArticleCard
+   ArticleCard — 文章卡片
+   复用论坛 postCard 样式，带内联赞按钮和点赞数
    ============================================================== */
 
-function ArticleCard({ article, onClick }: { article: PlazaArticleListResult; onClick: () => void }) {
+function ArticleCard({
+  article,
+  liked,
+  onClick,
+  onLike,
+}: {
+  article: PlazaArticleListResult
+  liked: boolean
+  onClick: () => void
+  onLike: (e: React.MouseEvent) => void
+}) {
   return (
     <div
-      className={styles.card}
+      className={styles.postCard}
       onClick={onClick}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => { if (e.key === 'Enter') onClick() }}
     >
       <div
-        className={styles.cardTitle}
+        className={styles.postTitle}
         dangerouslySetInnerHTML={{ __html: renderClient(article.title) }}
       />
-      <div className={styles.cardMeta}>
-        <UserName username={article.author_username} className={styles.author} />
+      <div className={styles.postMeta}>
+        <UserName username={article.author_username} className={styles.postAuthor} />
         <span>{formatDate(article.created_at)}</span>
-        <span className={`${styles.badge} ${styles.badgeCategory}`}>{article.category}{article.sub_category ? ` · ${article.sub_category}` : ''}</span>
-        {!article.is_public && <span className={`${styles.badge} ${styles.badgePrivate}`}>🔒 私密</span>}
+        {!article.is_public && <span style={{ color: '#b35a00', fontSize: '0.78rem' }}>🔒 私密</span>}
+        <span className={styles.statBadge}>💬 {article.comment_count ?? 0}</span>
+        <div className={styles.postStats}>
+          <button
+            className={`${styles.voteIcon} ${liked ? styles.voteIconActiveUp : ''}`}
+            onClick={onLike}
+            title={liked ? '取消赞' : '赞'}
+          >
+            <FaIcon name="thumbs-up" />
+          </button>
+          <span className={`${styles.voteCount} ${(article.like_count ?? 0) > 0 ? styles.voteCountPositive : ''}`}>
+            {article.like_count ?? 0}
+          </span>
+        </div>
       </div>
     </div>
   )

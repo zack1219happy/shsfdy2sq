@@ -92,19 +92,28 @@ export default function NoticePage() {
       {!loading && !error && filtered.length > 0 && (
         <div className={styles.noticeList}>
           {filtered.map((n) => {
-            const isForum = n.type?.startsWith('forum_')
+            const isForum = n.type?.startsWith('forum_') && n.page?.startsWith('forum/')
+            const isPlaza = n.type?.startsWith('forum_') && n.page?.startsWith('plaza/')
             const basePath = BASE_PATH
             const page = n.page ? (registry.oldToNewSlug[n.page] ?? n.page) : undefined
             const href = isForum
               ? `${basePath}/forum/post?id=${n.page?.replace('forum/', '') || ''}&comment=${n.comment_id}&_=${Date.now()}`
-              : page
+              : isPlaza
+                ? `${basePath}/plaza/post?slug=${encodeURIComponent(n.page?.replace('plaza/', '') || '')}&comment=${n.comment_id}&_=${Date.now()}`
+                : page
                   ? `${basePath}/wiki/${page}/?comment=${n.comment_id}&_=${Date.now()}`
                   : undefined
 
             let label = '评论'
-            if (n.type === 'forum_reply') label = '论坛回复'
-            else if (n.type === 'forum_own_post') label = '帖子动态'
-            else if (n.type === 'forum_post_update') label = '关注更新'
+            if (isForum) {
+              if (n.type === 'forum_reply') label = '论坛回复'
+              else if (n.type === 'forum_own_post') label = '帖子动态'
+              else if (n.type === 'forum_post_update') label = '关注更新'
+            } else if (isPlaza) {
+              if (n.type === 'forum_reply') label = '文章回复'
+              else if (n.type === 'forum_own_post') label = '文章动态'
+              else label = '文章通知'
+            }
 
             const isDeleted = n.excerpt === '评论已删除'
 

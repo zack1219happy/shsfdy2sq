@@ -119,3 +119,27 @@ a.treePage[data-active]:hover {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* ---- details/summary 重置（文件夹折叠用） ---- */
+
+.detailsReset {
+  /* 不加任何 margin/padding — 由内部 summary/子节点各自负责 */
+}
+
+.detailsReset > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.detailsReset > summary::-webkit-details-marker,
+.detailsReset > summary::marker {
+  display: none;
+}
+
+.detailsReset summary .chevron {
+  transition: transform 0.15s;
+}
+
+.detailsReset[open] > summary .chevron {
+  transform: rotate(90deg);
+}
