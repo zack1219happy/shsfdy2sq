@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useRef, useEffect } from 'react'
+import { useMemo, useRef, useEffect, useLayoutEffect } from 'react'
 import { renderClientWithRegistry, replaceWikiLinks } from '@/lib/render-client'
 import { registry, titleSlugMap as defaultTitleSlugMap } from '@/data/person-registry'
 import { BASE_PATH } from '@/lib/constants'
@@ -41,6 +41,52 @@ export default function WikiContent({ content, format, className, titleSlugMap: 
 
     return withLinks
   }, [content, format, effectiveMap, basePath])
+
+  // ---- callout details open state persistence ----
+  // 原生 <details> 的 open 状态不在 React 控制中，dangerouslySetInnerHTML
+  // 被重新设置时所有 <details> 会回到初始状态。用 ref 保存当前状态，
+  // useLayoutEffect 在同帧 paint 前恢复，避免用户看到闪烁。
+  const detailsStateRef = useRef<Record<string, boolean>>({})
+  const prevContentRef = useRef(content)
+
+  // 内容变化（编辑后）→ 清空保存的状态
+  if (prevContentRef.current !== content) {
+    detailsStateRef.current = {}
+    prevContentRef.current = content
+  }
+
+  // 监听 toggle 事件，持续同步 open 状态到 ref
+  // capture phase 确保嵌套 details 也能被捕获
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const handler = (e: Event) => {
+      const details = e.target as HTMLDetailsElement
+      if (!details.classList.contains('callout')) return
+      const all = el.querySelectorAll<HTMLDetailsElement>('details.callout')
+      for (let i = 0; i < all.length; i++) {
+        if (all[i] === details) {
+          detailsStateRef.current[String(i)] = details.open
+          return
+        }
+      }
+    }
+    el.addEventListener('toggle', handler, true)
+    return () => el.removeEventListener('toggle', handler, true)
+  }, [html])
+
+  // 渲染后同步恢复状态（在 paint 前执行，无闪烁）
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const all = el.querySelectorAll<HTMLDetailsElement>('details.callout')
+    for (let i = 0; i < all.length; i++) {
+      const saved = detailsStateRef.current[String(i)]
+      if (saved !== undefined && all[i].open !== saved) {
+        all[i].open = saved
+      }
+    }
+  })
 
   // 代码块复制按钮：事件委托
   useEffect(() => {
