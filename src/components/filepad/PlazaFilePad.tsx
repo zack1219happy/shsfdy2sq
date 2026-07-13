@@ -66,15 +66,19 @@ function buildNavTree(categories: PlazaCategory[]): PlazaNavNode[] {
   ]
 
   // 将分类树转为导航节点
-  function convertTree(nodes: PlazaCategoryTreeNode[]): PlazaNavNode[] {
+  // parentName: 父级分类名，用于叶子节点生成正确的 category=父&sub=子的 URL
+  function convertTree(nodes: PlazaCategoryTreeNode[], parentName?: string): PlazaNavNode[] {
     return nodes.map((cat): PlazaNavNode => {
       if (cat.children.length === 0) {
         // 叶子 → 页面
+        // 有父级: category=父名, sub=叶子名；无父级: category=叶子名
+        const catParam = parentName || cat.name
+        const subParam = parentName ? `&sub=${encodeURIComponent(cat.name)}` : ''
         return {
           id: cat.id,
           title: cat.name,
           type: 'page',
-          href: `/plaza?category=${encodeURIComponent(cat.name)}`,
+          href: `/plaza?category=${encodeURIComponent(catParam)}${subParam}`,
           icon: categoryIcons[cat.name],
         }
       }
@@ -84,7 +88,7 @@ function buildNavTree(categories: PlazaCategory[]): PlazaNavNode[] {
         type: 'folder',
         href: `/plaza?category=${encodeURIComponent(cat.name)}`,
         icon: categoryIcons[cat.name],
-        children: convertTree(cat.children),
+        children: convertTree(cat.children, cat.name),
       }
     })
   }
