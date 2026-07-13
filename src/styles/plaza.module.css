@@ -1,0 +1,410 @@
+/* ============================================
+   Plaza — 文章广场样式
+   ============================================ */
+
+.page {
+  padding: 0 24px 60px;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.header h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* ---- 搜索栏 ---- */
+
+.searchBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  background: var(--color-attr-bg);
+  border-radius: var(--border-radius);
+  padding: 8px 12px;
+}
+
+.searchIcon {
+  color: var(--color-text-light);
+  font-size: 0.9rem;
+}
+
+.searchInput {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 0.95rem;
+  color: var(--color-text);
+  outline: none;
+  font-family: var(--font-sans);
+}
+
+.searchCount {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.searchToggle {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  padding: 4px 6px;
+  border-radius: var(--border-radius);
+  transition: color 0.15s, background 0.15s;
+  display: flex;
+  align-items: center;
+}
+.searchToggle:hover {
+  color: var(--color-primary);
+  background: var(--color-active-bg);
+}
+.searchToggleActive {
+  color: var(--color-primary);
+  background: var(--color-active-bg);
+}
+
+.catBtnActive {
+  background: var(--color-primary) !important;
+  color: white !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* ---- 分类筛选 ---- */
+
+.categoryFilter {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.catBtn {
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: var(--font-sans);
+}
+.catBtn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-active-bg);
+}
+.catBtn[data-active] {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+/* ---- 文章卡片 ---- */
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card {
+  background: var(--color-bg);
+  border-radius: var(--border-radius-lg);
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+.card:hover {
+  background: var(--color-attr-bg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.cardTitle {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.cardMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  flex-wrap: wrap;
+}
+
+.cardMeta .author {
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.detailMeta .author {
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+.badgeCategory {
+  background: #e8f0fe;
+  color: #1a73e8;
+}
+.badgePrivate {
+  background: #fef3c7;
+  color: #b35a00;
+}
+
+/* ---- 新建/编辑表单 ---- */
+
+.newArticleForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.titleInput {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--color-text);
+  background: var(--color-bg);
+  outline: none;
+  transition: border-color 0.15s;
+  font-family: var(--font-sans);
+}
+.titleInput:focus {
+  border-color: var(--color-primary);
+}
+
+.formControls {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.formLabel {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.formSelect {
+  padding: 6px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  font-size: 0.9rem;
+  color: var(--color-text);
+  background: var(--color-bg);
+  outline: none;
+  cursor: pointer;
+  font-family: var(--font-sans);
+}
+
+.toggleSwitch {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.toggleInput {
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: #ccc;
+  appearance: none;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s;
+}
+.toggleInput:checked {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.toggleInput::before {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: white;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.2s;
+}
+.toggleInput:checked::before {
+  transform: translateX(16px);
+}
+
+.editorWrapper {
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.editorNoBorder {
+  border: none !important;
+}
+
+/* ---- 操作按钮 ---- */
+
+.btn {
+  padding: 6px 16px;
+  border-radius: var(--border-radius);
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+  font-family: var(--font-sans);
+}
+.btnOutline {
+  background: transparent;
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+.btnOutline:hover {
+  background: var(--color-hover-bg);
+}
+.btnPrimary {
+  background: var(--color-primary);
+  color: white;
+}
+.btnPrimary:hover {
+  background: var(--color-primary-hover);
+}
+.btnPrimary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.formActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.backBtnIcon {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  padding: 4px;
+  border-radius: var(--border-radius);
+  transition: color 0.15s, background 0.15s;
+  display: flex;
+  align-items: center;
+}
+.backBtnIcon:hover {
+  color: var(--color-primary);
+  background: var(--color-active-bg);
+}
+
+/* ---- 文章详情 ---- */
+
+.detailHeader {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.detailHeaderInner {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.detailTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.detailTitle {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.3;
+  text-wrap: balance;
+}
+
+.detailMeta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.detailBody {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: 0 24px 60px;
+}
+
+/* ---- 加载/空状态 ---- */
+
+.loading {
+  text-align: center;
+  color: var(--color-text-muted);
+  padding: 40px 0;
+}
+
+.empty {
+  text-align: center;
+  color: var(--color-text-muted);
+  padding: 40px 0;
+  font-size: 0.95rem;
+}
+
+.error {
+  text-align: center;
+  color: #e74c3c;
+  padding: 20px 0;
+}
+
+/* ---- TOC 可见时补偿 ---- */
+@media (min-width: 1601px) {
+  .page {
+    padding-right: 308px;
+  }
+}

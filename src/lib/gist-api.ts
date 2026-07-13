@@ -2,6 +2,7 @@
 
 import { supabase } from './supabase'
 import type { Comment, CommentsData, ForumPost, ForumComment, NotificationType, UserInfo } from '@/types/gist'
+import type { PlazaArticle, PlazaArticleDetail, PlazaArticleListResult } from '@/types/plaza'
 
 function mapComment(raw: Record<string, unknown>): Comment {
   return {
@@ -303,4 +304,76 @@ export async function heartbeatConversation(conversationId: string): Promise<voi
 
 export async function leaveConversation(conversationId: string): Promise<void> {
   await supabase.rpc('leave_conversation', { p_conversation_id: conversationId })
+}
+
+/* =============================================================
+   Plaza API — 文章广场
+   ============================================================= */
+
+export async function fetchPlazaArticles(
+  category?: string,
+  subCategory?: string,
+  search?: string,
+  limit = 50,
+  offset = 0,
+): Promise<PlazaArticleListResult[]> {
+  const params: Record<string, any> = { p_limit: limit, p_offset: offset }
+  if (category) params.p_category = category
+  if (subCategory) params.p_sub_category = subCategory
+  if (search) params.p_search = search
+  const { data, error } = await supabase.rpc('get_plaza_articles', params)
+  if (error) throw new Error('获取广场文章失败: ' + error.message)
+  return (data ?? []) as PlazaArticleListResult[]
+}
+
+export async function fetchPlazaArticle(slug: string): Promise<PlazaArticleDetail> {
+  const { data, error } = await supabase.rpc('get_plaza_article', { p_slug: slug })
+  if (error) throw new Error('获取文章失败: ' + error.message)
+  const row = (data as PlazaArticleDetail[] | null)?.[0]
+  if (!row) throw new Error('文章不存在')
+  return row
+}
+
+export async function createPlazaArticle(
+  title: string,
+  slug: string,
+  content: string,
+  category: string,
+  subCategory: string | null,
+  isPublic: boolean,
+): Promise<string> {
+  const { data, error } = await supabase.rpc('create_plaza_article', {
+    p_title: title.trim(),
+    p_slug: slug.trim(),
+    p_content: content.trim(),
+    p_category: category,
+    p_sub_category: subCategory,
+    p_is_public: isPublic,
+  })
+  if (error) throw new Error('发布文章失败: ' + error.message)
+  return data as string
+}
+
+export async function updatePlazaArticle(
+  id: string,
+  title: string,
+  content: string,
+  category: string,
+  subCategory: string | null,
+  isPublic: boolean,
+): Promise<void> {
+  const { error } = await supabase.rpc('update_plaza_article', {
+    p_article_id: id,
+    p_title: title.trim(),
+    p_content: content.trim(),
+    p_category: category,
+    p_sub_category: subCategory,
+    p_is_public: isPublic,
+  })
+  if (error) throw new Error('编辑失败: ' + error.message)
+}
+
+export async function deletePlazaArticle(id: string): Promise<void> {
+  const { error } = await supabase.rpc('delete_plaza_article', { p_article_id: id })
+  if (error) throw new Error('删除失败: ' + error.message)
 }
