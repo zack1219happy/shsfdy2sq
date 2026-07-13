@@ -4,8 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import FaIcon from '@/components/FaIcon'
 import { renderClient } from '@/lib/render-client'
-import { fetchPlazaArticles } from '@/lib/gist-api'
-import type { PlazaArticleListResult } from '@/types/plaza'
+import { fetchPlazaArticles, fetchPlazaCategories } from '@/lib/gist-api'
+import type { PlazaArticleListResult, PlazaCategory } from '@/types/plaza'
 import { UserName } from '@/components/UserName'
 import styles from '@/styles/forum.module.css'
 
@@ -23,27 +23,33 @@ export default function PlazaListPage() {
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
+  const [categories, setCategories] = useState<PlazaCategory[]>([])
 
-  const category = searchParams.get('category') || null
-  const subCategory = searchParams.get('sub') || null
+  const categoryId = searchParams.get('category_id') || null
   const tab = searchParams.get('my') ? 'my' : searchParams.get('liked') ? 'liked' : 'all'
+
+  // 加载分类（用于显示标题）
+  useEffect(() => {
+    fetchPlazaCategories().then(setCategories).catch(() => {})
+  }, [])
 
   // 根据当前筛选动态标题
   const headerTitle = useMemo(() => {
-    if (subCategory) return subCategory
-    if (category) return category
+    if (categoryId) {
+      const cat = categories.find((c) => c.id === categoryId)
+      if (cat) return cat.name
+    }
     if (tab === 'my') return '我写的'
     if (tab === 'liked') return '我赞的'
     return '文章广场'
-  }, [category, subCategory, tab])
+  }, [categoryId, categories, tab])
 
   useEffect(() => {
     let cancelled = false
     const timer = setTimeout(() => {
       setLoading(true)
       fetchPlazaArticles(
-        category || undefined,
-        subCategory || undefined,
+        categoryId || undefined,
         searchQuery.trim() || undefined,
         100,
         0,
@@ -58,7 +64,7 @@ export default function PlazaListPage() {
         .finally(() => { if (!cancelled) setLoading(false) })
     }, 300)
     return () => { cancelled = true; clearTimeout(timer) }
-  }, [category, subCategory, tab, searchQuery])
+  }, [categoryId, tab, searchQuery])
 
   const displayArticles = articles
 

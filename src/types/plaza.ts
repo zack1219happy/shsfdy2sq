@@ -5,8 +5,7 @@ export interface PlazaArticle {
   id: string
   title: string
   slug: string
-  category: string
-  sub_category: string | null
+  category_id: string
   author_id: string
   author_username: string
   author_color: string | null
@@ -86,43 +85,15 @@ export function buildCategoryTree(flat: PlazaCategory[]): PlazaCategoryTreeNode[
 }
 
 /**
- * 查找分类的完整路径（从根到叶的 name 数组）
+ * 通过 category_id 查找分类的完整路径（从根到叶的 name 数组）
  */
-export function getCategoryPath(flat: PlazaCategory[], name: string): string[] {
-  const map = new Map(flat.map((c) => [c.name, c] as const))
+export function getCategoryPathById(flat: PlazaCategory[], categoryId: string): string[] {
+  const map = new Map(flat.map((c) => [c.id, c] as const))
   const path: string[] = []
-  let current: PlazaCategory | undefined = map.get(name)
+  let current = map.get(categoryId)
   while (current) {
     path.unshift(current.name)
-    current = current.parent_id ? flat.find((c) => c.id === current!.parent_id) : undefined
+    current = current.parent_id ? map.get(current.parent_id) : undefined
   }
   return path
-}
-
-/**
- * 根据分类名查找分类 ID
- */
-export function getCategoryId(flat: PlazaCategory[], name: string): string | undefined {
-  return flat.find((c) => c.name === name)?.id
-}
-
-/** 兼容旧代码的分类信息（name + subCategories，用于显示） */
-export interface PlazaCategoryInfo {
-  name: string
-  /** null 表示无子类、直接页面 */
-  subCategories: (string | null)[]
-}
-
-/**
- * 从扁平 DB 分类列表转换为旧版 PLAZA_CATEGORIES 格式
- * （用于过渡期兼容，后续可移除）
- */
-export function toLegacyCategories(flat: PlazaCategory[]): PlazaCategoryInfo[] {
-  const tree = buildCategoryTree(flat)
-  return tree.map((cat) => ({
-    name: cat.name,
-    subCategories: cat.children.length > 0
-      ? cat.children.map((c) => c.name)
-      : [null],
-  }))
 }

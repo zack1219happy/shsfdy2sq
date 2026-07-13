@@ -323,8 +323,7 @@ export async function fetchPlazaCategories(): Promise<PlazaCategory[]> {
 }
 
 export async function fetchPlazaArticles(
-  category?: string,
-  subCategory?: string,
+  categoryId?: string,
   search?: string,
   limit = 50,
   offset = 0,
@@ -332,8 +331,7 @@ export async function fetchPlazaArticles(
   liked?: boolean,
 ): Promise<PlazaArticleListResult[]> {
   const params: Record<string, any> = { p_limit: limit, p_offset: offset }
-  if (category) params.p_category = category
-  if (subCategory) params.p_sub_category = subCategory
+  if (categoryId) params.p_category_id = categoryId
   if (search) params.p_search = search
   if (my) params.p_my = true
   if (liked) params.p_liked = true
@@ -362,16 +360,14 @@ export async function createPlazaArticle(
   title: string,
   slug: string,
   content: string,
-  category: string,
-  subCategory: string | null,
+  categoryId: string,
   isPublic: boolean,
 ): Promise<string> {
   const { data, error } = await supabase.rpc('create_plaza_article', {
     p_title: title.trim(),
     p_slug: slug.trim(),
     p_content: content.trim(),
-    p_category: category,
-    p_sub_category: subCategory,
+    p_category_id: categoryId,
     p_is_public: isPublic,
   })
   if (error) throw new Error('发布文章失败: ' + error.message)
@@ -382,16 +378,14 @@ export async function updatePlazaArticle(
   id: string,
   title: string,
   content: string,
-  category: string,
-  subCategory: string | null,
+  categoryId: string,
   isPublic: boolean,
 ): Promise<void> {
   const { error } = await supabase.rpc('update_plaza_article', {
     p_article_id: id,
     p_title: title.trim(),
     p_content: content.trim(),
-    p_category: category,
-    p_sub_category: subCategory,
+    p_category_id: categoryId,
     p_is_public: isPublic,
   })
   if (error) throw new Error('编辑失败: ' + error.message)

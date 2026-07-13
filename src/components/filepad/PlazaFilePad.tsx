@@ -66,19 +66,15 @@ function buildNavTree(categories: PlazaCategory[]): PlazaNavNode[] {
   ]
 
   // 将分类树转为导航节点
-  // parentName: 父级分类名，用于叶子节点生成正确的 category=父&sub=子的 URL
-  function convertTree(nodes: PlazaCategoryTreeNode[], parentName?: string): PlazaNavNode[] {
+  function convertTree(nodes: PlazaCategoryTreeNode[]): PlazaNavNode[] {
     return nodes.map((cat): PlazaNavNode => {
       if (cat.children.length === 0) {
-        // 叶子 → 页面
-        // 有父级: category=父名, sub=叶子名；无父级: category=叶子名
-        const catParam = parentName || cat.name
-        const subParam = parentName ? `&sub=${encodeURIComponent(cat.name)}` : ''
+        // 叶子 → 页面，使用 category_id=UUID
         return {
           id: cat.id,
           title: cat.name,
           type: 'page',
-          href: `/plaza?category=${encodeURIComponent(catParam)}${subParam}`,
+          href: `/plaza?category_id=${encodeURIComponent(cat.id)}`,
           icon: categoryIcons[cat.name],
         }
       }
@@ -86,9 +82,9 @@ function buildNavTree(categories: PlazaCategory[]): PlazaNavNode[] {
         id: cat.id,
         title: cat.name,
         type: 'folder',
-        href: `/plaza?category=${encodeURIComponent(cat.name)}`,
+        href: `/plaza?category_id=${encodeURIComponent(cat.id)}`,
         icon: categoryIcons[cat.name],
-        children: convertTree(cat.children, cat.name),
+        children: convertTree(cat.children),
       }
     })
   }
@@ -126,24 +122,23 @@ export default function PlazaFilePad() {
   useEffect(() => {
     if (typeof window === 'undefined') return
     const params = new URLSearchParams(window.location.search)
-    const category = params.get('category')
-    if (category) {
+    const categoryId = params.get('category_id')
+    if (categoryId) {
       setExpanded((prev) => {
         const next = new Set(prev)
-        next.add('articles')
         // 找到该分类的节点 ID
-        const cat = categories.find((c) => c.name === category)
+        const cat = categories.find((c) => c.id === categoryId)
         if (cat) {
-          // 展开到该分类的父级
+          // 展开到该分类的父级（沿着 parent_id 链一路展开所有祖先）
           let parentId = cat.parent_id
           while (parentId) {
             next.add(parentId)
             const parent = categories.find((c) => c.id === parentId)
             parentId = parent?.parent_id || null
           }
-          if (cat.parent_id) {
-            // 如果是子分类，展开父级
-            next.add(cat.parent_id)
+          // 展开该分类自身（如果是文件夹）
+          if (categories.some((c) => c.parent_id === cat.id)) {
+            next.add(cat.id)
           }
         }
         next.add('articles')

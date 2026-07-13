@@ -28,7 +28,8 @@ export default function NewArticlePage() {
   // 表单字段
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
-  const [categoryName, setCategoryName] = useState<string | null>(null) // 用户选的分类名
+  const [categoryId, setCategoryId] = useState<string | null>(null) // 用户选的分类 ID
+  const [categoryName, setCategoryName] = useState<string | null>(null) // 用户选的分类名（用于显示）
   const [isPublic, setIsPublic] = useState(false) // 默认私密
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -63,25 +64,13 @@ export default function NewArticlePage() {
   }, [categoryName, categories])
 
   const handleSubmit = useCallback(async () => {
-    if (!title.trim() || !content.trim() || !session || !categoryName) return
+    if (!title.trim() || !content.trim() || !session || !categoryId) return
     setSubmitting(true)
     setError(null)
     try {
-      // 从分类名推断 category 和 sub_category
-      const cat = categories.find((c) => c.name === categoryName)
-      let mainCat: string
-      let subCat: string | null = null
-
-      if (cat?.parent_id) {
-        // 选了子类 → category = 父名, sub_category = 子名
-        const parent = categories.find((c) => c.id === cat.parent_id)
-        mainCat = parent?.name || categoryName
-        subCat = categoryName
-      } else {
-        // 选了顶级分类（无父）
-        mainCat = categoryName
-        subCat = null
-      }
+      // 从分类 ID 直接使用
+      const cat = categories.find((c) => c.id === categoryId)
+      if (!cat) { setError('无效的分类'); return }
 
       const slug =
         title
@@ -91,14 +80,14 @@ export default function NewArticlePage() {
           .replace(/^-+|-+$/g, '') +
         '-' +
         Date.now().toString(36)
-      await createPlazaArticle(title.trim(), slug, content.trim(), mainCat, subCat, isPublic)
+      await createPlazaArticle(title.trim(), slug, content.trim(), categoryId, isPublic)
       router.push('/plaza/post?slug=' + encodeURIComponent(slug))
     } catch (e: any) {
       setError(e?.message || '发布失败')
     } finally {
       setSubmitting(false)
     }
-  }, [title, content, session, categoryName, categories, isPublic, router])
+  }, [title, content, session, categoryId, categories, isPublic, router])
 
   if (!session) {
     return (
@@ -177,7 +166,7 @@ export default function NewArticlePage() {
           <button
             className={`${Styles.btn} ${Styles.btnPrimary}`}
             onClick={handleSubmit}
-            disabled={submitting || !title.trim() || !content.trim() || !categoryName}
+            disabled={submitting || !title.trim() || !content.trim() || !categoryId}
           >
             {submitting ? '发布中…' : '发布文章'}
           </button>
@@ -189,7 +178,7 @@ export default function NewArticlePage() {
         <CategoryPickerModal
           categories={categories}
           selectedName={categoryName}
-          onConfirm={(name) => setCategoryName(name)}
+          onConfirm={(id, name) => { setCategoryId(id); setCategoryName(name) }}
           onClose={() => setPickerOpen(false)}
         />
       )}

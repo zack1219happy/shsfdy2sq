@@ -17,12 +17,14 @@ import {
   fetchPlazaComments,
   addPlazaComment,
   deletePlazaComment,
+  fetchPlazaCategories,
 } from '@/lib/gist-api'
 import { loadPinyinInitialsFromDB } from '@/lib/people'
 import TableOfContents from '@/components/TableOfContents'
 import CommentSection from '@/components/CommentSection'
 import type { Heading } from '@/lib/content'
-import type { PlazaArticleDetail, PlazaComment } from '@/types/plaza'
+import type { PlazaArticleDetail, PlazaComment, PlazaCategory } from '@/types/plaza'
+import { getCategoryPathById } from '@/types/plaza'
 import type { UnifiedComment } from '@/components/CommentSection'
 import { UserName } from '@/components/UserName'
 import { showWarningToast } from '@/lib/toast'
@@ -60,6 +62,7 @@ export default function PlazaArticlePage() {
   const [comments, setComments] = useState<PlazaComment[]>([])
   const [refreshCooldown, setRefreshCooldown] = useState(0)
   const [spinning, setSpinning] = useState(false)
+  const [categories, setCategories] = useState<PlazaCategory[]>([])
 
   useEffect(() => {
     if (!slug) return
@@ -86,7 +89,10 @@ export default function PlazaArticlePage() {
     })()
   }, [slug])
 
-  useEffect(() => { loadPinyinInitialsFromDB() }, [])
+  useEffect(() => {
+    loadPinyinInitialsFromDB()
+    fetchPlazaCategories().then(setCategories).catch(() => {})
+  }, [])
 
   const isAuthor = session && article && session.userId === article.author_id
 
@@ -113,8 +119,7 @@ export default function PlazaArticlePage() {
         article.id,
         editTitle.trim(),
         editContent.trim(),
-        article.category,
-        article.sub_category,
+        article.category_id,
         editIsPublic,
       )
       setEditing(false)
@@ -304,7 +309,9 @@ export default function PlazaArticlePage() {
               <span>编辑于 {formatDate(article.updated_at)}</span>
             )}
             <span style={{ color: 'var(--color-text-light)' }}>
-              {article.category}{article.sub_category ? ` · ${article.sub_category}` : ''}
+              {categories.length > 0 && article.category_id
+                ? getCategoryPathById(categories, article.category_id).join(' · ')
+                : ''}
             </span>
             {!article.is_public && (
               <span style={{ color: '#b35a00', fontSize: '0.82rem' }}>🔒 私密</span>

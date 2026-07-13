@@ -22,8 +22,8 @@ interface CategoryPickerModalProps {
   categories: PlazaCategory[]
   /** 当前已选中的分类名（可以是顶级或子级） */
   selectedName: string | null
-  /** 用户确认选择 */
-  onConfirm: (name: string) => void
+  /** 用户确认选择，传递分类 ID 和名称 */
+  onConfirm: (id: string, name: string) => void
   /** 关闭 */
   onClose: () => void
 }
@@ -103,10 +103,11 @@ export default function CategoryPickerModal({
 
   const handleConfirm = useCallback(() => {
     if (localSelected) {
-      onConfirm(localSelected)
+      const cat = categories.find((c) => c.name === localSelected)
+      if (cat) onConfirm(cat.id, localSelected)
     }
     onClose()
-  }, [localSelected, onConfirm, onClose])
+  }, [localSelected, categories, onConfirm, onClose])
 
   // 判断一个节点是否叶子（无子节点）
   const isLeaf = useCallback(
