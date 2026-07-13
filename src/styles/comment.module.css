@@ -5,6 +5,12 @@
   border-top: 1px solid var(--color-border);
 }
 
+.sectionNoTitle {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
 .title {
   font-size: 1.25rem;
   font-weight: 600;
@@ -78,11 +84,15 @@
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.15s, transform 0.15s;
 }
 
 .submitBtn:hover:not(:disabled) {
   background: var(--color-primary-hover);
+}
+
+.submitBtn:active:not(:disabled) {
+  transform: scale(0.96);
 }
 
 .submitBtn:disabled {
@@ -116,7 +126,7 @@
   line-height: 1;
   padding: 2px 4px;
   border-radius: var(--border-radius);
-  transition: all 0.15s;
+  transition: color 0.15s, background-color 0.15s;
 }
 
 .replyTagClose:hover {

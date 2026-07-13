@@ -10,6 +10,7 @@ import {
   faBell,
   faScaleBalanced,
   faEnvelope,
+  faNewspaper,
 } from '@fortawesome/free-solid-svg-icons'
 import { getUnreadDmCount } from '@/lib/gist-api'
 import { getSession } from '@/lib/auth'
@@ -18,6 +19,7 @@ import styles from '@/styles/sidebar.module.css'
 const entries = [
   { href: '/wiki', icon: faBook, label: 'Wiki' },
   { href: '/forum', icon: faComments, label: '讨论区' },
+  { href: '/plaza', icon: faNewspaper, label: '广场' },
   { href: '/dm', icon: faEnvelope, label: '私信' },
   { href: '/agreement', icon: faScaleBalanced, label: '协议与帮助' },
   { href: '/notice', icon: faBell, label: '通知' },

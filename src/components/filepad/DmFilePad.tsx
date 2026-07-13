@@ -19,10 +19,17 @@ export default function DmFilePad() {
   const router = useRouter()
   const [activeConvId, setActiveConvId] = useState<string | null>(null)
 
-  useEffect(() => {
+  // 初始读取 + 监听浏览器前进/后退
+  const syncActiveConv = useCallback(() => {
     const params = new URLSearchParams(window.location.search)
     setActiveConvId(params.get('conv'))
   }, [])
+
+  useEffect(() => {
+    syncActiveConv()
+    window.addEventListener('popstate', syncActiveConv)
+    return () => window.removeEventListener('popstate', syncActiveConv)
+  }, [syncActiveConv])
 
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [allUsers, setAllUsers] = useState<UserInfo[]>([])
@@ -156,9 +163,10 @@ export default function DmFilePad() {
                       className={styles.userItem}
                       onClick={() => {
                         if (existingConv) {
+                          setActiveConvId(existingConv.conversation_id)
                           router.push(`/dm?conv=${existingConv.conversation_id}`)
                         } else {
-                          // 导航到 DM 页，让 send_message 自动创建对话
+                          setActiveConvId(null)
                           router.push(`/dm?user=${u.id}`)
                         }
                         setShowNew(false)
@@ -193,7 +201,10 @@ export default function DmFilePad() {
               <button
                 key={conv.conversation_id}
                 className={`${styles.item} ${isActive ? styles.itemActive : ''} ${conv.unread_count > 0 ? styles.itemUnread : ''}`}
-                onClick={() => router.push(`/dm?conv=${conv.conversation_id}`)}
+                onClick={() => {
+                  setActiveConvId(conv.conversation_id)
+                  router.push(`/dm?conv=${conv.conversation_id}`)
+                }}
               >
                 <div className={styles.itemTop}>
                   <span className={styles.itemName}>

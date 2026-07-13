@@ -9,6 +9,7 @@ import {
   faBars,
   faBell,
   faBook,
+  faBookOpen,
   faBullhorn,
   faBuilding,
   faCalendarAlt,
@@ -26,10 +27,14 @@ import {
   faGavel,
   faHome,
   faKey,
+  faLightbulb,
   faMapMarkedAlt,
+  faNewspaper,
+  faPalette,
   faPen,
   faPlus,
   faReply,
+  faRunning,
   faSchool,
   faSearch,
   faSignOutAlt,
@@ -68,6 +73,7 @@ register(faArrowUp)
 register(faBars)
 register(faBell)
 register(faBook)
+register(faBookOpen)
 register(faBullhorn)
 register(faBuilding)
 register(faCalendarAlt)
@@ -87,12 +93,16 @@ register(faGavel)
 register(faHome)
 cssAlias(faHome, 'home')
 register(faKey)
+register(faLightbulb)
 register(faMapMarkedAlt)
 cssAlias(faMapMarkedAlt, 'map-marked-alt')
 register(faMarkdown)
+register(faNewspaper)
+register(faPalette)
 register(faPen)
 register(faPlus)
 register(faReply)
+register(faRunning)
 register(faSchool)
 register(faSearch)
 cssAlias(faSearch, 'search')

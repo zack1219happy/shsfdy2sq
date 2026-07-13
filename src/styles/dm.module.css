@@ -228,13 +228,17 @@
   border-radius: var(--border-radius);
   cursor: pointer;
   font-size: 0.95rem;
-  transition: background 0.15s;
+  transition: background 0.15s, transform 0.15s;
   z-index: 10;
   line-height: 1.5;
 }
 
 .sendBtn:hover {
   background: #3d6aa3;
+}
+
+.sendBtn:active:not(:disabled) {
+  transform: scale(0.96);
 }
 
 .sendBtn:disabled {

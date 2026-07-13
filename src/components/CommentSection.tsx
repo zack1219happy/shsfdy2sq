@@ -173,7 +173,7 @@ export default function CommentSection({
   // ---- 渲染 ----
 
   return (
-    <section className={commentStyles.section}>
+    <section className={`${commentStyles.section} ${hideTitle ? commentStyles.sectionNoTitle : ''}`}>
       {!hideTitle && <h2 className={commentStyles.title}>💬 评论区</h2>}
 
       <CommentForm

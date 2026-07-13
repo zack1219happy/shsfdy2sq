@@ -49,6 +49,10 @@
   transform: scale(1.15);
 }
 
+.closeBtn:active {
+  transform: scale(0.96);
+}
+
 .imageContainer {
   display: flex;
   align-items: center;

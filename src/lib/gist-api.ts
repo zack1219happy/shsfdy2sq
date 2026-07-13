@@ -2,6 +2,7 @@
 
 import { supabase } from './supabase'
 import type { Comment, CommentsData, ForumPost, ForumComment, NotificationType, UserInfo } from '@/types/gist'
+import type { PlazaArticle, PlazaArticleDetail, PlazaArticleListResult, PlazaComment, PlazaCategory } from '@/types/plaza'
 
 function mapComment(raw: Record<string, unknown>): Comment {
   return {
@@ -303,4 +304,157 @@ export async function heartbeatConversation(conversationId: string): Promise<voi
 
 export async function leaveConversation(conversationId: string): Promise<void> {
   await supabase.rpc('leave_conversation', { p_conversation_id: conversationId })
+}
+
+/* =============================================================
+   Plaza API — 文章广场
+   - 分类从 plaza_categories 表动态读取，不再硬编码
+   - 列表支持分类筛选、搜索、我写的/我赞的 标签页
+   - 可见性只有公开 / 私密两态（is_public: boolean），
+     没有论坛的 excluded_visibility 数组
+   - 点赞走 toggle_plaza_like RPC（乐观更新）
+   ============================================================= */
+
+/** 获取所有分类（扁平列表，前端自行构建树结构） */
+export async function fetchPlazaCategories(): Promise<PlazaCategory[]> {
+  const { data, error } = await supabase.rpc('get_plaza_categories')
+  if (error) throw new Error('获取分类失败: ' + error.message)
+  return (data ?? []) as PlazaCategory[]
+}
+
+export async function fetchPlazaArticles(
+  category?: string,
+  subCategory?: string,
+  search?: string,
+  limit = 50,
+  offset = 0,
+  my?: boolean,
+  liked?: boolean,
+): Promise<PlazaArticleListResult[]> {
+  const params: Record<string, any> = { p_limit: limit, p_offset: offset }
+  if (category) params.p_category = category
+  if (subCategory) params.p_sub_category = subCategory
+  if (search) params.p_search = search
+  if (my) params.p_my = true
+  if (liked) params.p_liked = true
+  const { data, error } = await supabase.rpc('get_plaza_articles', params)
+  if (error) throw new Error('获取广场文章失败: ' + error.message)
+  return ((data ?? []) as any[]).map((r: any) => ({
+    ...r,
+    like_count: r.upvote_count ?? r.like_count ?? 0,
+    downvote_count: r.downvote_count ?? 0,
+  })) as PlazaArticleListResult[]
+}
+
+export async function fetchPlazaArticle(slug: string): Promise<PlazaArticleDetail> {
+  const { data, error } = await supabase.rpc('get_plaza_article', { p_slug: slug })
+  if (error) throw new Error('获取文章失败: ' + error.message)
+  const row = (data as any[] | null)?.[0]
+  if (!row) throw new Error('文章不存在')
+  return {
+    ...row,
+    like_count: row.upvote_count ?? row.like_count ?? 0,
+    downvote_count: row.downvote_count ?? 0,
+  } as PlazaArticleDetail
+}
+
+export async function createPlazaArticle(
+  title: string,
+  slug: string,
+  content: string,
+  category: string,
+  subCategory: string | null,
+  isPublic: boolean,
+): Promise<string> {
+  const { data, error } = await supabase.rpc('create_plaza_article', {
+    p_title: title.trim(),
+    p_slug: slug.trim(),
+    p_content: content.trim(),
+    p_category: category,
+    p_sub_category: subCategory,
+    p_is_public: isPublic,
+  })
+  if (error) throw new Error('发布文章失败: ' + error.message)
+  return data as string
+}
+
+export async function updatePlazaArticle(
+  id: string,
+  title: string,
+  content: string,
+  category: string,
+  subCategory: string | null,
+  isPublic: boolean,
+): Promise<void> {
+  const { error } = await supabase.rpc('update_plaza_article', {
+    p_article_id: id,
+    p_title: title.trim(),
+    p_content: content.trim(),
+    p_category: category,
+    p_sub_category: subCategory,
+    p_is_public: isPublic,
+  })
+  if (error) throw new Error('编辑失败: ' + error.message)
+}
+
+export async function deletePlazaArticle(id: string): Promise<void> {
+  const { error } = await supabase.rpc('delete_plaza_article', { p_article_id: id })
+  if (error) throw new Error('删除失败: ' + error.message)
+}
+
+export async function votePlazaArticle(articleId: string, voteType: 'up' | 'down'): Promise<void> {
+  const { error } = await supabase.rpc('vote_plaza_article', {
+    p_article_id: articleId,
+    p_vote_type: voteType,
+  })
+  if (error) throw new Error('投票失败: ' + error.message)
+}
+
+export async function removePlazaVote(articleId: string): Promise<void> {
+  const { error } = await supabase.rpc('remove_plaza_vote', { p_article_id: articleId })
+  if (error) throw new Error('取消投票失败: ' + error.message)
+}
+
+export async function getUserPlazaVote(articleId: string): Promise<string | null> {
+  const { data, error } = await supabase.rpc('get_user_plaza_vote', { p_article_id: articleId })
+  if (error) return null
+  return data as string | null
+}
+
+export async function fetchLikedPlazaIds(): Promise<string[]> {
+  const s = (await import('@/lib/auth')).getSession()
+  if (!s) return []
+  const { data, error } = await supabase.rpc('get_user_liked_plaza_ids', { p_user_id: s.userId })
+  if (error) throw new Error('获取赞过的文章失败: ' + error.message)
+  return (data ?? []).map((r: { article_id: string }) => r.article_id)
+}
+
+/* =============================================================
+   Plaza 评论区 API
+   ============================================================= */
+
+export async function fetchPlazaComments(articleId: string): Promise<PlazaComment[]> {
+  const { data, error } = await supabase.rpc('get_plaza_comments', { p_article_id: articleId })
+  if (error) throw new Error('获取评论失败: ' + error.message)
+  return ((data ?? []) as PlazaComment[]).map((c: any) => ({ ...c, deleted: !!c.deleted }))
+}
+
+export async function addPlazaComment(
+  articleId: string,
+  content: string,
+  parentId?: string,
+): Promise<string> {
+  const { data, error } = await supabase.rpc('add_plaza_comment', {
+    p_article_id: articleId,
+    p_content: content.trim(),
+    p_parent_id: parentId || null,
+  })
+  if (error) throw new Error('评论失败: ' + error.message)
+  return data as string
+}
+
+export async function deletePlazaComment(commentId: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc('delete_plaza_comment', { p_comment_id: commentId })
+  if (error) throw new Error('删除失败: ' + error.message)
+  return !!data
 }
