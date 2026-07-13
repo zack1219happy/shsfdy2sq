@@ -8,6 +8,7 @@ import ForumFilePad from './filepad/ForumFilePad'
 import NoticeFilePad from './filepad/NoticeFilePad'
 import UserFilePad from './filepad/UserFilePad'
 import AgreementFilePad from './filepad/AgreementFilePad'
+import DmFilePad from './filepad/DmFilePad'
 import styles from '@/styles/filepad.module.css'
 
 interface Props {
@@ -32,7 +33,8 @@ export default function FilePad({ tree }: Props) {
     pathname.startsWith('/forum') ? 'forum' :
     pathname.startsWith('/notice') ? 'notice' :
     pathname.startsWith('/agreement') ? 'agreement' :
-    pathname.startsWith('/user') ? 'user' : null
+    pathname.startsWith('/user') ? 'user' :
+    pathname.startsWith('/dm') ? 'dm' : null
 
   return (
     <aside className={styles.filepad}>
@@ -41,6 +43,7 @@ export default function FilePad({ tree }: Props) {
       {mode === 'notice' && <NoticeFilePad />}
       {mode === 'agreement' && <AgreementFilePad />}
       {mode === 'user' && <UserFilePad />}
+      {mode === 'dm' && <DmFilePad />}
     </aside>
   )
 }

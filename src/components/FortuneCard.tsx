@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { getSession } from '@/lib/auth'
-import { drawFortune, loadFortuneDatesFromDB } from '@/lib/fortune'
+import { drawFortune, loadFortuneDatesFromDB, todayStr } from '@/lib/fortune'
 import { checkIn } from '@/lib/check-in'
 import type { FortuneResult } from '@/lib/fortune'
 import styles from '@/styles/fortune.module.css'
@@ -26,21 +26,35 @@ export default function FortuneCard() {
     loadFortuneDatesFromDB()
     setSession(getSession())
 
-    const today = new Date().toISOString().slice(0, 10)
-    try {
-      const raw = localStorage.getItem(FORTUNE_CACHE_KEY)
-      if (raw) {
-        const cached: CachedFortune = JSON.parse(raw)
-        if (cached.date === today) {
-          setResult(cached.result)
-          setHasDrawn(true)
-          setStreak(cached.streak ?? 0)
-          return
+    const checkDay = () => {
+      const today = todayStr()
+      try {
+        const raw = localStorage.getItem(FORTUNE_CACHE_KEY)
+        if (raw) {
+          const cached: CachedFortune = JSON.parse(raw)
+          if (cached.date === today) {
+            setResult(cached.result)
+            setHasDrawn(true)
+            setStreak(cached.streak ?? 0)
+            return
+          }
         }
+      } catch {
+        /* ignore parse errors */
       }
-    } catch {
-      /* ignore parse errors */
+      // 新的一天（或无缓存）→ 重置为抽卡状态
+      setHasDrawn(false)
+      setResult(null)
     }
+
+    checkDay()
+
+    // 跨午夜检测：页面保持打开时日期变更，或从后台切回
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') checkDay()
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => document.removeEventListener('visibilitychange', onVisibility)
   }, [])
 
   const handleDraw = async () => {
@@ -67,7 +81,7 @@ export default function FortuneCard() {
     setStreak(newStreak)
 
     // 3. 缓存
-    const today = new Date().toISOString().slice(0, 10)
+    const today = todayStr()
     localStorage.setItem(
       FORTUNE_CACHE_KEY,
       JSON.stringify({ date: today, result: fortune, streak: newStreak }),

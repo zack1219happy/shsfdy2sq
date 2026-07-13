@@ -20,6 +20,7 @@ export async function checkIn(studentId: string): Promise<CheckInResult> {
     p_student_id: studentId,
   })
   if (error) throw new Error('打卡失败: ' + error.message)
+  // RPC 返回 JSONB: {"streak": N, "total_points": N}
   const r = data as Record<string, unknown>
   return {
     streak: (r?.streak as number) ?? 0,

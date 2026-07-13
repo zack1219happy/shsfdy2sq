@@ -9,8 +9,7 @@ import {
   tryRestoreSessionFromAuth,
   type UserSession,
 } from '@/lib/auth'
-import { getUnreadCount } from '@/lib/gist-api'
-import { registry } from '@/data/person-registry'
+import { getUnreadCount, getUnreadDmCount } from '@/lib/gist-api'
 import styles from '@/styles/auth.module.css'
 import FaIcon from '@/components/FaIcon'
 import { UserColorProvider } from '@/lib/user-colors'
@@ -75,6 +74,7 @@ export default function AuthGate({ children }: Props) {
   return (
     <UserColorProvider>
       <div style={{ position: 'fixed', top: 12, right: 16, zIndex: 1500, display: 'flex', gap: 6 }}>
+        <DmBadge />
         <NotificationBadge />
         <UserBtn session={session} onLogout={handleLogout} />
       </div>
@@ -174,6 +174,54 @@ function LoginScreen({
         </p>
       </div>
     </div>
+  )
+}
+
+/* ==============================================================
+   DmBadge — 右上角私信入口（独立于通知系统）
+   ============================================================== */
+
+function DmBadge() {
+  const router = useRouter()
+  const [unread, setUnread] = useState(0)
+  const [sessionChecked, setSessionChecked] = useState(false)
+
+  useEffect(() => {
+    const s = getSession()
+    if (s) {
+      getUnreadDmCount().then(setUnread).catch(() => {})
+    }
+    setSessionChecked(true)
+  }, [])
+
+  // 15 秒轮询未读数
+  useEffect(() => {
+    if (!sessionChecked) return
+    const s = getSession()
+    if (!s) return
+    const interval = setInterval(async () => {
+      try { setUnread(await getUnreadDmCount()) } catch { /* ignore */ }
+    }, 15000)
+    return () => clearInterval(interval)
+  }, [sessionChecked])
+
+  // 新私信事件触发即时刷新
+  useEffect(() => {
+    const h = () => {
+      getSession() && getUnreadDmCount().then(setUnread).catch(() => {})
+    }
+    window.addEventListener('new-dm', h)
+    return () => window.removeEventListener('new-dm', h)
+  }, [])
+
+  return (
+    <button className={styles.bellBtn} onClick={() => router.push('/dm')} title="私信">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+        <polyline points="22,6 12,13 2,6" />
+      </svg>
+      {unread > 0 && <span className={styles.bellBadge}>{unread > 99 ? '99+' : unread}</span>}
+    </button>
   )
 }
 

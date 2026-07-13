@@ -3,11 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { getSession } from '@/lib/auth'
-import { fetchNotifications, getUnreadCount, markNotificationRead, clearAllNotifications, deleteNotifications } from '@/lib/gist-api'
+import { fetchNotifications, markNotificationRead, clearAllNotifications, deleteNotifications } from '@/lib/gist-api'
 import { registry } from '@/data/person-registry'
 import { BASE_PATH } from '@/lib/constants'
 import FaIcon from '@/components/FaIcon'
-import { UserName } from '@/components/UserName'
 import type { Notification } from '@/lib/gist-api'
 import styles from '@/styles/auth.module.css'
 
@@ -49,6 +48,7 @@ export default function NoticePage() {
   const handleRead = useCallback(async (id: string) => {
     await markNotificationRead(id)
     setNotifs((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n))
+    window.dispatchEvent(new CustomEvent('new-notification'))
   }, [])
 
   const handleClearAll = useCallback(async () => {
@@ -58,6 +58,7 @@ export default function NoticePage() {
         ? prev.map((n) => n.type === typeFilter ? { ...n, read: true } : n)
         : prev.map((n) => ({ ...n, read: true })),
     )
+    window.dispatchEvent(new CustomEvent('new-notification'))
   }, [typeFilter])
 
   const handleDelete = useCallback(async () => {
@@ -67,6 +68,7 @@ export default function NoticePage() {
         ? prev.filter((n) => n.type !== typeFilter)
         : [],
     )
+    window.dispatchEvent(new CustomEvent('new-notification'))
   }, [typeFilter])
 
   return (
@@ -95,8 +97,8 @@ export default function NoticePage() {
             const href = isForum
               ? `${basePath}/forum/post?id=${n.page?.replace('forum/', '') || ''}&comment=${n.comment_id}&_=${Date.now()}`
               : page
-                ? `${basePath}/wiki/${page}/?comment=${n.comment_id}&_=${Date.now()}`
-                : undefined
+                  ? `${basePath}/wiki/${page}/?comment=${n.comment_id}&_=${Date.now()}`
+                  : undefined
 
             let label = '评论'
             if (n.type === 'forum_reply') label = '论坛回复'

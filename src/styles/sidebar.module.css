@@ -61,6 +61,25 @@ a.navItem:active {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+}
+
+.navBadge {
+  position: absolute;
+  top: -6px;
+  right: -10px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  border-radius: var(--border-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
 .navLabel {

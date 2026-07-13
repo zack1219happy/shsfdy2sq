@@ -1,0 +1,236 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ---- 标题行 ---- */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 64px;
+  padding: 0 16px 0 27.5px;
+  border-bottom: 1px solid #e4e6e9;
+  flex-shrink: 0;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #1a1a1a;
+}
+
+.newBtn {
+  margin-left: auto;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: #4d7cb8;
+  border-radius: var(--border-radius);
+  transition: background 0.1s;
+  line-height: 1;
+}
+
+.newBtn:hover {
+  background: #eaecef;
+}
+
+.newBtnActive {
+  background: #dce6f2;
+}
+
+/* ---- 搜索框 ---- */
+
+.searchWrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 12px;
+  padding: 6px 10px;
+  background: #fff;
+  border: 1px solid #d0d4da;
+  border-radius: var(--border-radius);
+  flex-shrink: 0;
+}
+
+.searchWrap:focus-within {
+  border-color: #4d7cb8;
+}
+
+.searchIcon {
+  font-size: 0.8rem;
+  color: #8a8f99;
+  flex-shrink: 0;
+}
+
+.searchInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: none;
+  font-size: 0.82rem;
+  color: #1a1a1a;
+}
+
+.searchInput::placeholder {
+  color: #a0a4ac;
+}
+
+.searchClear {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: #8a8f99;
+  padding: 0 2px;
+  line-height: 1;
+}
+
+.searchClear:hover {
+  color: #1a1a1a;
+}
+
+/* ---- 对话列表 ---- */
+
+.list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 8px;
+}
+
+.status {
+  text-align: center;
+  color: #8a8f99;
+  font-size: 0.82rem;
+  padding: 32px 16px;
+}
+
+/* ---- 对话项 ---- */
+
+.item {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 10px 12px;
+  margin: 2px 0;
+  border: none;
+  background: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s;
+}
+
+.item:hover {
+  background: #eaecef;
+}
+
+.itemActive {
+  background: #dce6f2;
+}
+
+.itemActive:hover {
+  background: #d0dcec;
+}
+
+.itemUnread .itemName {
+  font-weight: 700;
+}
+
+.itemTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 2px;
+}
+
+.itemName {
+  font-size: 0.85rem;
+  color: #1a1a1a;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.itemTime {
+  font-size: 0.72rem;
+  color: #8a8f99;
+  flex-shrink: 0;
+}
+
+.itemPreview {
+  font-size: 0.78rem;
+  color: #6b7280;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.unreadBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  border-radius: var(--border-radius);
+  line-height: 1;
+}
+
+/* ---- 用户搜索结果（新建对话） ---- */
+
+.userList {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0;
+}
+
+.userItem {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 10px 12px;
+  margin: 1px 0;
+  border: none;
+  background: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s;
+}
+
+.userItem:hover {
+  background: #eaecef;
+}
+
+.userItemName {
+  font-size: 0.85rem;
+  color: #1a1a1a;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.userItemUsername {
+  font-size: 0.75rem;
+  color: #8a8f99;
+  margin-top: 1px;
+}
+
+.userItemHint {
+  font-size: 0.68rem;
+  color: #9ca3af;
+  font-weight: 400;
+}

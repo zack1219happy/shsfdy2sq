@@ -18,6 +18,7 @@ import {
   faComments,
   faCopy,
   faDice,
+  faEnvelope,
   faEye,
   faFileLines,
   faFolder,
@@ -77,6 +78,7 @@ register(faChevronRight)
 register(faComments)
 register(faCopy)
 register(faDice)
+register(faEnvelope)
 register(faEye)
 register(faFileLines)
 register(faFolder)
