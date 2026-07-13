@@ -48,6 +48,7 @@ export default function NoticePage() {
   const handleRead = useCallback(async (id: string) => {
     await markNotificationRead(id)
     setNotifs((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n))
+    window.dispatchEvent(new CustomEvent('new-notification'))
   }, [])
 
   const handleClearAll = useCallback(async () => {
@@ -57,6 +58,7 @@ export default function NoticePage() {
         ? prev.map((n) => n.type === typeFilter ? { ...n, read: true } : n)
         : prev.map((n) => ({ ...n, read: true })),
     )
+    window.dispatchEvent(new CustomEvent('new-notification'))
   }, [typeFilter])
 
   const handleDelete = useCallback(async () => {
@@ -66,6 +68,7 @@ export default function NoticePage() {
         ? prev.filter((n) => n.type !== typeFilter)
         : [],
     )
+    window.dispatchEvent(new CustomEvent('new-notification'))
   }, [typeFilter])
 
   return (

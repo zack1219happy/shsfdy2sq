@@ -296,3 +296,11 @@ export async function getUnreadDmCount(): Promise<number> {
 export async function markConversationRead(conversationId: string): Promise<void> {
   await supabase.rpc('mark_conversation_read', { p_conversation_id: conversationId })
 }
+
+export async function heartbeatConversation(conversationId: string): Promise<void> {
+  await supabase.rpc('heartbeat_conversation', { p_conversation_id: conversationId })
+}
+
+export async function leaveConversation(conversationId: string): Promise<void> {
+  await supabase.rpc('leave_conversation', { p_conversation_id: conversationId })
+}

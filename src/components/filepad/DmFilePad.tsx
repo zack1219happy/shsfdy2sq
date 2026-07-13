@@ -179,6 +179,8 @@ export default function DmFilePad() {
               </div>
             )}
           </>
+        ) : showNew && !search.trim() ? (
+          <p className={styles.status}>在上方搜索框输入姓名或用户名</p>
         ) : filteredConvs.length === 0 ? (
           <p className={styles.status}>
             {search.trim() ? '无匹配对话' : '暂无对话，点击 ＋ 发起新私信'}

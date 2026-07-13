@@ -52,11 +52,24 @@ CREATE TABLE IF NOT EXISTS conversation_read_status (
 );
 
 -- ============================================================
+-- 2.6 conversation_active_sessions — 实时在线追踪
+-- ============================================================
+CREATE TABLE IF NOT EXISTS conversation_active_sessions (
+  conversation_id uuid NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+  user_id         uuid NOT NULL REFERENCES wiki_users(id) ON DELETE CASCADE,
+  heartbeat_at    timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (conversation_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_cas_heartbeat ON conversation_active_sessions(heartbeat_at);
+
+-- ============================================================
 -- 3. RLS
 -- ============================================================
 ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE private_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE conversation_read_status ENABLE ROW LEVEL SECURITY;
+ALTER TABLE conversation_active_sessions ENABLE ROW LEVEL SECURITY;
 
 -- Realtime 需要表级 SELECT 权限才能广播变更
 GRANT SELECT ON private_messages TO anon, authenticated;
@@ -101,6 +114,25 @@ DROP POLICY IF EXISTS crs_update ON conversation_read_status;
 CREATE POLICY crs_update ON conversation_read_status
   FOR UPDATE USING (auth.uid() = user_id);
 
+-- conversation_active_sessions
+DROP POLICY IF EXISTS cas_select ON conversation_active_sessions;
+CREATE POLICY cas_select ON conversation_active_sessions
+  FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS cas_insert ON conversation_active_sessions;
+CREATE POLICY cas_insert ON conversation_active_sessions
+  FOR INSERT WITH CHECK (auth.uid() = user_id AND EXISTS (
+    SELECT 1 FROM conversations c WHERE c.id = conversation_id AND (c.user1_id = auth.uid() OR c.user2_id = auth.uid())
+  ));
+
+DROP POLICY IF EXISTS cas_update ON conversation_active_sessions;
+CREATE POLICY cas_update ON conversation_active_sessions
+  FOR UPDATE USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS cas_delete ON conversation_active_sessions;
+CREATE POLICY cas_delete ON conversation_active_sessions
+  FOR DELETE USING (auth.uid() = user_id);
+
 -- ============================================================
 -- 4. RPC: get_or_create_conversation
 -- ============================================================
@@ -129,6 +161,33 @@ BEGIN
   END IF;
 
   RETURN v_conv_id;
+END;
+$$;
+
+-- ============================================================
+-- 4.5 RPC: heartbeat_conversation — 活跃心跳（每 10s 调用）
+--       同时清理超过 30 秒的心跳
+-- ============================================================
+CREATE OR REPLACE FUNCTION heartbeat_conversation(p_conversation_id uuid)
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  INSERT INTO conversation_active_sessions (conversation_id, user_id, heartbeat_at)
+  VALUES (p_conversation_id, auth.uid(), now())
+  ON CONFLICT (conversation_id, user_id) DO UPDATE SET heartbeat_at = now();
+
+  -- 清理过期心跳
+  DELETE FROM conversation_active_sessions WHERE heartbeat_at < now() - interval '30 seconds';
+END;
+$$;
+
+-- ============================================================
+-- 4.6 RPC: leave_conversation — 离开对话时清理心跳
+-- ============================================================
+CREATE OR REPLACE FUNCTION leave_conversation(p_conversation_id uuid)
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  DELETE FROM conversation_active_sessions
+  WHERE conversation_id = p_conversation_id AND user_id = auth.uid();
 END;
 $$;
 
@@ -188,23 +247,29 @@ BEGIN
     w.username AS other_username,
     w.name AS other_name,
     CASE WHEN c.last_message IS NOT NULL THEN
-      CASE WHEN EXISTS (SELECT 1 FROM private_messages pm2 WHERE pm2.conversation_id = c.id AND pm2.recalled_at IS NOT NULL AND pm2.content = c.last_message)
-        THEN '【消息已撤回】'
+      CASE WHEN c.last_message = '【消息已撤回】' THEN '【消息已撤回】'
         ELSE c.last_message
       END
     ELSE NULL END AS last_message,
     c.last_message_at,
-    (SELECT count(*) FROM private_messages pm
-     WHERE pm.conversation_id = c.id
-       AND pm.sender_id != v_uid
-       AND pm.recalled_at IS NULL
-       AND (
-         CASE WHEN c.user1_id = v_uid THEN pm.recipient_deleted ELSE pm.sender_deleted END
-       ) = false
-       AND pm.created_at > coalesce(
-         (SELECT read_at FROM conversation_read_status crs WHERE crs.conversation_id = c.id AND crs.user_id = v_uid),
-         '1970-01-01'::timestamptz
-       ))
+    CASE WHEN EXISTS (
+      SELECT 1 FROM conversation_active_sessions cas
+      WHERE cas.conversation_id = c.id AND cas.user_id = v_uid
+        AND cas.heartbeat_at > now() - interval '15 seconds'
+    ) THEN 0
+    ELSE (
+      SELECT count(*) FROM private_messages pm
+      WHERE pm.conversation_id = c.id
+        AND pm.sender_id != v_uid
+        AND pm.recalled_at IS NULL
+        AND (
+          CASE WHEN c.user1_id = v_uid THEN pm.recipient_deleted ELSE pm.sender_deleted END
+        ) = false
+        AND pm.created_at > coalesce(
+          (SELECT read_at FROM conversation_read_status crs WHERE crs.conversation_id = c.id AND crs.user_id = v_uid),
+          '1970-01-01'::timestamptz
+        )
+    ) END
   FROM conversations c
   JOIN wiki_users w ON w.id = CASE WHEN c.user1_id = v_uid THEN c.user2_id ELSE c.user1_id END
   WHERE c.user1_id = v_uid OR c.user2_id = v_uid
@@ -276,8 +341,15 @@ BEGIN
 
   UPDATE private_messages SET recalled_at = now() WHERE id = p_message_id;
 
-  -- 更新对话预览
-  UPDATE conversations SET last_message = '【消息已撤回】' WHERE id = v_conv_id;
+  -- 更新对话预览（仅当撤回的是最后一条消息时）
+  IF EXISTS (
+    SELECT 1 FROM private_messages pm
+    WHERE pm.conversation_id = v_conv_id
+      AND pm.id = p_message_id
+      AND pm.created_at = (SELECT max(created_at) FROM private_messages WHERE conversation_id = v_conv_id)
+  ) THEN
+    UPDATE conversations SET last_message = '【消息已撤回】' WHERE id = v_conv_id;
+  END IF;
 END;
 $$;
 
@@ -300,6 +372,11 @@ BEGIN
       AND pm.created_at > coalesce(
         (SELECT read_at FROM conversation_read_status crs WHERE crs.conversation_id = c.id AND crs.user_id = v_uid),
         '1970-01-01'::timestamptz
+      )
+      AND NOT EXISTS (
+        SELECT 1 FROM conversation_active_sessions cas
+        WHERE cas.conversation_id = c.id AND cas.user_id = v_uid
+          AND cas.heartbeat_at > now() - interval '15 seconds'
       )
   );
 END;
