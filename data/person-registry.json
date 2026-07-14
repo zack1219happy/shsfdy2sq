@@ -35,6 +35,7 @@
     { "name": "李锋云", "initials": "lfy", "pinyin": "li feng yun", "pinyinPrefix": "li", "pinyinRestInitials": "fy", "hyphenForm": "li-fy", "subject": "化学" },
     { "name": "徐子蓝", "initials": "xzl", "pinyin": "xu zi lan", "pinyinPrefix": "xu", "pinyinRestInitials": "zl", "hyphenForm": "xu-zl", "subject": "生物" },
     { "name": "邱宛霖", "initials": "qwl", "pinyin": "qiu wan lin", "pinyinPrefix": "qiu", "pinyinRestInitials": "wl", "hyphenForm": "qiu-wl", "subject": "政治/班主任" },
+    { "name": "常宇鑫", "initials": "cyx", "pinyin": "chang yu xin", "pinyinPrefix": "chang", "pinyinRestInitials": "yx", "hyphenForm": "chang-yx", "subject": "历史" },
     { "name": "钱涛", "initials": "qt", "pinyin": "qian tao", "pinyinPrefix": "qian", "pinyinRestInitials": "t", "hyphenForm": "qian-t", "subject": "信息" },
     { "name": "张洋洋", "initials": "zyy", "pinyin": "zhang yang yang", "pinyinPrefix": "zhang", "pinyinRestInitials": "yy", "hyphenForm": "zhang-yy", "subject": "音乐" },
     { "name": "严亮", "initials": "yl", "pinyin": "yan liang", "pinyinPrefix": "yan", "pinyinRestInitials": "l", "hyphenForm": "yan-l", "subject": "体育" },

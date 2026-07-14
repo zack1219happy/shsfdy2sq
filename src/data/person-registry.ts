@@ -347,6 +347,15 @@ export const registry: PersonRegistry = {
       "subject": "政治/班主任"
     },
     {
+      "name": "常宇鑫",
+      "initials": "cyx",
+      "pinyin": "chang yu xin",
+      "pinyinPrefix": "chang",
+      "pinyinRestInitials": "yx",
+      "hyphenForm": "chang-yx",
+      "subject": "历史"
+    },
+    {
       "name": "钱涛",
       "initials": "qt",
       "pinyin": "qian tao",

@@ -20,8 +20,8 @@ title: 宿舍
 
 | 寝室 | 成员 |
 |------|------|
-| ? | [stu:kly], [stu:lyr] |
-| ? | [stu:xmz], [stu:zjs], [stu:zfy] |
+| 111 | [stu:kly], [stu:lyr], [stu:xmz] |
+| 112 | [stu:zjs], [stu:zfy] |
 
 ## 宿舍布局
 

@@ -14,4 +14,5 @@ icon: fas fa-user
 
 ## 外号与流行语
 
-**小 yang ger ger**：参见[stu:cxy]部分。[stu:cxy]是"大 yang ger ger"，[stu:yjr]是"小 yang ger ger"。
+- **小 yang ger ger**：参见[stu:cxy]部分。[stu:cxy]是"大 yang ger ger"，[stu:yjr]是"小 yang ger ger"。
+- **邪恶杨吨～**：？
