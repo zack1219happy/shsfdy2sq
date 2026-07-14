@@ -499,6 +499,13 @@ export async function deleteWishComment(commentId: string): Promise<boolean> {
   return !!data
 }
 
+/** 用积分支付许愿服务费 */
+export async function payWishWithPoints(wishId: string): Promise<{ success: boolean; message: string }> {
+  const { data, error } = await supabase.rpc('pay_wish_with_points', { p_wish_id: wishId })
+  if (error) return { success: false, message: error.message }
+  return (data ?? { success: false, message: '支付失败' }) as { success: boolean; message: string }
+}
+
 export async function updateWishStatus(
   id: string,
   status: string,

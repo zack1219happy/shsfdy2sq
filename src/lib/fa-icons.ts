@@ -49,7 +49,7 @@ import {
   faUser,
   faUsers,
 } from '@fortawesome/free-solid-svg-icons'
-import { faMarkdown } from '@fortawesome/free-brands-svg-icons'
+import { faMarkdown, faWeixin } from '@fortawesome/free-brands-svg-icons'
 
 // >>> AUTO-IMPORTS >>>（由 scripts/scan-icons.js 自动管理，请勿手动修改）
 // <<< AUTO-IMPORTS <<<
@@ -101,6 +101,7 @@ register(faLightbulb)
 register(faMapMarkedAlt)
 cssAlias(faMapMarkedAlt, 'map-marked-alt')
 register(faMarkdown)
+register(faWeixin)
 register(faNewspaper)
 register(faPalette)
 register(faPen)

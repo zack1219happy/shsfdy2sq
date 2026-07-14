@@ -42,6 +42,7 @@ export interface WishItem {
   paid_at: string | null
   estimated_hours: string | null
   estimated_stage: string | null
+  points_paid: number
   /** v3 新增：提交者信息（由 JOIN wiki_users 返回） */
   author_username: string | null
   author_name: string | null
