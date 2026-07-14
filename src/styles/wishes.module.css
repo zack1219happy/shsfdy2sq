@@ -276,6 +276,12 @@
   color: var(--color-text-light);
 }
 
+.editorInner {
+  border: none !important;
+  border-radius: 0 !important;
+  height: 238px;
+}
+
 .formInput {
   width: 100%;
   padding: 10px 14px;

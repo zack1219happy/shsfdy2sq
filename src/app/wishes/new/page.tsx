@@ -2,12 +2,18 @@
 
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import FaIcon from '@/components/FaIcon'
 import { supabase } from '@/lib/supabase'
 import { getSession } from '@/lib/auth'
 import { BASE_PATH } from '@/lib/constants'
 import type { UserSession } from '@/lib/auth'
 import styles from '@/styles/wishes.module.css'
+
+const MarkdownEditor = dynamic(
+  () => import('@/components/MarkdownEditor').then((m) => m.MarkdownEditor),
+  { ssr: false },
+)
 
 /* ==============================================================
    许愿池 — 单页表单 + 扫码付款流程
@@ -281,13 +287,18 @@ export default function WishingPoolPage() {
                   <label className={styles.formLabel}>
                     想要的功能 <span className={styles.required}>*</span>
                   </label>
-                  <textarea
-                    className={styles.formTextarea}
-                    placeholder="用一两句话说清楚，比如：&#10;&#34;在 wiki 首页加一个天气显示&#34;&#10;&#34;给讨论区加一个投票功能&#34;"
-                    rows={4}
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                  />
+                  <div style={{
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 'var(--border-radius)',
+                    overflow: 'hidden',
+                    height: 240,
+                  }}>
+                    <MarkdownEditor
+                      value={description}
+                      onChange={setDescription}
+                      className={styles.editorInner}
+                    />
+                  </div>
                 </div>
 
                 {/* 联系方式 */}
@@ -320,7 +331,7 @@ export default function WishingPoolPage() {
                   )}
                   {contactType === 'dm' && session && (
                     <p className={styles.formHint}>
-                      已登录为 <strong>{session.name}</strong>（@{session.username}），提交后可通过站内私信联系
+                      已登录为 <strong>@{session.username}</strong>，提交后可通过站内私信联系
                     </p>
                   )}
                   {contactType === 'dm' && !session && (

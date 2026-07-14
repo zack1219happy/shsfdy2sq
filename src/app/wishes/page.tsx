@@ -6,6 +6,7 @@ import FaIcon from '@/components/FaIcon'
 import { fetchAllWishes } from '@/lib/gist-api'
 import type { WishItem } from '@/types/wishes'
 import { WISH_STATUS_MAP, WISH_TIER_MAP, WISH_TIER_OPTIONS } from '@/types/wishes'
+import { UserName } from '@/components/UserName'
 import wishStyles from '@/styles/wishes.module.css'
 
 /* ==============================================================
@@ -87,6 +88,8 @@ function WishCard({ wish, onClick }: { wish: WishItem; onClick: () => void }) {
     large: '#e74c3c',
   }
 
+  const isFinished = wish.status === 'done' || wish.status === 'cancelled'
+
   return (
     <div
       onClick={onClick}
@@ -97,18 +100,21 @@ function WishCard({ wish, onClick }: { wish: WishItem; onClick: () => void }) {
         display: 'block',
         padding: '16px 20px',
         borderRadius: 'var(--border-radius)',
-        background: 'var(--color-bg)',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)',
+        background: isFinished ? 'var(--color-sidebar-bg)' : 'var(--color-bg)',
+        boxShadow: isFinished ? undefined : '0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)',
         cursor: 'pointer',
         transition: 'box-shadow 0.15s, transform 0.15s',
         marginBottom: 12,
+        opacity: isFinished ? 0.55 : 1,
       }}
       onMouseEnter={(e) => {
-        (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 12px rgba(26, 115, 232, 0.12), 0 0 0 1px rgba(26, 115, 232, 0.15)'
+        if (isFinished) return
+        ;(e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 12px rgba(26, 115, 232, 0.12), 0 0 0 1px rgba(26, 115, 232, 0.15)'
         ;(e.currentTarget as HTMLDivElement).style.transform = 'translateY(-1px)'
       }}
       onMouseLeave={(e) => {
-        (e.currentTarget as HTMLDivElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)'
+        if (isFinished) return
+        ;(e.currentTarget as HTMLDivElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)'
         ;(e.currentTarget as HTMLDivElement).style.transform = ''
       }}
     >
@@ -120,7 +126,7 @@ function WishCard({ wish, onClick }: { wish: WishItem; onClick: () => void }) {
             </strong>
             {wish.author_username && (
               <span style={{ fontSize: '0.82rem', color: 'var(--color-text-secondary)', fontWeight: 500 }}>
-                @{wish.author_username}
+                <UserName username={wish.author_username} />
               </span>
             )}
             <span style={{ fontSize: '0.78rem', color: tierColors[wish.estimated_tier] || '#888', fontWeight: 600 }}>

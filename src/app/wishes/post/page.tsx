@@ -15,6 +15,7 @@ import type { WishItem, WishComment } from '@/types/wishes'
 import { WISH_STATUS_MAP, WISH_TIER_MAP } from '@/types/wishes'
 import CommentSection from '@/components/CommentSection'
 import type { UnifiedComment } from '@/components/CommentSection'
+import WikiContent from '@/components/WikiContent'
 import { UserName } from '@/components/UserName'
 import { showWarningToast } from '@/lib/toast'
 import { formatDate } from '@/lib/forum'
@@ -267,7 +268,7 @@ export default function WishPostPage() {
 
           {/* 描述 */}
           <div className={styles.detailBody} style={{ marginTop: 12 }}>
-            <p style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{wish.description}</p>
+            <WikiContent content={wish.description} className="wiki-body" />
           </div>
 
           {/* 管理员状态编辑 */}
