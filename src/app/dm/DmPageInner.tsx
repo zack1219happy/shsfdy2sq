@@ -134,7 +134,6 @@ function NewChatView({
           />
         </div>
         <div className={styles.inputActions}>
-          <span className={styles.inputHint}>Ctrl+Enter 发送</span>
           <button
             className={styles.sendBtn}
             onClick={handleSend}
@@ -419,7 +418,6 @@ function DmChatView({
           />
         </div>
         <div className={styles.inputActions}>
-          <span className={styles.inputHint}>Ctrl+Enter 发送</span>
           <button
             className={styles.sendBtn}
             onClick={handleSend}
