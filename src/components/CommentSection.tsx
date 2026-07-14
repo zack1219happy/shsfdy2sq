@@ -243,9 +243,7 @@ function buildCommentTree(comments: UnifiedComment[]): CommentTree {
   const commentMap = new Map<string, UnifiedComment>()
   for (const c of comments) commentMap.set(c.id, c)
 
-  const topLevel = comments.filter((c) => !c.parentId)
-
-  // 收集每一条回复的根部父评论 id
+  // 收集每条回复的根部父评论 id
   const rootMap = new Map<string, ReplyInfo[]>()
   for (const c of comments) {
     if (!c.parentId) continue
@@ -271,12 +269,35 @@ function buildCommentTree(comments: UnifiedComment[]): CommentTree {
     })
   }
 
-  // 每组按时间正序
-  for (const [, list] of rootMap) {
-    list.sort((a, b) =>
+  // 每组按时间正序，同时过滤掉"已删除且无子回复"的回复
+  for (const [topId, list] of rootMap) {
+    // 构建子回复的 parent → child 关系（在 root 内部）
+    const childIds = new Set<string>()
+    for (const item of list) {
+      if (item.comment.parentId) childIds.add(item.comment.parentId)
+    }
+    // 已删除且没有任何人引用它为 direct parent → 过滤掉
+    const filtered = list.filter((item) => {
+      if (!item.comment.deleted) return true
+      return childIds.has(item.comment.id)
+    })
+    filtered.sort((a, b) =>
       new Date(a.comment.createdAt).getTime() - new Date(b.comment.createdAt).getTime()
     )
+    if (filtered.length > 0) {
+      rootMap.set(topId, filtered)
+    } else {
+      rootMap.delete(topId)
+    }
   }
+
+  // 顶层评论：已删除且无子回复的彻底隐藏
+  const topLevel = comments.filter((c) => {
+    if (c.parentId) return false
+    // 已删除但还有子回复 → 保留（占位符表示评论已删除，但下面还有回复可看）
+    if (c.deleted) return rootMap.has(c.id)
+    return true
+  })
 
   // 顶层按时间倒序（最新在上）
   topLevel.sort((a, b) =>

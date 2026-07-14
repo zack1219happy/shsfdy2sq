@@ -16,6 +16,7 @@ import {
   faCheck,
   faChevronLeft,
   faChevronRight,
+  faCoins,
   faComments,
   faCopy,
   faDice,
@@ -81,6 +82,7 @@ cssAlias(faCalendarAlt, 'calendar-alt')
 register(faCheck)
 register(faChevronLeft)
 register(faChevronRight)
+register(faCoins)
 register(faComments)
 register(faCopy)
 register(faDice)
