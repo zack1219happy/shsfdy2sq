@@ -7,6 +7,7 @@ import { fetchAllWishes } from '@/lib/gist-api'
 import type { WishItem } from '@/types/wishes'
 import { WISH_STATUS_MAP, WISH_TIER_MAP, WISH_TIER_OPTIONS } from '@/types/wishes'
 import { UserName } from '@/components/UserName'
+import { stripMarkdown } from '@/lib/render-client'
 import wishStyles from '@/styles/wishes.module.css'
 
 /* ==============================================================
@@ -137,7 +138,7 @@ function WishCard({ wish, onClick }: { wish: WishItem; onClick: () => void }) {
             </span>
           </div>
           <p style={{ margin: '6px 0 0', fontSize: '0.9rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
-            {wish.description}
+            {stripMarkdown(wish.description)}
           </p>
         </div>
         {wish.extra_money > 0 && (
