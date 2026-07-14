@@ -84,7 +84,7 @@ export default function AuthGate({ children }: Props) {
 }
 
 /* ==============================================================
-   LoginScreen — 全屏登录界面（不变）
+   LoginScreen — 全屏登录界面
    ============================================================== */
 
 function LoginScreen({
@@ -96,11 +96,14 @@ function LoginScreen({
   const [credential, setCredential] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null)
+  const [bannedUntil, setBannedUntil] = useState<string | null>(null)
+  const [banDismissed, setBanDismissed] = useState(false)
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault()
       setMessage(null)
+      setBanDismissed(false)
 
       if (!name.trim()) {
         setMessage({ type: 'error', text: '请输入姓名' })
@@ -119,11 +122,27 @@ function LoginScreen({
         const s = getSession()
         if (s) onSuccess(s)
       } else {
-        setMessage({ type: 'error', text: result.message })
+        if (result.bannedUntil) {
+          setBannedUntil(result.bannedUntil)
+        } else {
+          setMessage({ type: 'error', text: result.message })
+        }
       }
     },
     [name, credential, onSuccess],
   )
+
+  const untilStr = bannedUntil
+    ? new Date(bannedUntil).toLocaleString('zh-CN', {
+        timeZone: 'Asia/Shanghai',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      })
+    : ''
 
   return (
     <div className={styles.overlay}>
@@ -173,6 +192,29 @@ function LoginScreen({
           如果你在 2026/7/9 及以前修改过密码，密码可能已被重置为 8 位学号
         </p>
       </div>
+
+      {/* 封禁弹窗 */}
+      {bannedUntil && !banDismissed && (
+        <div className={styles.banOverlay}>
+          <div className={styles.banModal}>
+            <div className={styles.banIcon}>🚫</div>
+            <h2 className={styles.banTitle}>账号已被封禁</h2>
+            <p className={styles.banBody}>
+              您因恶意盗号被封禁 3 天
+            </p>
+            <p className={styles.banExpiry}>
+              至 {untilStr} 解禁
+            </p>
+            <p className={styles.banWarning}>下不为例</p>
+            <button
+              className={styles.banDismissBtn}
+              onClick={() => setBanDismissed(true)}
+            >
+              我知道了
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

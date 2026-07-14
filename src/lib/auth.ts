@@ -61,6 +61,7 @@ export function canDeleteComment(
 export interface LoginResult {
   success: boolean;
   message: string;
+  bannedUntil?: string | null; // ISO 时间戳，非空 = 被封禁
 }
 
 export async function login(
@@ -68,14 +69,35 @@ export async function login(
   credential: string,
 ): Promise<LoginResult> {
   const trimmed = nameOrUsername.trim();
+
+  // 获取客户端公网 IP（通过免费 IP 服务）
+  let clientIp: string | null = null;
+  try {
+    const res = await fetch('https://api.ipify.org?format=json', { signal: AbortSignal.timeout(2000) });
+    const data = await res.json();
+    clientIp = data.ip;
+  } catch { /* 获取 IP 失败不阻塞登录 */ }
+
   const { data, error } = await supabase.rpc("login", {
     p_name_or_username: trimmed,
     p_password: credential,
+    p_client_ip: clientIp || null,
   });
 
   const user = (data as any[])?.[0];
   if (!user) {
     return { success: false, message: "姓名/用户名或密码错误，请检查后重试" };
+  }
+
+  // 封禁检查
+  if (user.banned_until) {
+    const until = new Date(user.banned_until);
+    const fmt = until.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false });
+    return {
+      success: false,
+      message: `您因恶意盗号被封禁至 ${fmt}`,
+      bannedUntil: user.banned_until,
+    };
   }
 
   // Try to establish Auth session
