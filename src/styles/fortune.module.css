@@ -10,6 +10,8 @@
   display: flex;
   flex-direction: column;
   box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04);
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
 /* ── 未登录 / 未打卡 闲置状态 ── */

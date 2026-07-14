@@ -39,6 +39,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
+    "@playwright/test": "^1.61.1",
     "@types/dompurify": "^3.0.5",
     "@types/katex": "^0.16.8",
     "@types/markdown-it": "^14.1.2",

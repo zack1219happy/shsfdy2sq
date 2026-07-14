@@ -19,13 +19,13 @@ import styles from '@/styles/sidebar.module.css'
 
 const entries = [
   { href: '/wiki', icon: faBook, label: 'Wiki' },
-  { href: '/forum', icon: faComments, label: '讨论区' },
-  { href: '/plaza', icon: faNewspaper, label: '广场' },
-  { href: '/wishes', icon: faCoins, label: '许愿池' },
+  { href: '/forum', icon: faComments, label: '讨论' },
+  { href: '/plaza', icon: faNewspaper, label: '文章' },
   { href: '/dm', icon: faEnvelope, label: '私信' },
-  { href: '/agreement', icon: faScaleBalanced, label: '协议与帮助', mobileHidden: true },
-  { href: '/notice', icon: faBell, label: '通知', mobileHidden: true },
-  { href: '/user', icon: faUser, label: '用户设置' },
+  { href: '/notice', icon: faBell, label: '通知' },
+  { href: '/user', icon: faUser, label: '用户' },
+  { href: '/wishes', icon: faCoins, label: '许愿' },
+  { href: '/agreement', icon: faScaleBalanced, label: '协议' },
 ]
 
 export default function HomeNav() {
@@ -67,7 +67,7 @@ export default function HomeNav() {
         <Link
           key={e.href}
           href={e.href}
-          className={`${styles.navItem}${e.mobileHidden ? ' ' + styles.hideOnMobile : ''}`}
+          className={styles.navItem}
         >
           <span className={styles.navIcon}>
             <FontAwesomeIcon icon={e.icon} />

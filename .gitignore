@@ -27,6 +27,7 @@ public/data/
 
 # playwright MCP tool artifacts
 .playwright-mcp/
+playwright.config.js
 
 # local planning & AI config docs
 PLAN.md
@@ -37,3 +38,4 @@ __icon_preview.html
 
 # local migration files (applied via Supabase API)
 *.sql
+_scripts/

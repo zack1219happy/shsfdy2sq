@@ -37,7 +37,7 @@ a.navItem:visited {
   width: calc(100% - 16px);
   border-radius: var(--border-radius-lg);
   cursor: pointer;
-  color: #4d7cb8;
+  color: #3d6db0;
   text-decoration: none;
   transition: background 0.1s, transform 0.1s;
   border: none;
@@ -45,6 +45,18 @@ a.navItem:visited {
 }
 .navItem + .navItem {
   margin-top: 2px;
+}
+/* 后 4 个导航项使用深灰色，稍小 */
+.navItem:nth-child(n+6),
+a.navItem:nth-child(n+6):link,
+a.navItem:nth-child(n+6):visited {
+  color: #888;
+}
+.navItem:nth-child(n+6) .navIcon {
+  font-size: 1.15rem;
+}
+.navItem:nth-child(n+6) .navLabel {
+  font-size: 0.65rem;
 }
 .navItem:hover,
 a.navItem:hover {
@@ -185,6 +197,13 @@ a.navItem:active {
     right: -10px;
     min-width: 14px;
     height: 14px;
+    font-size: 0.55rem;
+  }
+
+  .navItem:nth-child(n+6) .navIcon {
+    font-size: 1.05rem;
+  }
+  .navItem:nth-child(n+6) .navLabel {
     font-size: 0.55rem;
   }
 }
