@@ -71,3 +71,29 @@ export interface ForumNotification extends Notification {
 }
 
 export type ForumView = 'list' | 'new' | 'post'
+
+/* ========== Points Types — 积分相关类型 ========== */
+
+export interface TodayProgress {
+  checked_in: boolean
+  comments_today: number
+  posts_today: number
+  total_points: number
+}
+
+export interface PointsTransaction {
+  id: string
+  amount: number
+  reason: 'checkin' | 'comment' | 'forum_post' | 'plaza_article' | 'wish_done'
+  reference_id: string | null
+  created_at: string
+}
+
+/** reason 中文映射 */
+export const POINTS_REASON_LABEL: Record<string, string> = {
+  checkin: '打卡',
+  comment: '评论',
+  forum_post: '论坛发帖',
+  plaza_article: '文章奖励',
+  wish_done: '许愿完成',
+}

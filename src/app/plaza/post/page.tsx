@@ -18,6 +18,7 @@ import {
   addPlazaComment,
   deletePlazaComment,
   fetchPlazaCategories,
+  awardPlazaArticlePoints,
 } from '@/lib/gist-api'
 import { loadPinyinInitialsFromDB } from '@/lib/people'
 import TableOfContents from '@/components/TableOfContents'
@@ -31,6 +32,7 @@ import { showWarningToast } from '@/lib/toast'
 import { useAutoSave, loadDraft } from '@/hooks/useAutoSave'
 import { extractHeadingsFromHtml } from '@/lib/plaza-headings'
 import styles from '@/styles/forum.module.css'
+import pointsStyles from '@/styles/points.module.css'
 
 const MarkdownEditor = dynamic(
   () => import('@/components/MarkdownEditor').then((m) => m.MarkdownEditor),
@@ -121,6 +123,32 @@ export default function PlazaArticlePage() {
   })
 
   const isAuthor = session && article && session.userId === article.author_id
+  const isAdmin = session && (session as any).role && ['admin', 'super_admin'].includes((session as any).role)
+
+  // 奖励积分弹窗
+  const [showAwardModal, setShowAwardModal] = useState(false)
+  const [awardAmount, setAwardAmount] = useState(30)
+  const [awardSubmitting, setAwardSubmitting] = useState(false)
+  const [awardResult, setAwardResult] = useState<{ success: boolean; text: string } | null>(null)
+
+  const handleAwardSubmit = async () => {
+    if (!article || awardAmount <= 0) return
+    setAwardSubmitting(true)
+    setAwardResult(null)
+    try {
+      const ok = await awardPlazaArticlePoints(article.id, awardAmount)
+      if (ok) {
+        setAwardResult({ success: true, text: `成功奖励 ${awardAmount} 积分` })
+        setTimeout(() => setShowAwardModal(false), 1000)
+      } else {
+        setAwardResult({ success: false, text: '奖励失败' })
+      }
+    } catch (e: any) {
+      setAwardResult({ success: false, text: e.message || '奖励失败' })
+    } finally {
+      setAwardSubmitting(false)
+    }
+  }
 
   const startEdit = () => {
     if (!article) return
@@ -321,6 +349,15 @@ export default function PlazaArticlePage() {
                   </button>
                 </>
               )}
+              {isAdmin && !editing && (
+                <button
+                  className={pointsStyles.awardBtn}
+                  onClick={() => { setShowAwardModal(true); setAwardResult(null) }}
+                  title="奖励积分"
+                >
+                  🏆 奖励
+                </button>
+              )}
               <button
                 className={styles.backBtnIcon}
                 onClick={editing ? cancelEdit : () => router.push('/plaza')}
@@ -428,6 +465,54 @@ export default function PlazaArticlePage() {
 
       {/* TOC */}
       <TableOfContents headings={headings} />
+
+      {/* 奖励积分弹窗 */}
+      {showAwardModal && (
+        <div className={pointsStyles.awardModal} onClick={() => setShowAwardModal(false)}>
+          <div className={pointsStyles.awardCard} onClick={(e) => e.stopPropagation()}>
+            <div className={pointsStyles.awardHeader}>
+              <h3>🏆 奖励积分</h3>
+              <button className={pointsStyles.awardClose} onClick={() => setShowAwardModal(false)}>✕</button>
+            </div>
+            <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: 12 }}>
+              作者：{article.author_username}
+            </p>
+            <div className={pointsStyles.awardPresets}>
+              {[10, 30, 50].map((v) => (
+                <button
+                  key={v}
+                  className={`${pointsStyles.awardPreset} ${awardAmount === v ? pointsStyles.awardPresetActive : ''}`}
+                  onClick={() => setAwardAmount(v)}
+                >
+                  {v} 分
+                </button>
+              ))}
+            </div>
+            <div className={pointsStyles.awardField}>
+              <label>积分数量</label>
+              <input
+                type="number"
+                min={1}
+                max={999}
+                value={awardAmount}
+                onChange={(e) => setAwardAmount(Number(e.target.value) || 0)}
+              />
+            </div>
+            <button
+              className={pointsStyles.awardSubmit}
+              onClick={handleAwardSubmit}
+              disabled={awardSubmitting || awardAmount <= 0}
+            >
+              {awardSubmitting ? '发放中…' : `确认奖励 ${awardAmount} 分`}
+            </button>
+            {awardResult && (
+              <div className={`${pointsStyles.awardResult} ${awardResult.success ? pointsStyles.awardSuccess : pointsStyles.awardError}`}>
+                {awardResult.text}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </>
   )
 }

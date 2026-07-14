@@ -1,0 +1,484 @@
+/* ============================================
+   积分系统 & 积分明细页面样式
+   ============================================ */
+
+.pointsPage {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 76px 24px 60px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.pointsTitle {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---- 积分概览卡片 ---- */
+
+.overviewCard {
+  margin-bottom: 24px;
+  padding: 20px 24px;
+  background: var(--color-bg);
+  border-radius: var(--border-radius);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04);
+}
+
+.totalPoints {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.totalPointsLabel {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.totalPointsValue {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+/* ---- 今日任务 ---- */
+
+.tasksSection {
+  border-top: 1px solid var(--color-border);
+  padding-top: 16px;
+}
+
+.tasksTitle {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-bottom: 10px;
+}
+
+.taskItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  font-size: 0.9rem;
+}
+
+.taskItem:not(:last-child) {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.taskLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.taskIcon {
+  font-size: 1rem;
+}
+
+.taskDone {
+  color: var(--color-text-light);
+}
+
+.taskDone .taskName {
+  text-decoration: line-through;
+  color: var(--color-text-light);
+}
+
+.taskName {
+  color: var(--color-text);
+}
+
+.taskProgress {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+.taskRight {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+.taskPoints {
+  font-weight: 500;
+  color: var(--color-primary);
+}
+
+/* ---- 积分记录 ---- */
+
+.historySection {
+  margin-top: 24px;
+}
+
+.historyTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 12px;
+}
+
+.historyList {
+  background: var(--color-bg);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04);
+}
+
+.historyItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  font-size: 0.9rem;
+}
+
+.historyItem:not(:last-child) {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.historyLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.historyReason {
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.historyDate {
+  font-size: 0.78rem;
+  color: var(--color-text-light);
+}
+
+.historyAmount {
+  font-weight: 600;
+}
+
+.amountPositive {
+  color: #16a34a;
+}
+
+/* ---- 如何获得积分 ---- */
+
+.howToGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+.howToItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 8px;
+  background: var(--color-active-bg);
+  border-radius: var(--border-radius);
+  gap: 2px;
+}
+
+.howToIcon {
+  font-size: 1.2rem;
+  margin-bottom: 2px;
+}
+
+.howToLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.howToValue {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--color-primary);
+}
+
+.howToCap {
+  font-size: 0.72rem;
+  color: var(--color-text-light);
+}
+
+/* ---- 加载/空/错误状态 ---- */
+
+.status {
+  text-align: center;
+  padding: 48px 16px;
+  color: var(--color-text-light);
+  font-size: 0.9rem;
+}
+
+.statusError {
+  text-align: center;
+  padding: 48px 16px;
+  color: #dc2626;
+  font-size: 0.9rem;
+}
+
+/* ---- 分页 ---- */
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.pageBtn {
+  padding: 6px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.pageBtn:hover:not(:disabled) {
+  background: var(--color-hover-bg);
+  border-color: var(--color-primary);
+}
+
+.pageBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pageInfo {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+/* ---- 积分商城占位 ---- */
+
+.shopPlaceholder {
+  text-align: center;
+  padding: 60px 24px;
+}
+
+.shopPlaceholderIcon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+}
+
+.shopPlaceholderTitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 8px;
+}
+
+.shopPlaceholderText {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+/* ---- 奖励弹窗 ---- */
+
+.awardModal {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+
+.awardCard {
+  width: 360px;
+  max-width: 90vw;
+  padding: 28px 24px;
+  border-radius: var(--border-radius);
+  background: var(--color-bg);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+}
+
+.awardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.awardHeader h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.awardClose {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: var(--color-text-light);
+  padding: 4px 8px;
+  border-radius: var(--border-radius);
+  transition: background 0.15s;
+}
+
+.awardClose:hover {
+  background: var(--color-hover-bg);
+}
+
+.awardField {
+  margin-bottom: 16px;
+}
+
+.awardField label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  margin-bottom: 6px;
+}
+
+.awardField input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  font-size: 0.95rem;
+  outline: none;
+  background: var(--color-bg);
+  color: var(--color-text);
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.awardField input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(26,115,232,0.12);
+}
+
+.awardPresets {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.awardPreset {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.awardPreset:hover {
+  background: var(--color-hover-bg);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.awardPresetActive {
+  background: var(--color-active-bg);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.awardSubmit {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: var(--border-radius);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.awardSubmit:hover {
+  background: var(--color-primary-hover);
+}
+
+.awardSubmit:active {
+  transform: scale(0.96);
+}
+
+.awardSubmit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.awardResult {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: var(--border-radius);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.awardSuccess {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+.awardError {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.awardBtn {
+  padding: 6px 14px;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--border-radius);
+  background: transparent;
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+}
+
+.awardBtn:hover {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+/* ---- 移动端适配 ---- */
+
+@media (max-width: 768px) {
+  .pointsPage {
+    padding: 16px 16px 80px;
+  }
+
+  .pointsTitle {
+    font-size: 1.2rem;
+  }
+
+  .totalPointsValue {
+    font-size: 1.6rem;
+  }
+
+  .overviewCard {
+    padding: 16px;
+  }
+}

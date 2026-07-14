@@ -26,6 +26,7 @@ import {
   faFolder,
   faFolderOpen,
   faGavel,
+  faGift,
   faHome,
   faKey,
   faLightbulb,
@@ -92,6 +93,7 @@ register(faFileLines)
 register(faFolder)
 register(faFolderOpen)
 register(faGavel)
+register(faGift)
 register(faHome)
 cssAlias(faHome, 'home')
 register(faKey)
