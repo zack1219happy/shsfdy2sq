@@ -179,9 +179,6 @@ export default function DmFilePad() {
                           <span className={styles.userItemHint}>已有对话</span>
                         )}
                       </span>
-                      <span className={styles.userItemUsername}>
-                        @<UserName username={u.username} />
-                      </span>
                     </button>
                   )
                 })}

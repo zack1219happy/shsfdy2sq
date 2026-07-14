@@ -84,7 +84,7 @@ export interface TodayProgress {
 export interface PointsTransaction {
   id: string
   amount: number
-  reason: 'checkin' | 'comment' | 'forum_post' | 'plaza_article' | 'wish_done'
+  reason: 'checkin' | 'comment' | 'forum_post' | 'plaza_article' | 'wish_done' | 'purchase'
   reference_id: string | null
   created_at: string
 }
@@ -96,4 +96,39 @@ export const POINTS_REASON_LABEL: Record<string, string> = {
   forum_post: '论坛发帖',
   plaza_article: '文章奖励',
   wish_done: '许愿完成',
+  purchase: '商城消费',
 }
+
+/* ========== Shop Types — 积分商城 ========== */
+
+export interface ShopItem {
+  id: string
+  item_type: 'color' | 'tag'
+  name: string
+  value: string
+  price: number
+  tag_color: string | null
+}
+
+export interface UserPurchase {
+  item_id: string
+  item_type: 'color' | 'tag'
+  name: string
+  value: string
+  tag_color: string | null
+  purchased_at: string
+}
+
+export interface UserDecoration {
+  color: string | null
+  tags: string[]
+}
+
+/** 内置身份 Tag（不消耗槽位，不可卸装） */
+export const BUILTIN_TAGS: Record<string, string[]> = {
+  'Zack-wz': ['创始人'],
+  'Irade-tqy': ['工程师'],
+}
+
+/** 自定义 tag 的商品 value（用于识别） */
+export const CUSTOM_TAG_VALUE = '__custom__'

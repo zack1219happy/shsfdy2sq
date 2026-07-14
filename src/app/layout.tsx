@@ -5,6 +5,7 @@ import FilePad from '@/components/FilePad'
 import AuthGate from '@/components/AuthGate'
 import ImageModal from '@/components/ImageModal'
 import ToastProvider from '@/components/ToastProvider'
+import { UserColorProvider } from '@/lib/user-colors'
 import ExternalLinkHandler from '@/components/ExternalLinkHandler'
 import { config } from '@fortawesome/fontawesome-svg-core'
 import '@fortawesome/fontawesome-svg-core/styles.css'
@@ -37,7 +38,9 @@ export default function RootLayout({
         <ToastProvider>
           <ExternalLinkHandler>
           <Sidebar />
-          <FilePad tree={tree} />
+          <UserColorProvider>
+            <FilePad tree={tree} />
+          </UserColorProvider>
 
           <ImageModal />
 

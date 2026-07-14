@@ -342,7 +342,7 @@ function UserBtn({ session, onLogout }: { session: UserSession; onLogout: () => 
   return (
     <button className={styles.userBtn} onClick={() => router.push('/user')} title="账号设置">
       <FaIcon name="user" />
-      <UserName username={session.username} className={styles.userName} />
+      <UserName username={session.username} className={styles.userName} hideTags />
     </button>
   )
 }

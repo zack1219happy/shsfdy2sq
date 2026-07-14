@@ -186,7 +186,7 @@ export default function PointsPage() {
                   <span className={styles.historyDate}>{formatDate(item.created_at)}</span>
                 </div>
                 <span className={`${styles.historyAmount} ${item.amount > 0 ? styles.amountPositive : ''}`}>
-                  +{item.amount}
+                  {item.amount > 0 ? '+' : ''}{item.amount}
                 </span>
               </div>
             ))}

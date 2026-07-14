@@ -519,7 +519,7 @@ export async function updateWishStatus(
    Points API — 积分系统
    ============================================================= */
 
-import type { TodayProgress, PointsTransaction } from '@/types/gist'
+import type { TodayProgress, PointsTransaction, ShopItem, UserPurchase, UserDecoration } from '@/types/gist'
 
 export async function fetchTodayProgress(): Promise<TodayProgress> {
   const { data, error } = await supabase.rpc('get_today_progress')
@@ -549,4 +549,50 @@ export async function awardPlazaArticlePoints(articleId: string, amount: number)
   })
   if (error) throw new Error('奖励积分失败: ' + error.message)
   return !!data
+}
+
+/* =============================================================
+   Shop API — 积分商城
+   ============================================================= */
+
+/** 获取所有可购买商品 */
+export async function fetchShopItems(): Promise<ShopItem[]> {
+  const { data, error } = await supabase.rpc('get_shop_items')
+  if (error) throw new Error('获取商品列表失败: ' + error.message)
+  return (data ?? []) as ShopItem[]
+}
+
+/** 获取当前用户已购买的商品 */
+export async function fetchUserPurchases(): Promise<UserPurchase[]> {
+  const { data, error } = await supabase.rpc('get_user_purchases')
+  if (error) throw new Error('获取已购商品失败: ' + error.message)
+  return (data ?? []) as UserPurchase[]
+}
+
+/** 购买商品 */
+export async function purchaseItem(itemId: string): Promise<{ success: boolean; message: string }> {
+  const { data, error } = await supabase.rpc('purchase_item', { p_item_id: itemId })
+  if (error) return { success: false, message: error.message }
+  return (data ?? { success: false, message: '购买失败' }) as { success: boolean; message: string }
+}
+
+/** 装备颜色（传 null 卸装） */
+export async function equipColor(itemId: string | null): Promise<{ success: boolean; message: string }> {
+  const { data, error } = await supabase.rpc('equip_color', { p_item_id: itemId })
+  if (error) return { success: false, message: error.message }
+  return (data ?? { success: false, message: '操作失败' }) as { success: boolean; message: string }
+}
+
+/** 装备标签（最多 3 个，传入标签值数组） */
+export async function equipTags(tagValues: string[]): Promise<{ success: boolean; message: string }> {
+  const { data, error } = await supabase.rpc('equip_tags', { p_tag_values: tagValues })
+  if (error) return { success: false, message: error.message }
+  return (data ?? { success: false, message: '操作失败' }) as { success: boolean; message: string }
+}
+
+/** 获取当前装备状态 */
+export async function fetchUserEquipped(): Promise<UserDecoration> {
+  const { data, error } = await supabase.rpc('get_user_equipped')
+  if (error) return { color: null, tags: [] }
+  return (data as UserDecoration) ?? { color: null, tags: [] }
 }
