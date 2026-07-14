@@ -129,7 +129,7 @@ export async function login(
 
   const session: UserSession = {
     userId: user.id,
-    username: user.username || "",
+    username: user.username || user.username_out || "",
     studentId: user.student_id || "",
     name: user.name || "",
     role: user.role || "user",

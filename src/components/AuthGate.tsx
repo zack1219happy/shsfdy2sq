@@ -9,6 +9,7 @@ import {
   tryRestoreSessionFromAuth,
   type UserSession,
 } from '@/lib/auth'
+import { supabase } from '@/lib/supabase'
 import { getUnreadCount, getUnreadDmCount } from '@/lib/gist-api'
 import styles from '@/styles/auth.module.css'
 import FaIcon from '@/components/FaIcon'
@@ -36,6 +37,22 @@ export default function AuthGate({ children }: Props) {
     setSession(getSession())
     setChecked(true)
     tryRestoreSessionFromAuth().then(() => setSession(getSession()))
+  }, [])
+
+  // 定期检查封禁状态（30 秒一次），封禁中则自动退登
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const s = getSession()
+      if (!s) return
+      const { data } = await supabase.rpc('check_ban', { p_user_id: s.userId })
+      const banned = (data as any) ?? (Array.isArray(data) ? data[0] : null)
+      if (banned) {
+        clearSession()
+        setSession(null)
+        window.dispatchEvent(new CustomEvent('user-session-changed'))
+      }
+    }, 30000)
+    return () => clearInterval(interval)
   }, [])
 
   useEffect(() => {
