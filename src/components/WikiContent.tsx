@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useRef, useEffect, useLayoutEffect } from 'react'
+import DOMPurify from 'dompurify'
 import { renderClientWithRegistry, replaceWikiLinks } from '@/lib/render-client'
 import { registry, titleSlugMap as defaultTitleSlugMap } from '@/data/person-registry'
 import { BASE_PATH } from '@/lib/constants'
@@ -34,7 +35,7 @@ export default function WikiContent({ content, format, className, titleSlugMap: 
     const rawHtml =
       format === 'markdown' || (format !== 'html' && !looksLikeHtml(content))
         ? renderClientWithRegistry(content, registry, { highlight: true, texmath: true, anchor: true })
-        : content
+        : (typeof window !== 'undefined' ? DOMPurify.sanitize(content) : content)
 
     // 2. 替换 Wiki 链接
     const withLinks = replaceWikiLinks(rawHtml, effectiveMap, basePath)
