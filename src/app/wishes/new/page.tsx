@@ -461,7 +461,7 @@ export default function WishingPoolPage() {
                   {/* 待放收款码图片的位置 */}
                   <div className={styles.qrArea}>
                     <img
-                      src={`${BASE_PATH}/wechat-pay.jpg`}
+                      src={`${BASE_PATH}/wechat-pay.webp`}
                       alt="微信收款码"
                       className={styles.qrImg}
                     />
