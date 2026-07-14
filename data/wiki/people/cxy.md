@@ -15,6 +15,7 @@ icon: fas fa-user
 
 - **cx yang（或简称 yang）**：有人会在电子词典里放这个音招惹他。晚期又演化出 **yang ger ger**（yang 哥哥）——[stu:yjr]是"小 yang ger ger"，他是"大 yang ger ger"。
 - **稀盐酸**：提到化学意义上的酸时触发，因为名字中有 xi yan。衍生出“陈稀盐”、”沉积岩“。
+- **百色路首富**：之前带着饮料去上艺术课被艺术老师骂了。
 
 ## 其他
 

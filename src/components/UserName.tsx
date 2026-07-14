@@ -20,5 +20,22 @@ export function UserName({ username, className }: Props) {
     return <span className={className}>{username}</span>
   }
 
+  if (color.startsWith('linear-gradient(')) {
+    return (
+      <span
+        className={className}
+        style={{
+          background: color,
+          backgroundClip: 'text',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          display: 'inline-block',
+        }}
+      >
+        {username}
+      </span>
+    )
+  }
+
   return <span className={className} style={{ color }}>{username}</span>
 }

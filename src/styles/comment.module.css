@@ -306,29 +306,6 @@
   background: var(--color-hover-bg);
 }
 
-/* ---------- 彩色用户名 ---------- */
-.colorWz {
-  color: #f5f5f5;
-}
-
-@keyframes wzRainbow {
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-.colorTqy {
-  color: #1a73e8 !important;
-}
-
-.colorZyj {
-  color: #dc2626 !important;
-}
-
-.colorDouDou {
-  color: #16a34a !important;
-}
-
 /* ---------- 已删除评论 ---------- */
 .commentDeleted {
   opacity: 0.4;
