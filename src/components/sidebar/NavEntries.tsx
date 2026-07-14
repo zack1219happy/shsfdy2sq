@@ -11,6 +11,7 @@ import {
   faScaleBalanced,
   faEnvelope,
   faNewspaper,
+  faCoins,
 } from '@fortawesome/free-solid-svg-icons'
 import { getUnreadDmCount, getUnreadCount } from '@/lib/gist-api'
 import { getSession } from '@/lib/auth'
@@ -20,6 +21,7 @@ const entries = [
   { href: '/wiki', icon: faBook, label: 'Wiki' },
   { href: '/forum', icon: faComments, label: '讨论区' },
   { href: '/plaza', icon: faNewspaper, label: '广场' },
+  { href: '/wishes', icon: faCoins, label: '许愿池' },
   { href: '/dm', icon: faEnvelope, label: '私信' },
   { href: '/agreement', icon: faScaleBalanced, label: '协议与帮助', mobileHidden: true },
   { href: '/notice', icon: faBell, label: '通知', mobileHidden: true },

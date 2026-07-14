@@ -245,3 +245,26 @@ export function replaceWikiLinks(
     .join('')
 }
 
+// ============================================================
+// 纯文本摘要（strip markdown → textContent）
+// ============================================================
+
+/**
+ * 将 markdown 转为纯文本，用于列表卡片预览。
+ *
+ * 先通过 markdown-it 转 HTML，再用浏览器 DOM 取 textContent，
+ * 能正确处理所有边界情况：
+ * - 未闭合标记如 **到一半 → "**到一半"（markdown-it 视为普通文本）
+ * - 代码块、表格、图片 alt 文本 → 全部剔除
+ * - 换行 → 空格（保持连续）
+ */
+export function stripMarkdown(md: string, maxLen = 120): string {
+  if (typeof window === 'undefined') return md.slice(0, maxLen)
+  const mdInstance = createClientMd({ highlight: false, texmath: false })
+  const html = mdInstance.render(md)
+  const div = document.createElement('div')
+  div.innerHTML = html
+  const text = (div.textContent || '').replace(/\s+/g, ' ').trim()
+  return text.length > maxLen ? text.slice(0, maxLen) + '…' : text
+}
+

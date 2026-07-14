@@ -12,6 +12,7 @@ import UserFilePad from './filepad/UserFilePad'
 import AgreementFilePad from './filepad/AgreementFilePad'
 import DmFilePad from './filepad/DmFilePad'
 import PlazaFilePad from './filepad/PlazaFilePad'
+import WishesFilePad from './filepad/WishesFilePad'
 import styles from '@/styles/filepad.module.css'
 
 interface Props {
@@ -135,7 +136,8 @@ function FilePadContent({ pathname, tree }: { pathname: string; tree: NavNode[] 
     pathname.startsWith('/agreement') ? 'agreement' :
     pathname.startsWith('/user') ? 'user' :
     pathname.startsWith('/dm') ? 'dm' :
-    pathname.startsWith('/plaza') ? 'plaza' : null
+    pathname.startsWith('/plaza') ? 'plaza' :
+    pathname.startsWith('/wishes') ? 'wishes' : null
 
   return (
     <>
@@ -146,6 +148,7 @@ function FilePadContent({ pathname, tree }: { pathname: string; tree: NavNode[] 
       {mode === 'user' && <UserFilePad />}
       {mode === 'dm' && <DmFilePad />}
       {mode === 'plaza' && <PlazaFilePad />}
+      {mode === 'wishes' && <WishesFilePad />}
     </>
   )
 }

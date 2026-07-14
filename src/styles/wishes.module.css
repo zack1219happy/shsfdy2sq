@@ -1,0 +1,682 @@
+/* ============================================
+   许愿池 (Wishing Pool) 样式
+   ============================================ */
+
+.page {
+  min-height: 100vh;
+  background: #fafbfc;
+  padding-bottom: 80px;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 76px 24px 60px;
+}
+
+/* ── 标题 ── */
+.header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+}
+
+/* ── 流程卡片 ── */
+.flowCard {
+  background: #fff;
+  border-radius: var(--border-radius-lg);
+  padding: 24px 28px;
+  margin-bottom: 32px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+.flowSteps {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.flowStep {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  padding: 12px 8px;
+  background: var(--color-sidebar-bg);
+  border-radius: var(--border-radius);
+}
+
+.flowStepNum {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-bottom: 2px;
+}
+
+.flowStep strong {
+  font-size: 0.85rem;
+  color: var(--color-text);
+}
+
+.flowStepDesc {
+  font-size: 0.75rem;
+  color: var(--color-text-light);
+}
+
+/* ── 警告框 ── */
+.warningBox {
+  background: #fef9e7;
+  border-radius: var(--border-radius);
+  padding: 16px 20px;
+  font-size: 0.85rem;
+  color: #5c4a0a;
+  line-height: 1.6;
+}
+
+.warningBox p {
+  margin-bottom: 6px;
+}
+
+.warningBox ul {
+  margin: 0 0 0 1.2rem;
+}
+
+.warningBox li {
+  margin-bottom: 3px;
+}
+
+/* ── 区块 ── */
+.section {
+  background: #fff;
+  border-radius: var(--border-radius-lg);
+  padding: 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+.sectionTitle {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.sectionNum {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  border-radius: var(--border-radius);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  padding: 0 6px;
+}
+
+.sectionHint {
+  font-size: 0.85rem;
+  color: var(--color-text-light);
+  margin-bottom: 20px;
+}
+
+/* ── 复杂度问题 ── */
+.qBlock {
+  margin-bottom: 20px;
+}
+
+.qText {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--color-text);
+  margin-bottom: 10px;
+}
+
+.qOptions {
+  display: flex;
+  gap: 10px;
+}
+
+.qOption {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--border-radius);
+  background: var(--color-bg);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  font-family: inherit;
+  text-align: left;
+}
+
+.qOption:hover {
+  border-color: var(--color-primary);
+}
+
+.qOptionActive {
+  border-color: var(--color-primary);
+  background: var(--color-active-bg);
+}
+
+.qOptionLabel {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+
+.qOptionDesc {
+  font-size: 0.78rem;
+  color: var(--color-text-light);
+}
+
+/* ── 预估结果 ── */
+.estimateCard {
+  border-radius: var(--border-radius);
+  padding: 16px 20px;
+  margin-top: 4px;
+}
+
+.estimateNormal {
+  display: flex;
+  gap: 12px;
+  background: #e8f5e9;
+  border-radius: var(--border-radius);
+  padding: 16px 20px;
+}
+
+.estimateIcon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.estimateNormal strong {
+  font-size: 0.95rem;
+  color: var(--color-text);
+}
+
+.estimateNormal p {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+/* ── 表单 ── */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.formLabel {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.required {
+  color: #dc2626;
+}
+
+.formLabelExtra {
+  font-weight: 400;
+  color: var(--color-text-light);
+  font-size: 0.82rem;
+}
+
+.formTextarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  background: var(--color-bg);
+  color: var(--color-text);
+  outline: none;
+  resize: vertical;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+
+.formTextarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.12);
+}
+
+.formTextarea::placeholder {
+  color: var(--color-text-light);
+}
+
+.editorInner {
+  border: none !important;
+  border-radius: 0 !important;
+  height: 238px;
+}
+
+.formInput {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  font-size: 0.9rem;
+  background: var(--color-bg);
+  color: var(--color-text);
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+
+.formInput:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.12);
+}
+
+.formInput::placeholder {
+  color: var(--color-text-light);
+}
+
+.formHint {
+  font-size: 0.8rem;
+  color: var(--color-text-light);
+}
+
+.formHintWarn {
+  font-size: 0.8rem;
+  color: #dc2626;
+}
+
+.formError {
+  padding: 10px 14px;
+  background: #fee2e2;
+  color: #b91c1c;
+  border-radius: var(--border-radius);
+  font-size: 0.85rem;
+}
+
+/* ── 联系人选项 ── */
+.contactOptions {
+  display: flex;
+  gap: 8px;
+}
+
+.contactOption {
+  flex: 1;
+  padding: 10px 12px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--border-radius);
+  background: var(--color-bg);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  font-family: inherit;
+  text-align: center;
+}
+
+.contactOption:hover {
+  border-color: var(--color-primary);
+}
+
+.contactOptionActive {
+  border-color: var(--color-primary);
+  background: var(--color-active-bg);
+  color: var(--color-primary);
+}
+
+.contactOption:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── 模型选择器 ── */
+.modelPicker {
+  position: relative;
+}
+
+.modelTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  background: var(--color-bg);
+  font-size: 0.9rem;
+  color: var(--color-text);
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+
+.modelTrigger:hover {
+  border-color: var(--color-primary);
+}
+
+.modelTriggerEmoji {
+  margin-right: 6px;
+}
+
+.modelChevron {
+  font-size: 0.7rem;
+  color: var(--color-text-light);
+  transition: transform 0.15s;
+}
+
+.modelChevronOpen {
+  transform: rotate(180deg);
+}
+
+.modelDropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  z-index: 10;
+  overflow: hidden;
+}
+
+.modelOption {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.1s;
+  border-bottom: 1px solid var(--color-border);
+  gap: 4px;
+}
+
+.modelOption:last-child {
+  border-bottom: none;
+}
+
+.modelOption:hover {
+  background: var(--color-sidebar-bg);
+}
+
+.modelOptionActive {
+  background: var(--color-active-bg);
+}
+
+.modelOptionHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+}
+
+.modelEmoji {
+  font-size: 1rem;
+}
+
+.modelDesc {
+  font-size: 0.78rem;
+  color: var(--color-text-light);
+}
+
+.modelCostNote {
+  font-size: 0.75rem;
+  color: #b35a00;
+  background: #fef3c7;
+  padding: 2px 8px;
+  border-radius: var(--border-radius);
+  margin-left: auto;
+}
+
+.modelCheck {
+  font-size: 0.85rem;
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+/* ── 输入框带前缀 ── */
+.inputWithSuffix {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+
+.inputWithSuffix:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.12);
+}
+
+.inputPrefix {
+  padding: 10px 0 10px 14px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.inputWithSuffix .formInput {
+  border: none;
+  box-shadow: none;
+  padding-left: 4px;
+}
+
+.inputWithSuffix .formInput:focus {
+  box-shadow: none;
+}
+
+/* ── 提交按钮 ── */
+.submitBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 32px;
+  border: none;
+  border-radius: var(--border-radius);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, transform 0.1s;
+  align-self: flex-end;
+  margin-top: 8px;
+}
+
+.submitBtn:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.submitBtn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.submitBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── 支付卡片 ── */
+.paymentCard {
+  background: var(--color-bg);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.requestBadge {
+  text-align: center;
+  padding: 20px 0;
+  font-size: 1.1rem;
+  color: var(--color-text-secondary);
+  background: var(--color-sidebar-bg);
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+.requestBadge strong {
+  font-size: 1.3rem;
+  color: var(--color-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.paymentBody {
+  display: flex;
+  gap: 24px;
+  padding: 24px;
+  align-items: flex-start;
+}
+
+.qrArea {
+  flex: 0 0 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.qrImg {
+  width: 220px;
+  height: 220px;
+  border-radius: var(--border-radius);
+  object-fit: contain;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+}
+
+.qrHint {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  margin-top: 12px;
+  line-height: 1.5;
+}
+
+.paymentInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.paymentRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+.paymentRow:last-child {
+  border-bottom: none;
+}
+
+.paymentTier {
+  color: var(--color-primary);
+}
+
+.paymentFee {
+  color: #dc2626;
+  font-size: 1.1rem;
+}
+
+.paymentFooter {
+  padding: 16px 24px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-sidebar-bg);
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  display: flex;
+  gap: 24px;
+}
+
+.paymentFooter p {
+  margin: 0;
+}
+
+/* ── 移动端 ── */
+@media (max-width: 768px) {
+  .container {
+    padding: 56px 16px 100px;
+  }
+
+  .header h1 {
+    font-size: 1.5rem;
+  }
+
+  .flowSteps {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .flowStep {
+    flex: 1 1 calc(50% - 8px);
+    min-width: 140px;
+  }
+
+  .qOptions {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .contactOptions {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .paymentBody {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .qrArea {
+    flex: none;
+  }
+
+  .paymentFooter {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .submitBtn {
+    align-self: stretch;
+  }
+}

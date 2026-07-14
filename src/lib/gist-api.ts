@@ -1,8 +1,10 @@
 'use client'
 
 import { supabase } from './supabase'
+import { showWarningToast } from './toast'
 import type { Comment, CommentsData, ForumPost, ForumComment, NotificationType, UserInfo } from '@/types/gist'
 import type { PlazaArticle, PlazaArticleDetail, PlazaArticleListResult, PlazaComment, PlazaCategory } from '@/types/plaza'
+import type { WishItem, WishComment } from '@/types/wishes'
 
 function mapComment(raw: Record<string, unknown>): Comment {
   return {
@@ -450,5 +452,65 @@ export async function addPlazaComment(
 export async function deletePlazaComment(commentId: string): Promise<boolean> {
   const { data, error } = await supabase.rpc('delete_plaza_comment', { p_comment_id: commentId })
   if (error) throw new Error('删除失败: ' + error.message)
+  return !!data
+}
+
+/* =============================================================
+   许愿池 API
+   ============================================================= */
+
+export async function fetchAllWishes(tier?: string): Promise<WishItem[]> {
+  const { data, error } = await supabase.rpc('get_all_wishes', { p_tier: tier || null })
+  if (error) throw new Error('获取许愿列表失败: ' + error.message)
+  return (data ?? []) as WishItem[]
+}
+
+export async function fetchWishById(id: string): Promise<WishItem> {
+  const { data, error } = await supabase.rpc('get_wish_by_id', { p_id: id })
+  if (error) throw new Error('获取许愿详情失败: ' + error.message)
+  const rows = data as WishItem[]
+  if (!rows || rows.length === 0) throw new Error('许愿不存在')
+  return rows[0]
+}
+
+export async function fetchWishComments(wishId: string): Promise<WishComment[]> {
+  const { data, error } = await supabase.rpc('get_wish_comments', { p_wish_id: wishId })
+  if (error) throw new Error('获取评论失败: ' + error.message)
+  return ((data ?? []) as WishComment[]).map((c: any) => ({ ...c, deleted: !!c.deleted }))
+}
+
+export async function addWishComment(
+  wishId: string,
+  content: string,
+  parentId?: string,
+): Promise<string> {
+  const { data, error } = await supabase.rpc('add_wish_comment', {
+    p_wish_id: wishId,
+    p_content: content.trim(),
+    p_parent_id: parentId || null,
+  })
+  if (error) throw new Error('评论失败: ' + error.message)
+  return data as string
+}
+
+export async function deleteWishComment(commentId: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc('delete_wish_comment', { p_comment_id: commentId })
+  if (error) throw new Error('删除失败: ' + error.message)
+  return !!data
+}
+
+export async function updateWishStatus(
+  id: string,
+  status: string,
+  estimatedHours?: string,
+  estimatedStage?: string,
+): Promise<boolean> {
+  const { data, error } = await supabase.rpc('update_wish_status', {
+    p_id: id,
+    p_status: status,
+    p_estimated_hours: estimatedHours || null,
+    p_estimated_stage: estimatedStage || null,
+  })
+  if (error) throw new Error('更新状态失败: ' + error.message)
   return !!data
 }
