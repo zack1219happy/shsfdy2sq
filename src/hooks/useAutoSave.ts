@@ -87,8 +87,16 @@ export function useAutoSave<T>({
   }, [save])
 
   // 组件卸载时（Next.js 客户端路由跳转）保存
+  // 但先检查 localStorage 中是否仍有草稿：
+  // 若已调用过 clearDraft()（如发布成功后），则不再重新写入，避免旧内容残留
   useEffect(() => {
-    return () => { if (enabledRef.current) save() }
+    return () => {
+      if (enabledRef.current) {
+        try {
+          if (localStorage.getItem(storageKey)) save()
+        } catch {}
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [save])
 

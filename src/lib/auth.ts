@@ -145,24 +145,25 @@ export async function tryRestoreSessionFromAuth(): Promise<void> {
   const meta = session.user.user_metadata;
   if (!meta?.username) return;
 
-  // 从数据库获取最新角色（Supabase Auth user_metadata 可能过期）
+  // 从数据库获取最新角色和姓名（Supabase Auth user_metadata 可能过期/乱码）
   let role = meta.role || "user";
+  let name = meta.name || "";
   try {
     const { data: profile } = await supabase
       .from('wiki_users')
-      .select('role')
+      .select('role, name')
       .eq('id', session.user.id)
       .single();
     if (profile?.role) role = profile.role;
-  } catch { /* fallback 到 metadata 的 role */ }
+    if (profile?.name) name = profile.name;
+  } catch { /* fallback 到 metadata */ }
 
-  // 始终更新 localStorage，确保角色等字段与数据库一致
+  // 始终更新 localStorage，确保与数据库一致
   const restored: UserSession = {
     userId: session.user.id,
     username: meta.username || "",
     studentId: meta.student_id || "",
-    name: meta.name || "",
-    role,
+    name,
     loginTime: new Date().toISOString(),
   };
   localStorage.setItem(SESSION_KEY, JSON.stringify(restored));
