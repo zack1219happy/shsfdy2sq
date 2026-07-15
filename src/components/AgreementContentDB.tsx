@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { fetchAgreementPage } from '@/lib/agreement-api'
 import WikiContent from '@/components/WikiContent'
+import AgreementEditPanel from '@/components/AgreementEditPanel'
 
 interface Props {
   slug: string
@@ -38,16 +39,26 @@ export default function AgreementContentDB({ slug, staticContent, staticTitle }:
 
   return (
     <>
-      <h2
+      <div
         style={{
-          fontSize: '1.8rem',
-          fontWeight: 600,
-          color: 'var(--color-text)',
+          display: 'flex',
+          alignItems: 'flex-end',
+          justifyContent: 'space-between',
+          gap: 12,
           padding: '32px 0 16px',
         }}
       >
-        {title}
-      </h2>
+        <h2
+          style={{
+            fontSize: '1.8rem',
+            fontWeight: 600,
+            color: 'var(--color-text)',
+          }}
+        >
+          {title}
+        </h2>
+        <AgreementEditPanel slug={slug} />
+      </div>
 
       <div className="wiki-body">
         <WikiContent format="markdown" content={content} />

@@ -7,6 +7,7 @@ import {
   faFileContract,
   faBook,
   faFileLines,
+  faBullhorn,
 } from '@fortawesome/free-solid-svg-icons'
 import styles from '@/styles/filepad.module.css'
 
@@ -14,6 +15,7 @@ const links = [
   { href: '/agreement', icon: faFileContract, label: '协议与帮助' },
   { href: '/agreement/user-agreement', icon: faScaleBalanced, label: '用户协议' },
   { href: '/agreement/community-guidelines', icon: faBook, label: '社区规范' },
+  { href: '/agreement/notice', icon: faBullhorn, label: '公告' },
   { href: '/agreement/markdown-helper', icon: faFileLines, label: 'Markdown 帮助' },
 ]
 
