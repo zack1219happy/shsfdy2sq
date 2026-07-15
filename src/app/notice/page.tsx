@@ -27,6 +27,8 @@ export default function NoticePage() {
         forum_reply: '论坛回复',
         forum_own_post: '帖子动态',
         forum_post_update: '关注更新',
+        wish_reply: '工单回复',
+        wish_status_update: '工单动态',
       } as Record<string, string>)[typeFilter] ?? '通知'
     : '通知'
 
@@ -94,15 +96,18 @@ export default function NoticePage() {
           {filtered.map((n) => {
             const isForum = n.type?.startsWith('forum_') && n.page?.startsWith('forum/')
             const isPlaza = n.type?.startsWith('forum_') && n.page?.startsWith('plaza/')
+            const isWish = n.type === 'wish_reply' || n.type === 'wish_status_update'
             const basePath = BASE_PATH
             const page = n.page ? (registry.oldToNewSlug[n.page] ?? n.page) : undefined
             const href = isForum
               ? `${basePath}/forum/post?id=${n.page?.replace('forum/', '') || ''}&comment=${n.comment_id}&_=${Date.now()}`
               : isPlaza
                 ? `${basePath}/plaza/post?slug=${encodeURIComponent(n.page?.replace('plaza/', '') || '')}&comment=${n.comment_id}&_=${Date.now()}`
-                : page
-                  ? `${basePath}/wiki/${page}/?comment=${n.comment_id}&_=${Date.now()}`
-                  : undefined
+                : isWish
+                  ? `${basePath}/wishes/post?id=${n.page?.replace('wishes/', '') || ''}&comment=${n.comment_id || ''}&_=${Date.now()}`
+                  : page
+                    ? `${basePath}/wiki/${page}/?comment=${n.comment_id}&_=${Date.now()}`
+                    : undefined
 
             let label = '评论'
             if (isForum) {
@@ -113,6 +118,9 @@ export default function NoticePage() {
               if (n.type === 'forum_reply') label = '文章回复'
               else if (n.type === 'forum_own_post') label = '文章动态'
               else label = '文章通知'
+            } else if (isWish) {
+              if (n.type === 'wish_reply') label = '工单回复'
+              else if (n.type === 'wish_status_update') label = '工单动态'
             }
 
             const isDeleted = n.excerpt === '评论已删除'

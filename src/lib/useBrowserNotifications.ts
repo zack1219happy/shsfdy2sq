@@ -14,6 +14,8 @@ const TITLES: Record<string, string> = {
   forum_post_update: '📝 论坛动态',
   forum_own_post: '📌 你的帖子',
   dm: '✉️ 新私信',
+  wish_reply: '📋 工单回复',
+  wish_status_update: '📋 工单动态',
 }
 
 function titleForType(type: string): string {
