@@ -130,7 +130,7 @@ export default function FortuneCard() {
 
       {/* 卦象头部 */}
       <div className={styles.resultHeader}>
-        <p className={styles.username}>{session.name} 的运势</p>
+        <p className={styles.username}>{session.username} 的运势</p>
         <span className={styles.symbol}>{result.hexagram.symbol}</span>
         <p className={`${styles.level} ${styles[`lvl${result.hexagram.level}`]}`}>
           § {result.hexagram.name} · {result.hexagram.level} §

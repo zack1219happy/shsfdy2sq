@@ -145,17 +145,16 @@ export async function tryRestoreSessionFromAuth(): Promise<void> {
   const meta = session.user.user_metadata;
   if (!meta?.username) return;
 
-  // 从数据库获取最新角色和姓名（Supabase Auth user_metadata 可能过期/乱码）
+  // 从数据库获取最新姓名（Supabase Auth user_metadata 可能乱码）
   let role = meta.role || "user";
   let name = meta.name || "";
   try {
-    const { data: profile } = await supabase
-      .from('wiki_users')
-      .select('role, name')
-      .eq('id', session.user.id)
-      .single();
-    if (profile?.role) role = profile.role;
-    if (profile?.name) name = profile.name;
+    // 使用 SECURITY DEFINER RPC（绕过 RLS）从数据库获取正确的姓名
+    const { data: users } = await supabase.rpc('get_all_users');
+    if (users) {
+      const found = (users as Array<{id: string; name: string}>).find(u => u.id === session.user.id);
+      if (found?.name) name = found.name;
+    }
   } catch { /* fallback 到 metadata */ }
 
   // 始终更新 localStorage，确保与数据库一致

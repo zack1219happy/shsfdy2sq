@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSession, setPassword, changeUsername, clearSession } from '@/lib/auth'
+import { supabase } from '@/lib/supabase'
 import FaIcon from '@/components/FaIcon'
 import { UserName } from '@/components/UserName'
 import type { UserSession } from '@/lib/auth'
@@ -11,12 +12,27 @@ import styles from '@/styles/auth.module.css'
 export default function UserSettingsPage() {
   const router = useRouter()
   const [session, setSession] = useState<UserSession | null>(null)
+  const [realName, setRealName] = useState<string | null>(null)
+  const [nameLoaded, setNameLoaded] = useState(false)
 
   useEffect(() => {
     const s = getSession()
     if (!s) router.push('/')
     setSession(s)
   }, [router])
+
+  // 从数据库获取正确的姓名（通过 SECURITY DEFINER RPC 绕过 RLS）
+  useEffect(() => {
+    const s = getSession()
+    if (!s) return
+    supabase.rpc('get_all_users').then(({ data }) => {
+      setNameLoaded(true)
+      if (!data) return
+      const users = data as Array<{ username: string; name: string }>
+      const me = users.find(u => u.username === s.username)
+      if (me?.name) setRealName(me.name)
+    })
+  }, [])
 
   if (!session) return null
 
@@ -31,7 +47,7 @@ export default function UserSettingsPage() {
         <div className={styles.settingsInfo}>
           <div className={styles.settingsInfoRow}>
             <span className={styles.settingsLabel}>姓名</span>
-            <span>{session.name}</span>
+            <span>{nameLoaded ? (realName || '—') : '…'}</span>
           </div>
           <div className={styles.settingsInfoRow}>
             <span className={styles.settingsLabel}>用户名</span>
