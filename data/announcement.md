@@ -1,5 +1,7 @@
 使用本站前请先阅读 **[用户协议](/agreement/user-agreement)** 和 **[社区规范](/agreement/community-guidelines)**。
 
+也可以安装桌面版：[下载链接](https://github.com/zack1219happy/shsfdy2sq/releases/download/v1.0.0-beta/shsfdy2sq-1.0.0.exe)、[下载链接（镜像）](https://cors.isteed.cc/github.com/zack1219happy/shsfdy2sq/releases/download/v1.0.0-beta/shsfdy2sq-1.0.0.exe)（看原始发布：[github原始发布](https://github.com/zack1219happy/shsfdy2sq/releases/tag/v1.0.0-beta)）
+
 前往 gitHub 仓库以 Star 本社区（求求了🙏），或进行内容修改。
 
 如果你的网络无法访问 Github，下载这个可能能解决问题：[Dev-SideCar](https://ghproxy.net/https://github.com/docmirror/dev-sidecar/releases/download/v2.2.0/DevSidecar-2.2.0-windows-x86_64.exe)（注：下载前请谨慎核实内容确定你需要，本网站不因下载或使用这个文件造成的任何损失负责）。
@@ -12,7 +14,7 @@
 
 ## 近期状态
 
-社区在功能上差不多已经完整了。差点图床、应用安装、通知同步浏览器（即使没打开页面）啥的我觉得你们应该不介意。
+社区在功能上差不多已经完整了。差点图床、通知同步浏览器（即使没打开页面）啥的我觉得你们应该不介意。
 
 大家多活跃活跃，发发帖？也可以多许许愿给我送钱~我会感恩戴德的。
 
