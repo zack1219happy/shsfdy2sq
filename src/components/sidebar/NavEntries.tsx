@@ -12,10 +12,9 @@ import {
   faEnvelope,
   faNewspaper,
   faCoins,
-  faGavel,
 } from '@fortawesome/free-solid-svg-icons'
 import { getUnreadDmCount, getUnreadCount } from '@/lib/gist-api'
-import { getSession, tryRestoreSessionFromAuth } from '@/lib/auth'
+import { getSession } from '@/lib/auth'
 import styles from '@/styles/sidebar.module.css'
 
 const entries = [
@@ -62,16 +61,7 @@ export default function HomeNav() {
     return () => window.removeEventListener('new-notification', h)
   }, [])
 
-  const [isAdmin, setIsAdmin] = useState(false)
-
-  useEffect(() => {
-    tryRestoreSessionFromAuth().then(() => {
-      const s = getSession()
-      setIsAdmin(!!(s && ['admin', 'super_admin'].includes(s.role)))
-    })
-  }, [])
-
-  // 管理员额外入口
+  // 导航入口
   return (
     <>
       {entries.map((e) => (
@@ -92,14 +82,6 @@ export default function HomeNav() {
           <span className={styles.navLabel}>{e.label}</span>
         </Link>
       ))}
-      {isAdmin && (
-        <Link href="/admin/revisions" className={styles.navItem} style={{ opacity: 0.75 }}>
-          <span className={styles.navIcon}>
-            <FontAwesomeIcon icon={faGavel} />
-          </span>
-          <span className={styles.navLabel}>审核</span>
-        </Link>
-      )}
     </>
   )
 }

@@ -24,6 +24,7 @@ function buildBreadcrumbs(slugPath: string): NavNode[] {
   const crumbs: NavNode[] = [{ id: 'home', title: '首页', type: 'page', pathKey: 'home' }]
   let path = ''
   for (const seg of segments) {
+    if (seg === 'home' && segments.length === 1) continue // home 页不重复
     path = path ? `${path}/${seg}` : seg
     crumbs.push({ id: seg, title: seg, type: 'page', pathKey: path })
   }
