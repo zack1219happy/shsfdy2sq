@@ -5,6 +5,7 @@ import Breadcrumb from '@/components/Breadcrumb'
 import AttributeBox from '@/components/AttributeBox'
 import TableOfContents from '@/components/TableOfContents'
 import CommentSection from '@/components/CommentSection'
+import WikiEditPanel from '@/components/WikiEditPanel'
 import type { NavNode } from '@/lib/navigation'
 
 interface Props {
@@ -30,15 +31,29 @@ function WikiArticle({ node, slug }: { node: NavNode; slug: string[] }) {
           flex: 1,
         }}
       >
-        <h2
+        <div
           style={{
-            fontSize: '1.8rem',
-            fontWeight: 600,
-            color: 'var(--color-text)',
-            padding: '32px 0 16px',
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            gap: 12,
           }}
-          dangerouslySetInnerHTML={{ __html: content.titleHtml }}
-        />
+        >
+          <h2
+            style={{
+              fontSize: '1.8rem',
+              fontWeight: 600,
+              color: 'var(--color-text)',
+              padding: '32px 0 16px',
+            }}
+            dangerouslySetInnerHTML={{ __html: content.titleHtml }}
+          />
+          <WikiEditPanel
+            slug={slugPath}
+            staticRawContent={content.rawContent}
+            staticTitle={content.title}
+          />
+        </div>
 
         <Breadcrumb crumbs={crumbs} baseHref="/wiki" />
         <AttributeBox attributes={content.attributes} />

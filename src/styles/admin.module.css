@@ -1,0 +1,456 @@
+/* ============================================
+   Admin — 审核管理页面样式
+   ============================================ */
+
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 76px 24px 60px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.pageTitle {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---- 列表 ---- */
+
+.revisionList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.revisionCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: var(--color-bg);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.revisionCard:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.revisionCard:active {
+  transform: scale(0.995);
+}
+
+.revisionCardConflict {
+  border-color: #f59e0b;
+  background: #fffdf5;
+}
+
+.revisionCardSelected {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(26,115,232,0.15);
+}
+
+.revisionInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.revisionTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.revisionMeta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.82rem;
+  color: var(--color-text-light);
+  flex-wrap: wrap;
+}
+
+.revisionAuthor {
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.revisionPage {
+  color: var(--color-primary);
+}
+
+.revisionActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badgePending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badgeApproved {
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.badgeRejected {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.badgeConflict {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.chevron {
+  color: var(--color-text-light);
+  font-size: 0.85rem;
+}
+
+/* ---- 空状态 ---- */
+
+.empty {
+  text-align: center;
+  padding: 60px 24px;
+  color: var(--color-text-light);
+}
+
+.emptyIcon {
+  font-size: 2.5rem;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.emptyText {
+  font-size: 0.95rem;
+}
+
+/* ---- 详情面板 ---- */
+
+.detailSection {
+  margin-top: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  background: var(--color-bg);
+}
+
+.detailHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-active-bg);
+}
+
+.detailHeaderInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detailHeaderTitle {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.detailHeaderMeta {
+  font-size: 0.82rem;
+  color: var(--color-text-light);
+}
+
+.detailHeaderActions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ---- 编辑器 + Diff 双栏布局 ---- */
+
+.editorDiffLayout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  min-height: 400px;
+}
+
+.editorPane {
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+}
+
+.editorPaneLabel {
+  padding: 10px 16px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  background: var(--color-active-bg);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.editorPaneBody {
+  flex: 1;
+  min-height: 300px;
+}
+
+.diffPane {
+  display: flex;
+  flex-direction: column;
+}
+
+.diffPaneLabel {
+  padding: 10px 16px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  background: var(--color-active-bg);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.diffPaneBody {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 600px;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.diffLine {
+  display: flex;
+  padding: 0 12px;
+  cursor: pointer;
+  transition: background 0.1s;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.diffLine:hover {
+  background: var(--color-hover-bg);
+}
+
+.diffLineAdd {
+  background: #f0fdf4;
+}
+
+.diffLineAdd:hover {
+  background: #dcfce7;
+}
+
+.diffLineDel {
+  background: #fef2f2;
+}
+
+.diffLineDel:hover {
+  background: #fee2e2;
+}
+
+.diffLineNum {
+  width: 40px;
+  text-align: right;
+  padding-right: 12px;
+  color: var(--color-text-light);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.diffLineContent {
+  flex: 1;
+  padding: 0 4px;
+}
+
+.diffLinePrefix {
+  width: 20px;
+  flex-shrink: 0;
+  font-weight: 700;
+  user-select: none;
+}
+
+.diffLinePrefixAdd {
+  color: #16a34a;
+}
+
+.diffLinePrefixDel {
+  color: #dc2626;
+}
+
+/* ---- 操作按钮 ---- */
+
+.detailFooter {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--color-border);
+  flex-wrap: wrap;
+}
+
+.reviewCommentInput {
+  flex: 1;
+  min-width: 200px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  font-size: 0.85rem;
+  outline: none;
+  background: var(--color-bg);
+  color: var(--color-text);
+  transition: border-color 0.2s;
+}
+
+.reviewCommentInput:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(26,115,232,0.12);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.12s;
+  white-space: nowrap;
+}
+
+.btn:active {
+  transform: scale(0.96);
+}
+
+.btnPrimary {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.btnPrimary:hover {
+  background: var(--color-primary-hover);
+}
+
+.btnSuccess {
+  background: #16a34a;
+  color: #fff;
+}
+
+.btnSuccess:hover {
+  background: #15803d;
+}
+
+.btnDanger {
+  background: #dc2626;
+  color: #fff;
+}
+
+.btnDanger:hover {
+  background: #b91c1c;
+}
+
+.btnOutline {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+.btnOutline:hover {
+  background: var(--color-hover-bg);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ---- 加载/错误 ---- */
+
+.loading {
+  text-align: center;
+  padding: 48px 16px;
+  color: var(--color-text-light);
+  font-size: 0.9rem;
+}
+
+.error {
+  text-align: center;
+  padding: 48px 16px;
+  color: #dc2626;
+  font-size: 0.9rem;
+}
+
+/* ---- 响应式 ---- */
+
+@media (max-width: 768px) {
+  .page {
+    padding: 16px 12px 60px;
+  }
+
+  .editorDiffLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .editorPane {
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .revisionCard {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .revisionActions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .detailFooter {
+    flex-direction: column;
+  }
+
+  .reviewCommentInput {
+    width: 100%;
+  }
+}
