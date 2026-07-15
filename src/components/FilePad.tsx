@@ -130,7 +130,7 @@ export default function FilePad({ tree }: Props) {
 
 function FilePadContent({ pathname, tree }: { pathname: string; tree: NavNode[] }) {
   const mode =
-    pathname.startsWith('/wiki') ? 'wiki' :
+    pathname.startsWith('/wiki') || pathname.startsWith('/admin') ? 'wiki' :
     pathname.startsWith('/forum') ? 'forum' :
     pathname.startsWith('/notice') ? 'notice' :
     pathname.startsWith('/agreement') ? 'agreement' :

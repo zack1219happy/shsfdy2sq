@@ -200,7 +200,7 @@ export function addImageModalSupport(html: string): string {
       if (attrs.includes('data-image-modal')) return _match
       // 外部图片不转换 WebP
       if (!attrs.includes('src="http')) {
-        attrs = attrs.replace(/\.(png|jpg|jpeg)(\?.*)?(")/gi, '.webp$2')
+        attrs = attrs.replace(/\.(png|jpg|jpeg)(\?.*)?(")/gi, '.webp$2$3')
       }
       // 跳过已含 loading 的图片
       const loadingAttr = attrs.includes('loading=') ? '' : ' loading="lazy"'

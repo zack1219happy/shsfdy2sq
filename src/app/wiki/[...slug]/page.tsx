@@ -6,6 +6,7 @@ import AttributeBox from '@/components/AttributeBox'
 import TableOfContents from '@/components/TableOfContents'
 import CommentSection from '@/components/CommentSection'
 import WikiEditPanel from '@/components/WikiEditPanel'
+import WikiContentDB from '@/components/WikiContentDB'
 import type { NavNode } from '@/lib/navigation'
 
 interface Props {
@@ -34,9 +35,10 @@ function WikiArticle({ node, slug }: { node: NavNode; slug: string[] }) {
         <div
           style={{
             display: 'flex',
-            alignItems: 'flex-start',
+            alignItems: 'flex-end',
             justifyContent: 'space-between',
             gap: 12,
+            padding: '32px 0 16px',
           }}
         >
           <h2
@@ -44,21 +46,16 @@ function WikiArticle({ node, slug }: { node: NavNode; slug: string[] }) {
               fontSize: '1.8rem',
               fontWeight: 600,
               color: 'var(--color-text)',
-              padding: '32px 0 16px',
             }}
             dangerouslySetInnerHTML={{ __html: content.titleHtml }}
           />
-          <WikiEditPanel
-            slug={slugPath}
-            staticRawContent={content.rawContent}
-            staticTitle={content.title}
-          />
+          <WikiEditPanel slug={slugPath} />
         </div>
 
         <Breadcrumb crumbs={crumbs} baseHref="/wiki" />
         <AttributeBox attributes={content.attributes} />
 
-        <div className="wiki-body" dangerouslySetInnerHTML={{ __html: content.html }} />
+        <WikiContentDB slug={slugPath} staticContent={content.rawContent} />
 
         <CommentSection pageSlug={slugPath} />
       </article>

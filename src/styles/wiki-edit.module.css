@@ -1,12 +1,13 @@
 /* ============================================
-   Wiki 编辑面板样式
+   Wiki 编辑相关样式
    ============================================ */
+
+/* ---- 标题行右侧按钮 ---- */
 
 .editBtnContainer {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-left: auto;
+  gap: 4px;
   flex-shrink: 0;
 }
 
@@ -33,97 +34,100 @@
 .pendingBadge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 10px;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  background: #fef3c7;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--border-radius);
+  background: transparent;
   color: #92400e;
+  font-size: 0.85rem;
   cursor: default;
 }
 
-.pendingBadgeConflict {
-  background: #fff7ed;
-  color: #c2410c;
-}
+/* ---- 管理员审核按钮 ---- */
 
-.reviewLink {
-  color: var(--color-primary);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  font-size: 0.82rem;
-  cursor: pointer;
-}
-
-/* ---- 编辑面板 ---- */
-
-.editPanel {
-  border: 1px solid var(--color-border);
+.reviewBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
   border-radius: var(--border-radius);
-  overflow: hidden;
-  margin-bottom: 20px;
-  background: var(--color-bg);
+  background: transparent;
+  color: var(--color-text-light);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.15s, color 0.15s;
+  position: relative;
 }
 
-.editPanelHeader {
+.reviewBtn:hover {
+  background: var(--color-hover-bg);
+  color: var(--color-primary);
+}
+
+.reviewCount {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* ---- 独立编辑页面 ---- */
+
+.editPage {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 76px 24px 60px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.editHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
-  background: var(--color-active-bg);
-  border-bottom: 1px solid var(--color-border);
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--color-text-secondary);
+  margin-bottom: 20px;
 }
 
-.editPanelActions {
+.editHeader h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-text);
   display: flex;
-  gap: 8px;
-}
-
-.editPanelBody {
-  min-height: 300px;
-}
-
-.btn {
-  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border: none;
+  gap: 10px;
+}
+
+.editError {
+  padding: 12px 16px;
+  background: #fef2f2;
+  color: #dc2626;
   border-radius: var(--border-radius);
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s, transform 0.12s;
+  font-size: 0.85rem;
+  margin-bottom: 16px;
 }
 
-.btn:active {
-  transform: scale(0.96);
-}
-
-.btnPrimary {
-  background: var(--color-primary);
-  color: #fff;
-}
-
-.btnPrimary:hover {
-  background: var(--color-primary-hover);
-}
-
-.btnOutline {
-  background: transparent;
-  border: 1px solid var(--color-border);
-  color: var(--color-text-secondary);
-}
-
-.btnOutline:hover {
-  background: var(--color-hover-bg);
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.editLoading {
+  text-align: center;
+  padding: 60px 16px;
+  color: var(--color-text-light);
+  font-size: 0.9rem;
 }

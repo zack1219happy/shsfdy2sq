@@ -4,6 +4,8 @@ import Breadcrumb from '@/components/Breadcrumb'
 import AttributeBox from '@/components/AttributeBox'
 import TableOfContents from '@/components/TableOfContents'
 import CommentSection from '@/components/CommentSection'
+import WikiEditPanel from '@/components/WikiEditPanel'
+import WikiContentDB from '@/components/WikiContentDB'
 
 export default function WikiHomePage() {
   const content = getPageContent([])
@@ -19,20 +21,30 @@ export default function WikiHomePage() {
           flex: 1,
         }}
       >
-        <h2
+        <div
           style={{
-            fontSize: '1.8rem',
-            fontWeight: 600,
-            color: 'var(--color-text)',
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'space-between',
+            gap: 12,
             padding: '32px 0 16px',
           }}
-          dangerouslySetInnerHTML={{ __html: content.titleHtml }}
-        />
+        >
+          <h2
+            style={{
+              fontSize: '1.8rem',
+              fontWeight: 600,
+              color: 'var(--color-text)',
+            }}
+            dangerouslySetInnerHTML={{ __html: content.titleHtml }}
+          />
+          <WikiEditPanel slug="home" />
+        </div>
 
         <Breadcrumb crumbs={crumbs} baseHref="/wiki" />
         <AttributeBox attributes={content.attributes} />
 
-        <div className="wiki-body" dangerouslySetInnerHTML={{ __html: content.html }} />
+        <WikiContentDB slug="home" staticContent={content.rawContent} />
 
         <CommentSection pageSlug="home" />
       </article>

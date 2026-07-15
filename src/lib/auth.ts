@@ -142,20 +142,30 @@ export async function login(
 export async function tryRestoreSessionFromAuth(): Promise<void> {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return;
-  const existing = getSession();
-  if (existing) return;
   const meta = session.user.user_metadata;
-  if (meta?.username) {
-    const restored: UserSession = {
-      userId: session.user.id,
-      username: meta.username || "",
-      studentId: meta.student_id || "",
-      name: meta.name || "",
-      role: meta.role || "user",
-      loginTime: new Date().toISOString(),
-    };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(restored));
-  }
+  if (!meta?.username) return;
+
+  // 从数据库获取最新角色（Supabase Auth user_metadata 可能过期）
+  let role = meta.role || "user";
+  try {
+    const { data: profile } = await supabase
+      .from('wiki_users')
+      .select('role')
+      .eq('id', session.user.id)
+      .single();
+    if (profile?.role) role = profile.role;
+  } catch { /* fallback 到 metadata 的 role */ }
+
+  // 始终更新 localStorage，确保角色等字段与数据库一致
+  const restored: UserSession = {
+    userId: session.user.id,
+    username: meta.username || "",
+    studentId: meta.student_id || "",
+    name: meta.name || "",
+    role,
+    loginTime: new Date().toISOString(),
+  };
+  localStorage.setItem(SESSION_KEY, JSON.stringify(restored));
 }
 
 export async function logout(): Promise<void> {

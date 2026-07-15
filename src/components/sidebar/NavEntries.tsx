@@ -15,7 +15,7 @@ import {
   faGavel,
 } from '@fortawesome/free-solid-svg-icons'
 import { getUnreadDmCount, getUnreadCount } from '@/lib/gist-api'
-import { getSession } from '@/lib/auth'
+import { getSession, tryRestoreSessionFromAuth } from '@/lib/auth'
 import styles from '@/styles/sidebar.module.css'
 
 const entries = [
@@ -62,10 +62,16 @@ export default function HomeNav() {
     return () => window.removeEventListener('new-notification', h)
   }, [])
 
-  // 管理员额外入口
-  const session = getSession()
-  const isAdmin = session && ['admin', 'super_admin'].includes(session.role)
+  const [isAdmin, setIsAdmin] = useState(false)
 
+  useEffect(() => {
+    tryRestoreSessionFromAuth().then(() => {
+      const s = getSession()
+      setIsAdmin(!!(s && ['admin', 'super_admin'].includes(s.role)))
+    })
+  }, [])
+
+  // 管理员额外入口
   return (
     <>
       {entries.map((e) => (

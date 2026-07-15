@@ -38,6 +38,7 @@ export interface WikiRevision {
 export interface RevisionDetail {
   id: string
   slug: string
+  page_title: string
   title: string
   content: string
   frontmatter: Record<string, unknown>
@@ -150,4 +151,24 @@ export async function fetchUserPendingRevision(slug: string): Promise<{ id: stri
   const { data, error } = await supabase.rpc('get_user_pending_revision', { p_slug: slug })
   if (error) throw new Error('获取我的待审核失败: ' + error.message)
   return (data as any[])?.[0] ?? null
+}
+
+// ── 获取页面图片资源（base64） ──
+
+export interface WikiAsset {
+  filename: string
+  mime_type: string
+  data: string   // base64
+  size: number
+}
+
+export async function fetchPageAssets(slug: string): Promise<Map<string, string>> {
+  const { data, error } = await supabase.rpc('get_page_assets', { p_slug: slug })
+  if (error) throw new Error('获取图片资源失败: ' + error.message)
+  const assets = (data ?? []) as WikiAsset[]
+  const map = new Map<string, string>()
+  for (const a of assets) {
+    map.set(a.filename, `data:${a.mime_type};base64,${a.data}`)
+  }
+  return map
 }

@@ -10,9 +10,11 @@ import {
   faFolder,
   faFolderOpen,
   faFileLines,
+  faGavel,
 } from '@fortawesome/free-solid-svg-icons'
 import type { NavNode } from '@/lib/navigation'
 import { resolveIcon } from '@/lib/fa-icons'
+import { getSession, tryRestoreSessionFromAuth } from '@/lib/auth'
 import styles from '@/styles/filepad.module.css'
 
 interface Props {
@@ -27,12 +29,21 @@ export default function WikiFilePad({ tree }: Props) {
   const pathname = norm(rawPathname)
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
 
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    tryRestoreSessionFromAuth().then(() => {
+      const s = getSession()
+      setIsAdmin(!!(s && ['admin', 'super_admin'].includes(s.role)))
+    })
+  }, [])
+
   // 自动展开当前页面的祖先文件夹 + 当前页面本身（如果是文件夹）
   useEffect(() => {
     const slug = pathname
       .replace(/^\/wiki\/?$/, 'home')
       .replace(/^\/wiki\//, '')
-    if (slug === 'home') return
+    if (slug === 'home' || slug.startsWith('edit')) return
 
     const segments = slug.split('/')
     const toExpand: string[] = []
@@ -65,7 +76,20 @@ export default function WikiFilePad({ tree }: Props) {
         <FontAwesomeIcon icon={faBook} className={styles.titleIcon} />
         <span className={styles.titleText}>Wiki</span>
       </div>
+
       <div className={styles.treeContainer}>
+        {isAdmin && (
+          <Link
+            href="/admin/revisions"
+            className={styles.treePage}
+            style={{ paddingLeft: 8 }}
+          >
+            <span className={styles.chevronSlot} />
+            <FontAwesomeIcon icon={faGavel} className={styles.treeIcon} />
+            <span className={styles.treeLabel}>审核管理</span>
+          </Link>
+        )}
+
         <TreeNodes
           nodes={tree}
           depth={0}
