@@ -7,10 +7,10 @@
   "author": "上中二旦",
   "scripts": {
     "dev": "next dev",
-    "predev": "node scripts/copy-data-dev.js && node scripts/generate-person-ts.js && node scripts/convert-images-webp.js",
-    "prescan": "node scripts/scan-icons.js && node scripts/convert-images-webp.js && node scripts/generate-person-ts.js",
+    "predev": "node scripts/generate-person-ts.js",
+    "prescan": "node scripts/scan-icons.js && node scripts/generate-person-ts.js",
     "build": "next build",
-    "export": "node scripts/scan-icons.js && node scripts/generate-person-ts.js && node scripts/convert-images-webp.js && node scripts/copy-data-dev.js && cross-env EXPORT=true next build && node scripts/strip-katex-fonts.js && node scripts/copy-static.js",
+    "export": "node scripts/scan-icons.js && node scripts/generate-person-ts.js && cross-env EXPORT=true next build && node scripts/strip-katex-fonts.js && node scripts/copy-static.js",
     "start": "next start",
     "lint": "next lint",
     "build:exe": "npm run export && electron-builder --win"

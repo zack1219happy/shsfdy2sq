@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
-import { getAllSlugs, findNodeBySlug, getBreadcrumbs } from '@/lib/navigation'
-import { getPageContent } from '@/lib/content'
+import { fetchWikiPage, fetchWikiSlugs } from '@/lib/wiki-api'
+import { renderMarkdownAndGetHeadings, renderAttributesFromFrontmatter, renderInlineTitle } from '@/lib/content'
 import Breadcrumb from '@/components/Breadcrumb'
 import AttributeBox from '@/components/AttributeBox'
 import TableOfContents from '@/components/TableOfContents'
@@ -14,13 +14,38 @@ interface Props {
 }
 
 export async function generateStaticParams() {
-  return getAllSlugs().map((slug) => ({ slug }))
+  const slugs = await fetchWikiSlugs()
+  return slugs.map((slug) => ({ slug: slug.split('/') }))
 }
 
-function WikiArticle({ node, slug }: { node: NavNode; slug: string[] }) {
+/** 从 slug 路径构建面包屑 */
+function buildBreadcrumbs(slugPath: string): NavNode[] {
+  const segments = slugPath.split('/')
+  const crumbs: NavNode[] = [{ id: 'home', title: '首页', type: 'page', pathKey: 'home' }]
+  let path = ''
+  for (const seg of segments) {
+    path = path ? `${path}/${seg}` : seg
+    crumbs.push({ id: seg, title: seg, type: 'page', pathKey: path })
+  }
+  return crumbs
+}
+
+export default async function WikiPage({ params }: Props) {
+  const { slug } = await params
   const slugPath = slug.join('/')
-  const content = getPageContent(slug)
-  const crumbs = getBreadcrumbs(slugPath)
+
+  // 从 DB 加载页面内容
+  const page = await fetchWikiPage(slugPath)
+  if (!page) notFound()
+
+  // 渲染 markdown 提取标题（TOC）
+  const { headings } = renderMarkdownAndGetHeadings(page.content)
+
+  // 从 frontmatter 渲染属性表
+  const attributes = renderAttributesFromFrontmatter((page.frontmatter ?? {}) as Record<string, unknown>)
+
+  // 面包屑
+  const crumbs = buildBreadcrumbs(slugPath)
 
   return (
     <div className="page-content" style={{ display: 'flex', gap: '24px' }}>
@@ -47,32 +72,20 @@ function WikiArticle({ node, slug }: { node: NavNode; slug: string[] }) {
               fontWeight: 600,
               color: 'var(--color-text)',
             }}
-            dangerouslySetInnerHTML={{ __html: content.titleHtml }}
+            dangerouslySetInnerHTML={{ __html: renderInlineTitle(page.title) }}
           />
           <WikiEditPanel slug={slugPath} />
         </div>
 
         <Breadcrumb crumbs={crumbs} baseHref="/wiki" />
-        <AttributeBox attributes={content.attributes} />
+        <AttributeBox attributes={attributes} />
 
-        <WikiContentDB slug={slugPath} staticContent={content.rawContent} />
+        <WikiContentDB slug={slugPath} staticContent={page.content} />
 
         <CommentSection pageSlug={slugPath} />
       </article>
 
-      <TableOfContents headings={content.headings} />
+      <TableOfContents headings={headings} />
     </div>
   )
-}
-
-export default async function WikiPage({ params }: Props) {
-  const { slug } = await params
-  const slugPath = slug.join('/')
-
-  const node = findNodeBySlug(slugPath)
-  if (!node) {
-    notFound()
-  }
-
-  return <WikiArticle node={node} slug={slug} />
 }

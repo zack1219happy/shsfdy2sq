@@ -3,6 +3,15 @@ import path from 'path'
 import matter from 'gray-matter'
 import { loadRegistry } from './people-server'
 import { resolveText } from './people'
+import { createClient } from '@supabase/supabase-js'
+
+// ── Supabase 客户端（构建时可用的轻量实例）──
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  )
+}
 
 // ============================================================
 //  导航树 —— 自动扫描 data/ 下各目录的 .md 文件
@@ -25,7 +34,6 @@ export interface NavNode {
 export const SITE_TITLE = '上中二旦社区'
 
 const WIKI_DIR = path.join(process.cwd(), 'data', 'wiki')
-const AGREEMENT_DIR = path.join(process.cwd(), 'data', 'agreement')
 
 // ---------- 读取 frontmatter ----------
 
@@ -190,7 +198,6 @@ function buildTree(entries: FileEntry[]): NavNode[] {
 // ---------- 缓存 ----------
 
 let cachedWikiTree: NavNode[] | null = null
-let cachedAgreementTree: NavNode[] | null = null
 
 function getWikiTreeInternal(): NavNode[] {
   if (!cachedWikiTree) {
@@ -200,22 +207,44 @@ function getWikiTreeInternal(): NavNode[] {
   return cachedWikiTree
 }
 
-function getAgreementTreeInternal(): NavNode[] {
-  if (!cachedAgreementTree) {
-    const entries = scanAllMdFiles(AGREEMENT_DIR)
-    cachedAgreementTree = buildTree(entries)
+/**
+ * 从 DB 获取 wiki 导航树（异步，SSG 构建时使用）
+ * 回退到文件系统
+ */
+export async function getNavTreeFromDB(): Promise<NavNode[]> {
+  try {
+    const supabase = getSupabase()
+    const { data, error } = await supabase.rpc('get_all_wiki_pages')
+    if (error) throw error
+    const rows = (data ?? []) as { slug: string; title: string; frontmatter: Record<string, unknown> }[]
+
+    if (rows.length === 0) {
+      return getWikiTreeInternal()
+    }
+
+    const entries: FileEntry[] = rows.map((r) => {
+      const registry = loadRegistry()
+      const resolvedTitle = resolveText(r.title || r.slug.split('/').pop() || r.slug, registry)
+      return {
+        id: r.slug,
+        filePath: '',
+        meta: {
+          title: resolvedTitle,
+          icon: (r.frontmatter?.icon as string) || undefined,
+        },
+      }
+    })
+
+    return buildTree(entries)
+  } catch {
+    return getWikiTreeInternal()
   }
-  return cachedAgreementTree
 }
 
 // ---------- 公开 API ----------
 
 export function getNavTree(): NavNode[] {
   return getWikiTreeInternal()
-}
-
-export function getAgreementTree(): NavNode[] {
-  return getAgreementTreeInternal()
 }
 
 export function getSiteTitle(): string {

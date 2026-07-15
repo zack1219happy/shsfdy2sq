@@ -1,35 +1,83 @@
 import { notFound } from 'next/navigation'
-import { getAgreementContent } from '@/lib/content'
-import { getAgreementTree, getAllSlugs as getWikiSlugs, type NavNode } from '@/lib/navigation'
+import AgreementContentDB from '@/components/AgreementContentDB'
 import TableOfContents from '@/components/TableOfContents'
+import { renderMarkdownAndGetHeadings, type Heading } from '@/lib/content'
+import { supabase } from '@/lib/supabase'
 
 interface Props {
   params: Promise<{ slug?: string[] }>
 }
 
+interface AgreementPageSSG {
+  slug: string
+  title: string
+  content: string
+}
+
+interface StaticFallback {
+  title: string
+  rawContent: string
+  slug: string
+  headings: Heading[]
+}
+
+async function getDBSlugs(): Promise<string[]> {
+  try {
+    const { data } = await supabase.rpc('get_agreement_slugs')
+    return (data ?? []).map((r: any) => r.slug)
+  } catch {
+    return []
+  }
+}
+
+async function getDBContent(slug: string): Promise<AgreementPageSSG | null> {
+  try {
+    const { data } = await supabase.rpc('get_agreement_page', { p_slug: slug })
+    const rows = (data ?? []) as AgreementPageSSG[]
+    return rows[0] ?? null
+  } catch {
+    return null
+  }
+}
+
 export async function generateStaticParams() {
-  // 扫描 agreement 目录获取 slug
-  const tree = getAgreementTree()
-  const slugs: string[][] = [[]]
-  function walk(nodes: NavNode[], prefix: string[] = []) {
-    for (const node of nodes) {
-      if (node.type === 'page' && node.pathKey) {
-        slugs.push(node.pathKey.split('/'))
-      }
-      if (node.children) walk(node.children, [...prefix, node.id])
+  const dbSlugs = await getDBSlugs()
+  const params: { slug: string[] }[] = []
+  for (const s of dbSlugs) {
+    if (s === 'index') {
+      params.push({ slug: [] })
+      params.push({ slug: ['index'] })
+    } else {
+      params.push({ slug: [s] })
     }
   }
-  walk(tree)
-  return slugs.map((slug) => ({ slug }))
+  return params
+}
+
+async function getStaticFallback(slug: string[]): Promise<StaticFallback> {
+  const slugPath = slug.length === 0 ? 'index' : slug.join('/')
+  const db = await getDBContent(slugPath)
+
+  const title = db?.title ?? '协议与帮助'
+  const rawContent = db?.content ?? ''
+
+  // 渲染 markdown 并提取标题供 TOC 使用
+  let headings: Heading[] = []
+  if (rawContent) {
+    const rendered = renderMarkdownAndGetHeadings(rawContent)
+    headings = rendered.headings
+  }
+
+  return { title, rawContent, slug: slugPath, headings }
 }
 
 export default async function AgreementPage({ params }: Props) {
   const { slug } = await params
+  const slugPath = slug?.length ? slug.join('/') : 'index'
 
-  const content = getAgreementContent(slug ?? [])
+  const staticContent = await getStaticFallback(slug ?? [])
 
-  if (slug && !slug.length && content.title === '未找到') {
-    // 如果连 index.md 都没有，返回 404
+  if (!slug?.length && !staticContent.rawContent) {
     notFound()
   }
 
@@ -43,20 +91,14 @@ export default async function AgreementPage({ params }: Props) {
           flex: 1,
         }}
       >
-        <h2
-          style={{
-            fontSize: '1.8rem',
-            fontWeight: 600,
-            color: 'var(--color-text)',
-            padding: '32px 0 16px',
-          }}
-          dangerouslySetInnerHTML={{ __html: content.titleHtml }}
+        <AgreementContentDB
+          slug={slugPath}
+          staticContent={staticContent.rawContent}
+          staticTitle={staticContent.title}
         />
-
-        <div className="wiki-body" dangerouslySetInnerHTML={{ __html: content.html }} />
       </article>
 
-      <TableOfContents headings={content.headings} />
+      <TableOfContents headings={staticContent.headings} />
     </div>
   )
 }

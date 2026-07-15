@@ -162,6 +162,28 @@ export interface WikiAsset {
   size: number
 }
 
+// ── 获取所有 wiki slug（用于 SSG params） ──
+
+export async function fetchWikiSlugs(): Promise<string[]> {
+  const { data, error } = await supabase.rpc('get_wiki_slugs')
+  if (error) throw new Error('获取 wiki slug 列表失败: ' + error.message)
+  return (data ?? []).map((r: any) => r.slug)
+}
+
+// ── 获取所有 wiki 页面（用于导航树） ──
+
+export interface WikiPageNav {
+  slug: string
+  title: string
+  frontmatter: Record<string, unknown>
+}
+
+export async function fetchAllWikiPages(): Promise<WikiPageNav[]> {
+  const { data, error } = await supabase.rpc('get_all_wiki_pages')
+  if (error) throw new Error('获取所有 wiki 页面失败: ' + error.message)
+  return (data ?? []) as WikiPageNav[]
+}
+
 export async function fetchPageAssets(slug: string): Promise<Map<string, string>> {
   const { data, error } = await supabase.rpc('get_page_assets', { p_slug: slug })
   if (error) throw new Error('获取图片资源失败: ' + error.message)

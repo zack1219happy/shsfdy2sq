@@ -88,7 +88,6 @@ calloutPlugin(md)
 personPlugin(md, loadRegistry())
 
 const WIKI_DIR = path.join(process.cwd(), 'data', 'wiki')
-const AGREEMENT_DIR = path.join(process.cwd(), 'data', 'agreement')
 
 /**
  * 根据 slug 路径加载页面内容
@@ -144,31 +143,6 @@ export function getPageContent(slug: string[]): PageContent {
     attributes,
     headings,
   }
-}
-
-/**
- * 加载协议与帮助内容（从 data/agreement/ 读取，对应路由 /agreement/*）
- */
-export function getAgreementContent(slug: string[]): PageContent {
-  const slugPath = slug.length === 0 ? 'index' : slug.join('/')
-  const mdPath = path.join(AGREEMENT_DIR, slugPath + '.md')
-
-  if (!fs.existsSync(mdPath)) {
-    return { title: '未找到', titleHtml: '未找到', html: '<p>页面不存在</p>', rawContent: '页面不存在', attributes: {}, headings: [] }
-  }
-
-  const raw = fs.readFileSync(mdPath, 'utf-8')
-  const { data, content } = matter(raw)
-
-  const title = (data.title as string) || slug[slug.length - 1] || '协议与帮助'
-  const titleHtml = DOMPurify.sanitize(md.renderInline(title)).trim()
-
-  let html = md.render(content)
-  html = DOMPurify.sanitize(html)
-  const headings = extractHeadingsFromHtml(html)
-  const attributes = renderAttributesFromFrontmatter(data)
-
-  return { title, titleHtml, html, rawContent: raw, attributes, headings }
 }
 
 /**
@@ -251,7 +225,7 @@ function addImageCaptions(html: string): string {
  * 使用完整的 markdown-it + KaTeX 管线渲染键和值
  * 支持：$...$（LaTeX）、[text](url)（Markdown 链接）、**粗体**等
  */
-function renderAttributesFromFrontmatter(data: Record<string, unknown>): Record<string, string> {
+export function renderAttributesFromFrontmatter(data: Record<string, unknown>): Record<string, string> {
   const rawAttributes = data.attributes
   if (!rawAttributes || typeof rawAttributes !== 'object') return {}
   const result: Record<string, string> = {}
@@ -286,4 +260,21 @@ function replaceWikiLinks(html: string, currentSlug: string): string {
       return `<a href="${href}" class="wiki-link">${(label || title).trim()}</a>`
     }
   )
+}
+
+/**
+ * 渲染行内标题（支持 [stu:xxx] / [tch:xxx] 等 markdown 语法）
+ */
+export function renderInlineTitle(title: string): string {
+  return DOMPurify.sanitize(md.renderInline(title)).trim()
+}
+
+/**
+ * 渲染 markdown 内容并提取标题（适用于 SSG 阶段构建 TOC）
+ * 复用已有的 markdown-it 实例，保证 ID 与客户端渲染一致
+ */
+export function renderMarkdownAndGetHeadings(mdContent: string): { html: string; headings: Heading[] } {
+  const html = DOMPurify.sanitize(md.render(mdContent))
+  const headings = extractHeadingsFromHtml(html)
+  return { html, headings }
 }

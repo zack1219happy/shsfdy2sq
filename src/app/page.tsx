@@ -7,6 +7,7 @@ import { UserName } from '@/components/UserName'
 import WikiContent from '@/components/WikiContent'
 import FortuneCard from '@/components/FortuneCard'
 import { fetchForumPosts } from '@/lib/gist-api'
+import { fetchAgreementPage } from '@/lib/agreement-api'
 import type { ForumPost } from '@/types/gist'
 import { formatDate } from '@/lib/forum'
 import { titleSlugMap } from '@/data/person-registry'
@@ -37,12 +38,8 @@ export default function HomePage() {
       fetchForumPosts().then((data) => {
         setPosts(data.slice(0, 5))
       }),
-      fetch(`${base}/data/announcement.md?t=${Date.now()}`, { cache: 'no-store' })
-        .then((r) => (r.ok ? r.text() : ''))
-        .then((text) => {
-          const body = text.replace(/^---[\s\S]*?---\n?/, '').trim()
-          setAnnouncement(body)
-        }),
+      fetchAgreementPage('notice')
+        .then((page) => setAnnouncement(page?.content ?? '')),
     ]).finally(() => setLoading(false))
 
     // 随机选取 3 个 wiki 页面

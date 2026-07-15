@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { getSiteTitle, getNavTree } from '@/lib/navigation'
+import { getSiteTitle, getNavTreeFromDB } from '@/lib/navigation'
 import Sidebar from '@/components/Sidebar'
 import FilePad from '@/components/FilePad'
 import AuthGate from '@/components/AuthGate'
@@ -20,12 +20,12 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const tree = getNavTree()
+  const tree = await getNavTreeFromDB()
 
   return (
     <html lang="zh-CN" data-scroll-behavior="smooth">

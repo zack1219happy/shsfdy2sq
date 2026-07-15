@@ -1,15 +1,24 @@
-import { getPageContent } from '@/lib/content'
-import { getBreadcrumbs } from '@/lib/navigation'
+import { fetchWikiPage } from '@/lib/wiki-api'
+import { renderMarkdownAndGetHeadings, renderAttributesFromFrontmatter, renderInlineTitle } from '@/lib/content'
 import Breadcrumb from '@/components/Breadcrumb'
 import AttributeBox from '@/components/AttributeBox'
 import TableOfContents from '@/components/TableOfContents'
 import CommentSection from '@/components/CommentSection'
 import WikiEditPanel from '@/components/WikiEditPanel'
 import WikiContentDB from '@/components/WikiContentDB'
+import type { NavNode } from '@/lib/navigation'
 
-export default function WikiHomePage() {
-  const content = getPageContent([])
-  const crumbs = getBreadcrumbs('home')
+const homeCrumb: NavNode[] = [{ id: 'home', title: '首页', type: 'page', pathKey: 'home' }]
+
+export default async function WikiHomePage() {
+  // 从 DB 加载首页内容
+  const page = await fetchWikiPage('home')
+  const content = page?.content ?? ''
+  const title = page?.title ?? '首页'
+  const frontmatter = (page?.frontmatter ?? {}) as Record<string, unknown>
+
+  const { headings } = content ? renderMarkdownAndGetHeadings(content) : { headings: [] }
+  const attributes = renderAttributesFromFrontmatter(frontmatter)
 
   return (
     <div className="page-content" style={{ display: 'flex', gap: '24px' }}>
@@ -36,20 +45,20 @@ export default function WikiHomePage() {
               fontWeight: 600,
               color: 'var(--color-text)',
             }}
-            dangerouslySetInnerHTML={{ __html: content.titleHtml }}
+            dangerouslySetInnerHTML={{ __html: renderInlineTitle(title) }}
           />
           <WikiEditPanel slug="home" />
         </div>
 
-        <Breadcrumb crumbs={crumbs} baseHref="/wiki" />
-        <AttributeBox attributes={content.attributes} />
+        <Breadcrumb crumbs={homeCrumb} baseHref="/wiki" />
+        <AttributeBox attributes={attributes} />
 
-        <WikiContentDB slug="home" staticContent={content.rawContent} />
+        <WikiContentDB slug="home" staticContent={content} />
 
         <CommentSection pageSlug="home" />
       </article>
 
-      <TableOfContents headings={content.headings} />
+      <TableOfContents headings={headings} />
     </div>
   )
 }
