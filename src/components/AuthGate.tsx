@@ -16,6 +16,10 @@ import FaIcon from '@/components/FaIcon'
 import { UserColorProvider } from '@/lib/user-colors'
 import { BASE_PATH } from '@/lib/constants'
 import { UserName } from '@/components/UserName'
+import {
+  useBrowserNotifications,
+  requestNotificationPermission,
+} from '@/lib/useBrowserNotifications'
 
 /* ==============================================================
    AuthGate — 页面级登录门
@@ -84,6 +88,9 @@ export default function AuthGate({ children }: Props) {
     setSession(null)
     window.dispatchEvent(new CustomEvent('user-session-changed'))
   }, [])
+
+  // Realtime 订阅 + 浏览器通知（必须在条件 return 之前调用，保障 hooks 顺序）
+  useBrowserNotifications(session?.userId ?? null)
 
   if (!checked) return null
   if (!session) return <LoginScreen onSuccess={handleLoginSuccess} />
@@ -322,7 +329,7 @@ function NotificationBadge() {
   }, [])
 
   return (
-    <button className={styles.bellBtn} onClick={() => router.push('/notice')} title="通知">
+    <button className={styles.bellBtn} onClick={() => { requestNotificationPermission(); router.push('/notice') }} title="通知">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
         <path d="M13.73 21a2 2 0 0 1-3.46 0" />
