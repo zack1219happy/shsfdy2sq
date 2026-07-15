@@ -59,7 +59,7 @@ function scanIconNames() {
       }
     }
   }
-  walk(CONTENTS_DIR)
+  if (fs.existsSync(CONTENTS_DIR)) walk(CONTENTS_DIR)
   if (fs.existsSync(AGREEMENT_DIR)) walk(AGREEMENT_DIR)
   return [...names].sort()
 }
