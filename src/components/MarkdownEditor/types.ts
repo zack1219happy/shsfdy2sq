@@ -2,6 +2,7 @@
    MarkdownEditor — 类型定义
    ============================================ */
 
+import type { ReactNode } from 'react'
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons'
 
 // ---------- 工具栏按钮 ----------
@@ -93,6 +94,8 @@ export interface DialogRequest {
   tabs?: DialogTab[]
   /** 用户填写完成后调用，返回要插入的 markdown 字符串 */
   fn: (data: Record<string, string>) => string
+  /** 当 type 为 'component' 时，渲染此组件替代表单 */
+  render?: (helpers: { onFinish: (data: Record<string, string>) => void; onClose: () => void }) => ReactNode
 }
 
 // ---------- 编辑器配置 ----------

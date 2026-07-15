@@ -16,6 +16,8 @@ import {
   faCheck,
   faChevronLeft,
   faChevronRight,
+  faCircleExclamation,
+  faCloudUploadAlt,
   faCoins,
   faComments,
   faCopy,
@@ -79,6 +81,10 @@ register(faBookOpen)
 register(faBullhorn)
 register(faBuilding)
 register(faCalendarAlt)
+register(faCloudUploadAlt)
+cssAlias(faCloudUploadAlt, 'cloud-upload-alt')
+register(faCircleExclamation)
+cssAlias(faCircleExclamation, 'exclamation-circle')
 cssAlias(faCalendarAlt, 'calendar-alt')
 register(faCheck)
 register(faChevronLeft)

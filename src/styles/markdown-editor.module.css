@@ -356,3 +356,143 @@
   resize: vertical;
   min-height: 120px;
 }
+
+/* ---------- 图片上传对话框 ---------- */
+.uploadDialogBody {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.uploadZone {
+  border: 2px dashed var(--color-border);
+  border-radius: var(--border-radius-lg);
+  padding: 28px 20px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 150ms ease-out, background-color 150ms ease-out;
+  background: var(--color-hover-bg);
+  outline: none;
+  user-select: none;
+}
+
+.uploadZone:hover {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 6%, var(--color-bg));
+}
+
+.uploadZone:focus-visible {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.2);
+}
+
+.uploadZoneActive {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg));
+}
+
+.uploadZoneDisabled {
+  opacity: 0.7;
+  cursor: default;
+  pointer-events: none;
+}
+
+.uploadZoneContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.uploadIcon {
+  font-size: 32px;
+  color: var(--color-text-light);
+  margin-bottom: 4px;
+}
+
+.uploadSpinner {
+  font-size: 24px;
+  color: var(--color-primary);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.uploadZoneText {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.uploadZoneSubtext {
+  font-size: 12px;
+  color: var(--color-text-light);
+}
+
+.uploadPreview {
+  max-width: 200px;
+  max-height: 120px;
+  border-radius: var(--border-radius);
+  object-fit: contain;
+  margin-bottom: 4px;
+}
+
+.uploadSuccessHint {
+  font-size: 13px;
+  color: #22c55e;
+  font-weight: 500;
+}
+
+.uploadError {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: color-mix(in srgb, #ef4444 10%, var(--color-bg));
+  border: 1px solid color-mix(in srgb, #ef4444 30%, var(--color-bg));
+  border-radius: var(--border-radius);
+  color: #ef4444;
+  font-size: 13px;
+}
+
+.uploadField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.uploadLabel {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.uploadInput {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  font-size: 14px;
+  color: var(--color-text);
+  background: var(--color-bg);
+  font-family: inherit;
+}
+
+.uploadInput:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
+}
+
+.uploadInput::placeholder {
+  color: var(--color-text-light);
+}
+
+.uploadActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 4px;
+}

@@ -83,30 +83,29 @@ export default function Dialog({ request, onFinish, onClose }: DialogProps) {
               Tab dialog type not yet implemented
             </p>
           )}
-          {request.type === 'component' && (
-            <p style={{ color: '#999', padding: '20px', textAlign: 'center' }}>
-              Component dialog type not yet implemented
-            </p>
-          )}
+          {request.type === 'component' && request.render &&
+            request.render({ onFinish, onClose })}
         </div>
 
-        {/* Footer */}
-        <div className={styles.dialogFooter}>
-          <button
-            className={`${styles.dialogBtn} ${styles.dialogBtnCancel}`}
-            onClick={onClose}
-            type="button"
-          >
-            {t('cancel')}
-          </button>
-          <button
-            className={`${styles.dialogBtn} ${styles.dialogBtnConfirm}`}
-            onClick={handleFinish}
-            type="button"
-          >
-            {t('confirm')}
-          </button>
-        </div>
+        {/* Footer（component 类型由组件自行控制确认） */}
+        {request.type !== 'component' && (
+          <div className={styles.dialogFooter}>
+            <button
+              className={`${styles.dialogBtn} ${styles.dialogBtnCancel}`}
+              onClick={onClose}
+              type="button"
+            >
+              {t('cancel')}
+            </button>
+            <button
+              className={`${styles.dialogBtn} ${styles.dialogBtnConfirm}`}
+              onClick={handleFinish}
+              type="button"
+            >
+              {t('confirm')}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

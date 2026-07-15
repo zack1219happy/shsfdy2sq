@@ -22,6 +22,8 @@ import {
   faLockOpen,
 } from '@fortawesome/free-solid-svg-icons'
 
+import React from 'react'
+
 import type {
   ToolbarBtn,
   DialogRequest,
@@ -229,7 +231,22 @@ const imgBtn: ToolbarBtn = {
   name: 'img',
   icon: faImage,
   title: t('img'),
-  action: { type: 'request', dialog: IMAGE_DIALOG },
+  action: {
+    type: 'function',
+    fn: ({ openDialog }) => {
+      // 动态导入确保 ImageUploadDialog（'use client'）不造成模块边界问题
+      import('./ImageUploadDialog').then((mod) => {
+        const ImageUploadDlg = mod.default
+        openDialog({
+          type: 'component',
+          title: t('dialogImgTitle'),
+          fn: (data) => `![${data.alt || ''}](${data.url || ''})`,
+          render: ({ onFinish, onClose }) =>
+            React.createElement(ImageUploadDlg, { onFinish, onClose }),
+        })
+      })
+    },
+  },
 }
 
 const linkBtn: ToolbarBtn = {
