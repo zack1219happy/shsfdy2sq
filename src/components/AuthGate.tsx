@@ -164,7 +164,7 @@ function LoginScreen({
   return (
     <div className={styles.overlay}>
       <div className={styles.card}>
-        <img src={`${BASE_PATH}/logo.png`} alt="" className={styles.cardLogo} />
+        <img src={`${BASE_PATH}/logo.webp`} alt="" className={styles.cardLogo} />
 
         <h1>上中二旦社区</h1>
         <p className={styles.cardSubtitle}>上海中学二旦班 · 班级知识库</p>
