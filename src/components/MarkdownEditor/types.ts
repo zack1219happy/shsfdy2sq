@@ -115,4 +115,6 @@ export interface EditorProps {
   className?: string
   /** 标题→slug 映射，传入后预览面板启用 [[WikiLink]] 渲染 */
   titleSlugMap?: Record<string, string>
+  /** 按 Ctrl+Enter 时触发（用于私信等场景的快捷发送） */
+  onSubmit?: () => void
 }

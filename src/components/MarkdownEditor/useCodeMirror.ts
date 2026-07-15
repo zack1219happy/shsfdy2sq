@@ -27,6 +27,8 @@ interface UseCodeMirrorOptions {
   value: string
   onChange?: (value: string) => void
   onEditorScroll?: (lineNumber: number) => void
+  /** 按 Ctrl+Enter 时触发 */
+  onSubmit?: () => void
 }
 
 /**
@@ -39,6 +41,7 @@ export function useCodeMirror({
   value,
   onChange,
   onEditorScroll,
+  onSubmit,
 }: UseCodeMirrorOptions): CodeMirrorAPI {
   const viewRef = useRef<ReactCodeMirrorRef | null>(null)
   const [editorView, setEditorView] = useState<EditorView | null>(null)
@@ -78,6 +81,21 @@ export function useCodeMirror({
       if (rafId !== null) cancelAnimationFrame(rafId)
     }
   }, [onEditorScroll, editorView])
+
+  // Ctrl+Enter 提交
+  const onSubmitRef = useRef(onSubmit)
+  onSubmitRef.current = onSubmit
+  useEffect(() => {
+    if (!editorView || !onSubmit) return
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault()
+        onSubmitRef.current?.()
+      }
+    }
+    editorView.dom.addEventListener('keydown', handler)
+    return () => editorView.dom.removeEventListener('keydown', handler)
+  }, [onSubmit, editorView])
 
   // markdown 语法扩展
   const extensions = useMemo<Extension[]>(

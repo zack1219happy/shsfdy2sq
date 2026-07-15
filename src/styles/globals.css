@@ -227,6 +227,24 @@ img {
   border: 1px solid var(--color-border);
   background: #1e1e2e;
 }
+.code-block-wrapper > pre {
+  margin: 0;
+  padding: 1rem 1.5rem;
+  background: transparent;
+  overflow-x: auto;
+  border-radius: 0;
+  line-height: 1.6;
+}
+.code-block-wrapper > pre code {
+  background: transparent;
+  padding: 0;
+  color: #cdd6f4;
+  font-size: 0.85rem;
+  line-height: inherit;
+}
+.code-block-wrapper > pre .hljs {
+  background: transparent;
+}
 
 .code-block-header {
   background: #2a2a3e;

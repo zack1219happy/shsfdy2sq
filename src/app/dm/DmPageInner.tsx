@@ -18,7 +18,10 @@ import {
   type Conversation,
 } from '@/lib/gist-api'
 import type { UserInfo } from '@/types/gist'
-import { renderClient } from '@/lib/render-client'
+import { renderClientWithRegistry, replaceWikiLinks } from '@/lib/render-client'
+import { registry, titleSlugMap } from '@/data/person-registry'
+import { BASE_PATH } from '@/lib/constants'
+import { useCodeCopy } from '@/lib/useCodeCopy'
 import { UserName } from '@/components/UserName'
 import styles from '@/styles/dm.module.css'
 
@@ -126,11 +129,13 @@ function NewChatView({
 
       <div className={styles.inputArea}>
         <div className={styles.editorWrap}>
+          <span className={styles.editorHint}>Ctrl+Enter 发送</span>
           <MarkdownEditor
             value={input}
             onChange={setInput}
             config={{ preview: false, fullScreen: false, scrollSync: false }}
             className={styles.editorInner}
+            onSubmit={handleSend}
           />
         </div>
         <div className={styles.inputActions}>
@@ -270,6 +275,9 @@ function DmChatView({
     }
   }, [conversationId, currentUserId])
 
+  // 代码块复制按钮
+  useCodeCopy(listRef)
+
   // 新消息自动滚到底部
   useEffect(() => {
     if (listRef.current) {
@@ -395,7 +403,7 @@ function DmChatView({
                 {msg.recalled_at ? (
                   <span className={styles.recalledText}>消息已撤回</span>
                 ) : (
-                  <div className={styles.bubbleContent} dangerouslySetInnerHTML={{ __html: renderClient(msg.content).replace(/\n+$/, '') }} />
+                  <div className={styles.bubbleContent} dangerouslySetInnerHTML={{ __html: replaceWikiLinks(renderClientWithRegistry(msg.content, registry), titleSlugMap, BASE_PATH).replace(/\n+$/, '') }} />
                 )}
               </div>
               <span className={styles.messageTime}>
@@ -410,11 +418,13 @@ function DmChatView({
       {/* 输入区 */}
       <div className={styles.inputArea}>
         <div className={styles.editorWrap}>
+          <span className={styles.editorHint}>Ctrl+Enter 发送</span>
           <MarkdownEditor
             value={input}
             onChange={setInput}
             config={{ preview: false, fullScreen: false, scrollSync: false }}
             className={styles.editorInner}
+            onSubmit={handleSend}
           />
         </div>
         <div className={styles.inputActions}>

@@ -13,6 +13,7 @@ import Toolbar from './Toolbar'
 import Dialog from './Dialog'
 import { DEFAULT_CONFIG } from './config'
 import { findLineInPreview } from './scrollSync'
+import { useCodeCopy } from '@/lib/useCodeCopy'
 import styles from '@/styles/markdown-editor.module.css'
 import type { EditorProps, MarkdownEditorConfig, ToggleState, DialogRequest } from './types'
 
@@ -22,6 +23,7 @@ export default function Editor({
   config,
   className,
   titleSlugMap,
+  onSubmit,
 }: EditorProps) {
   // 1. Config
   const merged: MarkdownEditorConfig = useMemo(
@@ -81,6 +83,7 @@ export default function Editor({
     useCodeMirror({
       value,
       onChange,
+      onSubmit,
       onEditorScroll:
         toggleState.scrollSyncEnabled && !toggleState.previewHidden
           ? (lineNumber: number) => {
@@ -118,6 +121,7 @@ export default function Editor({
       : undefined,
     titleSlugMap,
   })
+  useCodeCopy(previewRef)
 
   // 6. Toolbar
   const { handleAction } = useToolbar({

@@ -6,6 +6,7 @@ import { renderClientWithRegistry, replaceWikiLinks } from '@/lib/render-client'
 import { registry, titleSlugMap as defaultTitleSlugMap } from '@/data/person-registry'
 import { BASE_PATH } from '@/lib/constants'
 import { fetchPageAssets } from '@/lib/wiki-api'
+import { useCodeCopy } from '@/lib/useCodeCopy'
 
 interface Props {
   /** 原始内容（markdown 或 HTML） */
@@ -118,32 +119,8 @@ export default function WikiContent({ content, format, className, titleSlugMap: 
     }
   })
 
-  // 代码块复制按钮：事件委托
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const handler = async (e: MouseEvent) => {
-      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-code-copy-btn]')
-      if (!btn) return
-      const wrapper = btn.closest('.code-block-wrapper')
-      const code = wrapper?.querySelector('code')
-      if (!code) return
-      try {
-        await navigator.clipboard.writeText(code.textContent || '')
-        btn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg>已复制'
-        setTimeout(() => {
-          btn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>复制'
-        }, 2000)
-      } catch {
-        btn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>失败'
-        setTimeout(() => {
-          btn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>复制'
-        }, 2000)
-      }
-    }
-    el.addEventListener('click', handler)
-    return () => el.removeEventListener('click', handler)
-  }, [html])
+  // 代码块复制按钮
+  useCodeCopy(ref)
 
   return <div ref={ref} className={className} dangerouslySetInnerHTML={{ __html: html }} />
 }
