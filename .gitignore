@@ -39,3 +39,6 @@ __icon_preview.html
 # local migration files (applied via Supabase API)
 *.sql
 _scripts/
+
+# electron-builder output
+release/

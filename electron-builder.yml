@@ -1,0 +1,29 @@
+# ============================================
+# electron-builder 配置 — Windows 安装包
+# ============================================
+appId: com.shs.wiki
+productName: 二旦班知识库
+copyright: Copyright © 2024 上中二旦
+
+directories:
+  output: release
+  buildResources: resources
+
+files:
+  - electron/**/*
+  - out/**/*
+
+win:
+  target:
+    - target: portable
+      arch:
+        - x64
+  icon: out/logo.png
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: 二旦班知识库

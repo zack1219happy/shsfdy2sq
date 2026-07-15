@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "description": "上中二旦社区 - 班级知识库",
+  "main": "electron/main.js",
+  "author": "上中二旦",
   "scripts": {
     "dev": "next dev",
     "predev": "node scripts/copy-data-dev.js && node scripts/generate-person-ts.js && node scripts/convert-images-webp.js",
@@ -10,7 +12,8 @@
     "build": "next build",
     "export": "node scripts/scan-icons.js && node scripts/generate-person-ts.js && node scripts/convert-images-webp.js && node scripts/copy-data-dev.js && cross-env EXPORT=true next build && node scripts/strip-katex-fonts.js && node scripts/copy-static.js",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "build:exe": "npm run export && electron-builder --win"
   },
   "dependencies": {
     "@codemirror/lang-markdown": "^6.5.0",
@@ -48,6 +51,8 @@
     "@types/react-dom": "^19.2.3",
     "chinese-holidays": "^1.8.0",
     "cross-env": "^10.1.0",
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8",
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.2.10",
     "sharp": "^0.35.3",
