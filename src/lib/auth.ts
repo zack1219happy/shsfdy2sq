@@ -164,6 +164,7 @@ export async function tryRestoreSessionFromAuth(): Promise<void> {
     username: meta.username || "",
     studentId: meta.student_id || "",
     name,
+    role,
     loginTime: new Date().toISOString(),
   };
   localStorage.setItem(SESSION_KEY, JSON.stringify(restored));
