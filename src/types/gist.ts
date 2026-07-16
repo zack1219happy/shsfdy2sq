@@ -85,7 +85,7 @@ export interface TodayProgress {
 export interface PointsTransaction {
   id: string
   amount: number
-  reason: 'checkin' | 'comment' | 'forum_post' | 'plaza_article' | 'wish_done' | 'purchase' | 'wish_payment'
+  reason: 'checkin' | 'comment' | 'forum_comment' | 'forum_post' | 'plaza_article' | 'wish_done' | 'purchase' | 'wish_payment' | 'admin_adjust'
   reference_id: string | null
   created_at: string
 }
@@ -94,7 +94,9 @@ export interface PointsTransaction {
 export const POINTS_REASON_LABEL: Record<string, string> = {
   checkin: '打卡',
   comment: '评论',
+  forum_comment: '论坛评论',
   forum_post: '论坛发帖',
+  admin_adjust: '管理员调整',
   plaza_article: '文章奖励',
   wish_done: '许愿完成',
   purchase: '商城消费',

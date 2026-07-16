@@ -81,7 +81,7 @@ try {
       ALTER TABLE points_transactions
       ADD CONSTRAINT points_transactions_reason_check
       CHECK (reason = ANY (ARRAY[
-        'checkin', 'comment', 'forum_post', 'plaza_article',
+        'checkin', 'comment', 'forum_comment', 'forum_post', 'plaza_article',
         'wish_done', 'purchase', 'wish_payment', 'admin_adjust'
       ]));
     `)
