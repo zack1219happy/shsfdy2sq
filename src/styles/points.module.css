@@ -450,6 +450,23 @@
   gap: 8px;
 }
 
+.appearanceHint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  margin-bottom: 20px;
+  background: var(--color-active-bg);
+  border-radius: var(--border-radius);
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.appearanceHint strong {
+  color: var(--color-text);
+}
+
 .appearancePreview {
   background: var(--color-bg);
   border-radius: var(--border-radius-lg);

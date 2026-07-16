@@ -226,6 +226,11 @@ export default function AppearancePage() {
         <FaIcon name="palette" /> 名称装扮
       </h2>
 
+      {/* 提示：装扮需刷新页面方能完全生效 */}
+      <div className={styles.appearanceHint}>
+        <FaIcon name="lightbulb" /> 名称装扮穿戴完毕后，需要<strong>刷新页面</strong>才能在所有页面完全生效（仅切换页面无效）。
+      </div>
+
       {/* 预览区 */}
       <div className={styles.appearancePreview}>
         <div className={styles.appearancePreviewLabel}>当前效果预览</div>

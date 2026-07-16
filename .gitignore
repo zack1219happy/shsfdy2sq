@@ -40,5 +40,8 @@ __icon_preview.html
 *.sql
 _scripts/
 
+# misc scripts
+scripts/check-login-activity.mjs
+
 # electron-builder output
 release/
