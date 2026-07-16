@@ -2,12 +2,12 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { supabase } from './supabase'
-import { BUILTIN_TAGS } from '@/types/gist'
+import { BUILTIN_TAGS, type TagData } from '@/types/gist'
 
 // ---- 用户装饰数据结构 ----
 export interface UserDecoration {
   color: string | null
-  tags: string[]
+  tags: TagData[]
 }
 
 // ---- 模块级预拉取 — 一导入（应用启动）就开始请求 ----
@@ -20,9 +20,9 @@ async function fetchDecorations(): Promise<Map<string, UserDecoration> | null> {
       ({ data }) => {
         if (!data) return null as unknown as Map<string, UserDecoration> | null
         const map = new Map<string, UserDecoration>()
-        const users = data as Array<{ username: string; color: string | null; equipped_tags: string[] | null }>
+        const users = data as Array<{ username: string; color: string | null; equipped_tags: TagData[] | null }>
         for (const u of users) {
-          const builtin = BUILTIN_TAGS[u.username] ?? []
+          const builtin = (BUILTIN_TAGS[u.username] ?? []).map(v => ({ v, c: null }))
           map.set(u.username, {
             color: u.color ?? null,
             tags: [...builtin, ...(u.equipped_tags ?? [])],

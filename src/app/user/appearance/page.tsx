@@ -6,7 +6,7 @@ import Link from 'next/link'
 import FaIcon from '@/components/FaIcon'
 import { getSession } from '@/lib/auth'
 import { fetchUserPurchases, equipColor, equipTags, fetchUserEquipped } from '@/lib/gist-api'
-import type { UserPurchase } from '@/types/gist'
+import type { UserPurchase, TagData } from '@/types/gist'
 import { BUILTIN_TAGS, CUSTOM_TAG_VALUE } from '@/types/gist'
 import styles from '@/styles/points.module.css'
 
@@ -49,7 +49,7 @@ export default function AppearancePage() {
       ])
       setPurchases(purchasesData)
       setCurrentColor(equipped.color)
-      setCurrentTags(equipped.tags)
+      setCurrentTags(equipped.tags.map(t => t.v))
 
       // 找出当前颜色对应的 item_id
       if (equipped.color) {
@@ -60,8 +60,8 @@ export default function AppearancePage() {
       }
 
       // 如果当前装备了自定义 tag（不在已购 tag 列表中的短文本即为自定义），回填输入框
-      const customTag = equipped.tags.find(t => t.length <= 5 && !purchasesData.some(p => p.item_type === 'tag' && p.value === t))
-      if (customTag) setCustomTagText(customTag)
+      const customTag = equipped.tags.find(t => t.v.length <= 5 && !purchasesData.some(p => p.item_type === 'tag' && p.value === t.v))
+      if (customTag) setCustomTagText(customTag.v)
 
       setPageState('ready')
     } catch (e) {
@@ -83,6 +83,14 @@ export default function AppearancePage() {
 
   // 总共可显示的 tags = 内置 + 已装备（最多 3 个用户 tag）
   const displayTags = [...builtinTags, ...currentTags]
+
+  // 标签颜色映射（tag value → tag_color，来自购买记录）
+  const tagColorMap: Record<string, string | null> = {}
+  for (const p of ownedTags) {
+    tagColorMap[p.value] = p.tag_color
+  }
+  // 自定义灰色（购买了"自定义灰色"商品的用户可以用，未购买时自定义 tag 显示纯灰）
+  const customGrayColor: string | null = customTagPurchase?.tag_color ?? null
 
   // 处理颜色选择
   const handleColorSelect = useCallback(async (itemId: string, colorValue: string) => {
@@ -132,7 +140,7 @@ export default function AppearancePage() {
     setCurrentTags(newTags)
 
     try {
-      const result = await equipTags(newTags)
+      const result = await equipTags(toTagData(newTags, tagColorMap, customGrayColor))
       if (!result.success) {
         setCurrentTags(currentTags)
       }
@@ -159,7 +167,7 @@ export default function AppearancePage() {
     }
     setCurrentTags(newTags)
     try {
-      const r = await equipTags(newTags)
+      const r = await equipTags(toTagData(newTags, tagColorMap, customGrayColor))
       if (!r.success) setCurrentTags(currentTags)
     } catch { setCurrentTags(currentTags) }
     finally { setSaving(false) }
@@ -183,7 +191,7 @@ export default function AppearancePage() {
     setSaving(true)
     setCurrentTags(newTags)
     try {
-      const r = await equipTags(newTags)
+      const r = await equipTags(toTagData(newTags, tagColorMap, customGrayColor))
       if (!r.success) setCurrentTags(currentTags)
     } catch { setCurrentTags(currentTags) }
     finally { setSaving(false) }
@@ -226,6 +234,8 @@ export default function AppearancePage() {
             username={username}
             color={currentColor}
             tags={displayTags}
+            tagColorMap={tagColorMap}
+            customGray={customGrayColor}
           />
         </div>
       </div>
@@ -341,6 +351,11 @@ export default function AppearancePage() {
   )
 }
 
+/** 将标签值数组 + 颜色映射转换为 TagData[] */
+function toTagData(values: string[], colorMap: Record<string, string | null>, customGray: string | null): TagData[] {
+  return values.map(v => ({ v, c: colorMap[v] ?? customGray ?? null }))
+}
+
 /* ==============================================================
    DecoratedName — 带颜色和标签的用户名预览
    ============================================================== */
@@ -349,10 +364,14 @@ function DecoratedName({
   username,
   color,
   tags,
+  tagColorMap,
+  customGray,
 }: {
   username: string
   color: string | null
   tags: string[]
+  tagColorMap: Record<string, string | null>
+  customGray: string | null
 }) {
   const nameEl = color ? (
     color.startsWith('linear-gradient(') ? (
@@ -375,18 +394,25 @@ function DecoratedName({
   return (
     <>
       {nameEl}
-      {tags.map((tag, i) => (
-        <span key={i} className={styles.previewTag} style={getPreviewTagStyle(tag)}>
-          {tag}
-        </span>
-      ))}
+      {tags.map((tag, i) => {
+        const builtinStyle = getTagBuiltinStyle(tag)
+        const tagColor = tagColorMap[tag] ?? customGray
+        const previewStyle = builtinStyle ?? (tagColor
+          ? { color: tagColor, border: `1px solid ${tagColor}` }
+          : {})
+        return (
+          <span key={i} className={styles.previewTag} style={previewStyle}>
+            {tag}
+          </span>
+        )
+      })}
     </>
   )
 }
 
-/** 预览区标签特殊样式 */
-function getPreviewTagStyle(text: string): CSSProperties {
+/** 内置身份 tag 的特殊样式 — 返回 null 表示非内置 tag */
+function getTagBuiltinStyle(text: string): CSSProperties | null {
   if (text === '创始人') return { background: '#000', color: '#fff' }
   if (text === '工程师') return { background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', color: '#fff' }
-  return {}
+  return null
 }

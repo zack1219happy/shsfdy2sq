@@ -526,7 +526,7 @@ export async function updateWishStatus(
    Points API — 积分系统
    ============================================================= */
 
-import type { TodayProgress, PointsTransaction, ShopItem, UserPurchase, UserDecoration } from '@/types/gist'
+import type { TodayProgress, PointsTransaction, ShopItem, UserPurchase, UserDecoration, TagData } from '@/types/gist'
 
 export async function fetchTodayProgress(): Promise<TodayProgress> {
   const { data, error } = await supabase.rpc('get_today_progress')
@@ -590,9 +590,9 @@ export async function equipColor(itemId: string | null): Promise<{ success: bool
   return (data ?? { success: false, message: '操作失败' }) as { success: boolean; message: string }
 }
 
-/** 装备标签（最多 3 个，传入标签值数组） */
-export async function equipTags(tagValues: string[]): Promise<{ success: boolean; message: string }> {
-  const { data, error } = await supabase.rpc('equip_tags', { p_tag_values: tagValues })
+/** 装备标签（最多 3 个，传入 {v, c} 数组，c 为颜色或 null） */
+export async function equipTags(tagData: TagData[]): Promise<{ success: boolean; message: string }> {
+  const { data, error } = await supabase.rpc('equip_tags', { p_tag_values: tagData })
   if (error) return { success: false, message: error.message }
   return (data ?? { success: false, message: '操作失败' }) as { success: boolean; message: string }
 }

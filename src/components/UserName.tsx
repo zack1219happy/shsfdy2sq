@@ -72,15 +72,19 @@ export function UserName({ username, className, hideTags }: Props) {
     <span className={className} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
       {nameEl}
       {tags.map((tag, i) => (
-        <TagBadge key={i} text={tag} />
+        <TagBadge key={i} text={tag.v} color={tag.c} />
       ))}
     </span>
   )
 }
 
 /** 单个标签徽章（小圆角胶囊） */
-function TagBadge({ text }: { text: string }) {
-  const style = getTagBuiltinStyle(text)
+function TagBadge({ text, color }: { text: string; color?: string | null }) {
+  const builtinStyle = getTagBuiltinStyle(text)
+  const tagStyle = builtinStyle ?? (color
+    ? { color, border: `1px solid ${color}` }
+    : { background: 'var(--color-active-bg)', color: 'var(--color-text-secondary)' }
+  )
   return (
     <span
       style={{
@@ -91,7 +95,7 @@ function TagBadge({ text }: { text: string }) {
         borderRadius: 999,
         lineHeight: '1.6',
         whiteSpace: 'nowrap',
-        ...style,
+        ...tagStyle,
       }}
     >
       {text}
@@ -99,8 +103,8 @@ function TagBadge({ text }: { text: string }) {
   )
 }
 
-/** 内置身份 tag 的特殊样式 */
-function getTagBuiltinStyle(text: string): React.CSSProperties {
+/** 内置身份 tag 的特殊样式 — 返回 null 表示非内置 tag */
+function getTagBuiltinStyle(text: string): React.CSSProperties | null {
   if (text === '创始人') {
     return { background: '#000', color: '#fff' }
   }
@@ -110,5 +114,5 @@ function getTagBuiltinStyle(text: string): React.CSSProperties {
       color: '#fff',
     }
   }
-  return { background: 'var(--color-active-bg)', color: 'var(--color-text-secondary)' }
+  return null
 }

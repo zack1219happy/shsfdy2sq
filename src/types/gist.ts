@@ -120,9 +120,15 @@ export interface UserPurchase {
   purchased_at: string
 }
 
+/** 标签数据 — v: 显示文本, c: 颜色（null = 灰色） */
+export interface TagData {
+  v: string
+  c: string | null
+}
+
 export interface UserDecoration {
   color: string | null
-  tags: string[]
+  tags: TagData[]
 }
 
 /** 内置身份 Tag（不消耗槽位，不可卸装） */
