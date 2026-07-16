@@ -414,5 +414,11 @@ function DecoratedName({
 function getTagBuiltinStyle(text: string): CSSProperties | null {
   if (text === '创始人') return { background: '#000', color: '#fff' }
   if (text === '工程师') return { background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', color: '#fff' }
+  if (text === '开拓者') return {
+    background: 'linear-gradient(135deg, #fbbf24, #f59e0b, #b45309)',
+    color: '#fff',
+    fontWeight: 700,
+    textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+  }
   return null
 }

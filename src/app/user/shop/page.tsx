@@ -174,8 +174,15 @@ function ShopCard({
   onBuy: (id: string) => void
   username?: string
 }) {
-  const canAfford = myPoints >= item.price
   const isCustom = item.value === '__custom__'
+  const isPioneer = item.value === '开拓者'
+
+  // 开拓者促销：8.1 前 ≥50 积分免费获取
+  const pioneerActive = isPioneer && new Date() < new Date('2026-08-01T00:00:00+08:00')
+  const pioneerExpired = isPioneer && !pioneerActive
+  const canAfford = isPioneer ? myPoints >= 50 : myPoints >= item.price
+
+  if (pioneerExpired && !owned) return null // 过期后不显示
 
   return (
     <div className={`${styles.shopCard} ${owned ? styles.shopCardOwned : ''}`}>
@@ -197,6 +204,19 @@ function ShopCard({
       <div className={styles.shopCardFooter}>
         {owned ? (
           <span className={styles.shopOwnedBadge}>已拥有</span>
+        ) : pioneerActive ? (
+          <>
+            <span className={styles.shopPrice}>
+              ≥50积分 <span style={{ fontSize: '0.7rem', color: 'var(--color-primary)' }}>免费</span>
+            </span>
+            <button
+              className={styles.shopBuyBtn}
+              disabled={!canAfford || buying}
+              onClick={() => onBuy(item.id)}
+            >
+              {buying ? '…' : !canAfford ? '积分不足' : '免费获取'}
+            </button>
+          </>
         ) : (
           <>
             <span className={styles.shopPrice}>
@@ -243,10 +263,17 @@ function ColorPreview({ value, name, username }: { value: string; name: string; 
 
 /** 标签预览 */
 function TagPreview({ value, color, custom }: { value: string; color: string | null; tag_color?: string; custom: boolean }) {
+  const isPioneer = value === '开拓者'
   return (
     <span
       className={styles.tagPreview}
-      style={color ? { color, borderColor: color } : undefined}
+      style={isPioneer ? {
+        background: 'linear-gradient(135deg, #fbbf24, #f59e0b, #b45309)',
+        color: '#fff',
+        fontWeight: 700,
+        textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+        border: 'none',
+      } : color ? { color, borderColor: color } : undefined}
     >
       {custom ? '自定义' : value}
     </span>
