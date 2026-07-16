@@ -52,6 +52,7 @@ export default function ForumPostPage() {
   const [editTitle, setEditTitle] = useState('')
   const [editContent, setEditContent] = useState('')
   const [editExcludedIds, setEditExcludedIds] = useState<string[]>([])
+  const [editAgentVisible, setEditAgentVisible] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [allUsers, setAllUsers] = useState<UserInfo[]>([])
   const [usersLoading, setUsersLoading] = useState(true)
@@ -129,6 +130,7 @@ export default function ForumPostPage() {
       if (draft.title) setEditTitle(draft.title)
       if (draft.content) setEditContent(draft.content)
       if (draft.excludedUserIds) setEditExcludedIds(draft.excludedUserIds)
+      if ('agentVisible' in draft) setEditAgentVisible((draft as any).agentVisible)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -137,7 +139,7 @@ export default function ForumPostPage() {
   const editHasContent = editTitle.trim() !== '' || editContent.trim() !== ''
   const { clearDraft: clearEditDraft } = useAutoSave({
     key: `forum_edit_${postId}`,
-    data: { title: editTitle, content: editContent, excludedUserIds: editExcludedIds },
+    data: { title: editTitle, content: editContent, excludedUserIds: editExcludedIds, agentVisible: editAgentVisible },
     enabled: editing && editHasContent,
   })
 
@@ -188,6 +190,7 @@ export default function ForumPostPage() {
     setEditTitle(post.title)
     setEditContent(post.content)
     setEditExcludedIds(post.excluded_visibility ?? [])
+    setEditAgentVisible(post.agent_visible ?? true)
     setEditing(true)
   }
 
@@ -203,7 +206,7 @@ export default function ForumPostPage() {
     if (!post || !editTitle.trim() || !editContent.trim() || submitting) return
     setSubmitting(true)
     try {
-      await updateForumPost(post.id, editTitle.trim(), editContent.trim(), editExcludedIds)
+      await updateForumPost(post.id, editTitle.trim(), editContent.trim(), editExcludedIds, editAgentVisible)
       clearEditDraft()
       setEditing(false)
       refreshPostOnly()
@@ -308,6 +311,8 @@ export default function ForumPostPage() {
               onRemoveExclude={(userId) =>
                 setEditExcludedIds((prev) => prev.filter((id) => id !== userId))
               }
+              agentVisible={editAgentVisible}
+              onAgentVisibleChange={setEditAgentVisible}
             />
             <div className={styles.editorWrapper} style={{ minHeight: '300px' }}>
               <MarkdownEditor value={editContent} onChange={setEditContent} className={styles.editorNoBorder} />

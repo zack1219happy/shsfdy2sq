@@ -30,6 +30,7 @@ export default function NewPostPage() {
   const [allUsers, setAllUsers] = useState<UserInfo[]>([])
   const [usersLoading, setUsersLoading] = useState(true)
   const [excludedUserIds, setExcludedUserIds] = useState<string[]>([])
+  const [agentVisible, setAgentVisible] = useState(true)
   const [showVisibilityModal, setShowVisibilityModal] = useState(false)
 
   // 加载用户列表 + 拼音首字母
@@ -53,6 +54,7 @@ export default function NewPostPage() {
       if (draft.title) setTitle(draft.title)
       if (draft.content) setContent(draft.content)
       if (draft.excludedUserIds) setExcludedUserIds(draft.excludedUserIds)
+    if ('agentVisible' in draft) setAgentVisible((draft as any).agentVisible)
     }
   }, [])
 
@@ -60,7 +62,7 @@ export default function NewPostPage() {
   const hasContent = title.trim() !== '' || content.trim() !== ''
   const { clearDraft } = useAutoSave({
     key: 'forum_new',
-    data: { title, content, excludedUserIds },
+    data: { title, content, excludedUserIds, agentVisible },
     enabled: hasContent,
   })
 
@@ -75,7 +77,7 @@ export default function NewPostPage() {
     setSubmitting(true)
     setError(null)
     try {
-      const id = await createForumPost(title.trim(), content.trim(), excludedUserIds)
+      const id = await createForumPost(title.trim(), content.trim(), excludedUserIds, agentVisible)
       clearDraft()
       router.push('/forum/post?id=' + id)
     } catch (e: any) {
@@ -126,6 +128,8 @@ export default function NewPostPage() {
           onRemoveExclude={(userId) =>
             setExcludedUserIds((prev) => prev.filter((id) => id !== userId))
           }
+          agentVisible={agentVisible}
+          onAgentVisibleChange={setAgentVisible}
         />
 
         <div className={Styles.editorWrapper}>

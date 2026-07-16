@@ -42,6 +42,7 @@ export interface ForumPost {
   downvotes: number
   comment_count: number
   excluded_visibility?: string[] | null
+  agent_visible?: boolean
 }
 
 export interface UserInfo {

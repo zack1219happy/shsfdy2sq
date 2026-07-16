@@ -149,6 +149,14 @@
 /* callout / 折叠框在气泡内使用自己的配色，不继承父级颜色 */
 .bubble :global(.callout) { color: #1a1a1a; }
 
+/* 自己消息中的链接用灰色（不在 callout 内时） */
+.bubbleMine a {
+  color: #c8d0dc;
+}
+.bubbleMine :global(.callout) a {
+  color: var(--color-primary);
+}
+
 .bubbleRecalled {
   background: #f5f5f5;
   color: #9ca3af;

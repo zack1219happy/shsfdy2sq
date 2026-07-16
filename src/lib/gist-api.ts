@@ -163,11 +163,12 @@ export async function fetchForumPost(postId: string): Promise<ForumPost | null> 
   return (data ?? [])[0] ?? null
 }
 
-export async function createForumPost(title: string, content: string, excludedVisibility?: string[]): Promise<string> {
+export async function createForumPost(title: string, content: string, excludedVisibility?: string[], agentVisible = true): Promise<string> {
   const { data, error } = await supabase.rpc('create_forum_post', {
     p_title: title.trim(),
     p_content: content.trim(),
     p_excluded_visibility: excludedVisibility && excludedVisibility.length > 0 ? excludedVisibility : [],
+    p_agent_visible: agentVisible,
   })
   if (error) throw new Error('发帖失败: ' + error.message)
   return data as string
@@ -212,12 +213,13 @@ export async function getUserForumVote(postId: string): Promise<string | null> {
   return data as string | null
 }
 
-export async function updateForumPost(postId: string, title: string, content: string, excludedVisibility?: string[] | null): Promise<void> {
+export async function updateForumPost(postId: string, title: string, content: string, excludedVisibility?: string[] | null, agentVisible?: boolean): Promise<void> {
   const { error } = await supabase.rpc('update_forum_post', {
     p_post_id: postId,
     p_title: title.trim(),
     p_content: content.trim(),
     p_excluded_visibility: excludedVisibility !== undefined ? (excludedVisibility ?? []) : null,
+    p_agent_visible: agentVisible ?? null,
   })
   if (error) throw new Error('编辑失败: ' + error.message)
 }
