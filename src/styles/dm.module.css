@@ -217,8 +217,8 @@
 
 .editorHint {
   position: absolute;
-  top: 4px;
-  right: 8px;
+  bottom: 4px;
+  left: 8px;
   font-size: 0.7rem;
   color: #9ca3af;
   pointer-events: none;
@@ -258,4 +258,35 @@
 .sendBtn:disabled {
   background: #c4cdd8;
   cursor: not-allowed;
+}
+
+/* ---- 移动端适配 ---- */
+
+@media (max-width: 768px) {
+  .page {
+    position: fixed;
+    top: 48px;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--bottom-tab-height) + env(safe-area-inset-bottom, 0px));
+    height: auto;
+    width: auto;
+  }
+
+  .chatHeader {
+    height: 56px;
+    padding: 0 12px;
+  }
+
+  .messageList {
+    padding: 12px;
+  }
+
+  .message {
+    max-width: 85%;
+  }
+
+  .bubble {
+    font-size: 0.82rem;
+  }
 }

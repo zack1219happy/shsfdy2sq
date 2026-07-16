@@ -140,7 +140,7 @@ export default function AdminRevisionsPage() {
     )
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         {/* 灰色衬底 header（对齐文章广场 detailHeader）— 全宽 */}
         <div className={forumStyles.detailHeader}>
           <div className={forumStyles.detailHeaderInner}>

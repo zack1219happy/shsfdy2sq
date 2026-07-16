@@ -246,21 +246,25 @@
 
 @media (max-width: 768px) {
   .page {
-    padding: 16px 12px 60px;
+    padding: 16px 12px 0;
   }
 
   .editorDiffLayout {
     grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto;
   }
 
   .editorPane {
     border: 1px solid var(--color-border);
     border-bottom: 0;
     border-radius: var(--border-radius) var(--border-radius) 0 0;
+    min-height: 300px;
   }
 
   .diffPane {
     border-radius: 0 0 var(--border-radius) var(--border-radius);
+    min-height: 150px;
+    max-height: 40vh;
   }
 
   .revisionCard {

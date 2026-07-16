@@ -364,4 +364,14 @@
   .replyContent {
     font-size: 0.82rem;
   }
+
+  /* 移动端：删除按钮始终可见（无 hover） */
+  .deleteBtn {
+    opacity: 0.6;
+  }
+
+  .commentMeta:hover .deleteBtn,
+  .replyMeta:hover .deleteBtn {
+    opacity: 0.6;
+  }
 }
