@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { getSession } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
@@ -31,24 +31,12 @@ const MarkdownEditor = dynamic(
 )
 
 export default function DmPageInner() {
-  const [activeQuery, setActiveQuery] = useState(() => window.location.search)
   const router = useRouter()
+  const searchParams = useSearchParams()
   const session = getSession()
 
-  useEffect(() => {
-    const syncQuery = () => setActiveQuery(window.location.search)
-    syncQuery()
-    window.addEventListener('popstate', syncQuery)
-    window.addEventListener('dm-route-change', syncQuery)
-    return () => {
-      window.removeEventListener('popstate', syncQuery)
-      window.removeEventListener('dm-route-change', syncQuery)
-    }
-  }, [])
-
-  const params = useMemo(() => new URLSearchParams(activeQuery), [activeQuery])
-  const convId = params.get('conv')
-  const userId = params.get('user')
+  const convId = searchParams.get('conv')
+  const userId = searchParams.get('user')
 
   if (!session) {
     return null
