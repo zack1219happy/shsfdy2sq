@@ -163,6 +163,26 @@ export async function fetchForumPost(postId: string): Promise<ForumPost | null> 
   return (data ?? [])[0] ?? null
 }
 
+/** 检测论坛帖子重复（客户端预检） */
+export async function checkForumDuplicate(title: string, content: string): Promise<{ is_duplicate: boolean; existing_title: string; created_at: string } | null> {
+  const { data, error } = await supabase.rpc('check_forum_post_duplicate', {
+    p_title: title.trim(),
+    p_content: content.trim(),
+  })
+  if (error) return null
+  return (data ?? [])[0] ?? null
+}
+
+/** 检测广场文章重复（客户端预检） */
+export async function checkPlazaDuplicate(title: string, content: string): Promise<{ is_duplicate: boolean; existing_title: string; created_at: string } | null> {
+  const { data, error } = await supabase.rpc('check_plaza_article_duplicate', {
+    p_title: title.trim(),
+    p_content: content.trim(),
+  })
+  if (error) return null
+  return (data ?? [])[0] ?? null
+}
+
 export async function createForumPost(title: string, content: string, excludedVisibility?: string[], agentVisible = true): Promise<string> {
   const { data, error } = await supabase.rpc('create_forum_post', {
     p_title: title.trim(),

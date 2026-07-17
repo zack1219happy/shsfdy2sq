@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic'
 import FaIcon from '@/components/FaIcon'
 import CategoryPickerModal from '@/components/CategoryPickerModal'
 import { getSession } from '@/lib/auth'
-import { createPlazaArticle, fetchPlazaCategories } from '@/lib/gist-api'
+import { createPlazaArticle, fetchPlazaCategories, checkPlazaDuplicate } from '@/lib/gist-api'
 import { loadPinyinInitialsFromDB } from '@/lib/people'
 import { useAutoSave, loadDraft } from '@/hooks/useAutoSave'
 import type { PlazaCategory } from '@/types/plaza'
@@ -34,6 +34,7 @@ export default function NewArticlePage() {
   const [isPublic, setIsPublic] = useState(false) // 默认私密
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [dupWarning, setDupWarning] = useState<{ existing_title: string; created_at: string } | null>(null)
   const [categories, setCategories] = useState<PlazaCategory[]>([])
   const [pickerOpen, setPickerOpen] = useState(false)
   const session = getSession()
@@ -93,10 +94,46 @@ export default function NewArticlePage() {
 
   const handleSubmit = useCallback(async () => {
     if (!title.trim() || !content.trim() || !session || !categoryId) return
+
+    // 预检重复
+    const dup = await checkPlazaDuplicate(title.trim(), content.trim())
+    if (dup) {
+      setDupWarning({ existing_title: dup.existing_title, created_at: dup.created_at })
+      return
+    }
+
     setSubmitting(true)
     setError(null)
     try {
       // 从分类 ID 直接使用
+      const cat = categories.find((c) => c.id === categoryId)
+      if (!cat) { setError('无效的分类'); return }
+
+      const slug =
+        title
+          .trim()
+          .toLowerCase()
+          .replace(/[^\w一-鿿-]+/g, '-')
+          .replace(/^-+|-+$/g, '') +
+        '-' +
+        Date.now().toString(36)
+      await createPlazaArticle(title.trim(), slug, content.trim(), categoryId, isPublic)
+      clearDraft()
+      router.push('/plaza/post?slug=' + encodeURIComponent(slug))
+    } catch (e: any) {
+      setError(e?.message || '发布失败')
+    } finally {
+      setSubmitting(false)
+    }
+  }, [title, content, session, categoryId, categories, isPublic, router])
+
+  /** 忽略重复警告，强制发布 */
+  const handleForceSubmit = useCallback(async () => {
+    if (!title.trim() || !content.trim() || !session || !categoryId) return
+    setDupWarning(null)
+    setSubmitting(true)
+    setError(null)
+    try {
       const cat = categories.find((c) => c.id === categoryId)
       if (!cat) { setError('无效的分类'); return }
 
@@ -187,6 +224,25 @@ export default function NewArticlePage() {
         </div>
 
         {error && <p className={Styles.error}>{error}</p>}
+
+        {/* 重复内容警告 */}
+        {dupWarning && (
+          <div className={Styles.dupWarning}>
+            <div className={Styles.dupWarningContent}>
+              <p><strong>检测到重复内容</strong></p>
+              <p>您已在 {new Date(dupWarning.created_at).toLocaleString('zh-CN')} 发过标题为「{dupWarning.existing_title}」的文章，内容相似。</p>
+              <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>确认再次发布吗？</p>
+              <div className={Styles.dupWarningActions}>
+                <button className={`${Styles.btn} ${Styles.btnOutline}`} onClick={() => setDupWarning(null)}>
+                  不发布了
+                </button>
+                <button className={`${Styles.btn} ${Styles.btnPrimary}`} onClick={handleForceSubmit}>
+                  确认发布
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className={Styles.formActions}>
           <button className={`${Styles.btn} ${Styles.btnOutline}`} onClick={() => router.push('/plaza')}>

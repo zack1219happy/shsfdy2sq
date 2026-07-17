@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import FaIcon from '@/components/FaIcon'
 import { getSession } from '@/lib/auth'
-import { createForumPost, fetchAllUsers } from '@/lib/gist-api'
+import { createForumPost, fetchAllUsers, checkForumDuplicate } from '@/lib/gist-api'
 import { loadPinyinInitialsFromDB } from '@/lib/people'
 import VisibilityBar from '@/components/VisibilityBar'
 import VisibilityModal from '@/components/VisibilityModal'
@@ -24,6 +24,7 @@ export default function NewPostPage() {
   const [content, setContent] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [dupWarning, setDupWarning] = useState<{ existing_title: string; created_at: string } | null>(null)
   const session = getSession()
 
   // 可见性状态
@@ -74,6 +75,14 @@ export default function NewPostPage() {
 
   const handleSubmit = useCallback(async () => {
     if (!title.trim() || !content.trim() || !session) return
+
+    // 预检重复
+    const dup = await checkForumDuplicate(title.trim(), content.trim())
+    if (dup) {
+      setDupWarning({ existing_title: dup.existing_title, created_at: dup.created_at })
+      return
+    }
+
     setSubmitting(true)
     setError(null)
     try {
@@ -93,6 +102,23 @@ export default function NewPostPage() {
       prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId],
     )
   }, [])
+
+  /** 忽略重复警告，强制发布 */
+  const handleForceSubmit = useCallback(async () => {
+    if (!title.trim() || !content.trim() || !session) return
+    setDupWarning(null)
+    setSubmitting(true)
+    setError(null)
+    try {
+      const id = await createForumPost(title.trim(), content.trim(), excludedUserIds, agentVisible)
+      clearDraft()
+      router.push('/forum/post?id=' + id)
+    } catch (e: any) {
+      setError(e?.message || '发帖失败')
+    } finally {
+      setSubmitting(false)
+    }
+  }, [title, content, session, router, excludedUserIds])
 
   if (!session) {
     return (
@@ -137,6 +163,25 @@ export default function NewPostPage() {
         </div>
 
         {error && <p className={Styles.error}>{error}</p>}
+
+        {/* 重复内容警告 */}
+        {dupWarning && (
+          <div className={Styles.dupWarning}>
+            <div className={Styles.dupWarningContent}>
+              <p><strong>检测到重复内容</strong></p>
+              <p>您已在 {new Date(dupWarning.created_at).toLocaleString('zh-CN')} 发过标题为「{dupWarning.existing_title}」的帖子，内容相似。</p>
+              <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>确认再次发布吗？</p>
+              <div className={Styles.dupWarningActions}>
+                <button className={`${Styles.btn} ${Styles.btnOutline}`} onClick={() => setDupWarning(null)}>
+                  不发布了
+                </button>
+                <button className={`${Styles.btn} ${Styles.btnPrimary}`} onClick={handleForceSubmit}>
+                  确认发布
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className={Styles.formActions}>
           <button className={`${Styles.btn} ${Styles.btnOutline}`} onClick={() => router.push('/forum')}>
