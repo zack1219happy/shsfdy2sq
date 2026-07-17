@@ -40,8 +40,12 @@ __icon_preview.html
 *.sql
 _scripts/
 
+# Echo agent runtime state
+agents/Echo/agent.json
+
 # misc scripts
 scripts/check-login-activity.mjs
+scripts/.last-check.json
 
 # electron-builder output
 release/
