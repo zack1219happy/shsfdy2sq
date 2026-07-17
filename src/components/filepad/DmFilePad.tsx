@@ -19,7 +19,6 @@ export default function DmFilePad() {
   const router = useRouter()
   const [activeConvId, setActiveConvId] = useState<string | null>(null)
 
-  // 初始读取 + 监听浏览器前进/后退
   const syncActiveConv = useCallback(() => {
     const params = new URLSearchParams(window.location.search)
     setActiveConvId(params.get('conv'))
@@ -107,6 +106,17 @@ export default function DmFilePad() {
 
   const showUserResults = showNew && search.trim().length > 0
 
+  const navigateToConversation = useCallback(
+    (conversationId?: string, userId?: string) => {
+      const params = new URLSearchParams()
+      if (conversationId) params.set('conv', conversationId)
+      if (userId) params.set('user', userId)
+      const nextUrl = params.toString() ? `/dm?${params.toString()}` : '/dm'
+      router.push(nextUrl)
+    },
+    [router],
+  )
+
   return (
     <div className={styles.container}>
       {/* 标题 */}
@@ -164,10 +174,10 @@ export default function DmFilePad() {
                       onClick={() => {
                         if (existingConv) {
                           setActiveConvId(existingConv.conversation_id)
-                          router.push(`/dm?conv=${existingConv.conversation_id}`)
+                          navigateToConversation(existingConv.conversation_id)
                         } else {
                           setActiveConvId(null)
-                          router.push(`/dm?user=${u.id}`)
+                          navigateToConversation(undefined, u.id)
                         }
                         setShowNew(false)
                         setSearch('')
@@ -200,7 +210,7 @@ export default function DmFilePad() {
                 className={`${styles.item} ${isActive ? styles.itemActive : ''} ${conv.unread_count > 0 ? styles.itemUnread : ''}`}
                 onClick={() => {
                   setActiveConvId(conv.conversation_id)
-                  router.push(`/dm?conv=${conv.conversation_id}`)
+                  navigateToConversation(conv.conversation_id)
                 }}
               >
                 <div className={styles.itemTop}>

@@ -176,38 +176,52 @@ function DmChatView({
     canRecall: boolean
   } | null>(null)
   const listRef = useRef<HTMLDivElement | null>(null)
-  const loadedRef = useRef(false)
 
   // 加载消息
   useEffect(() => {
-    if (!conversationId || loadedRef.current) return
-    loadedRef.current = true
-    setLoading(true)
+    if (!conversationId) return
 
-    getMessages(conversationId)
-      .then((data) => {
+    let active = true
+    setLoading(true)
+    setMessages([])
+    setInput('')
+    setOtherUser(null)
+    otherUserNameRef.current = ''
+    setContextMenu(null)
+
+    const loadConversation = async () => {
+      try {
+        const [data, convs] = await Promise.all([getMessages(conversationId), getConversations()])
+        if (!active) return
+
         setMessages(data.reverse())
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false))
+
+        const conv = convs.find((c) => c.conversation_id === conversationId)
+        if (conv) {
+          setOtherUser({
+            id: conv.other_user_id,
+            username: conv.other_username,
+            name: conv.other_name,
+          })
+          otherUserNameRef.current = conv.other_username || ''
+        }
+      } catch {
+        // ignore
+      } finally {
+        if (active) setLoading(false)
+      }
+    }
+
+    loadConversation()
 
     // 标记已读，完成后通知侧边栏刷新未读数
     markConversationRead(conversationId).finally(() => {
       window.dispatchEvent(new CustomEvent('dm-new-message'))
     })
 
-    // 获取对方信息
-    getConversations().then((convs) => {
-      const conv = convs.find((c) => c.conversation_id === conversationId)
-      if (conv) {
-        setOtherUser({
-          id: conv.other_user_id,
-          username: conv.other_username,
-          name: conv.other_name,
-        })
-        otherUserNameRef.current = conv.other_username || ''
-      }
-    })
+    return () => {
+      active = false
+    }
   }, [conversationId])
 
   // Realtime 订阅
