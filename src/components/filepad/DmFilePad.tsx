@@ -112,6 +112,13 @@ export default function DmFilePad() {
       if (conversationId) params.set('conv', conversationId)
       if (userId) params.set('user', userId)
       const nextUrl = params.toString() ? `/dm?${params.toString()}` : '/dm'
+      // 先同步改写浏览器 URL + 发送自定义事件通知页面组件，
+      // 再用 router.push 同步 Next.js 路由状态。
+      // 二者缺一不可：仅 router.push 无法保证 layout→page 的同路径 query 传播。
+      if (window.location.pathname + window.location.search !== nextUrl) {
+        window.history.replaceState({}, '', nextUrl)
+        window.dispatchEvent(new CustomEvent('dm-route-change'))
+      }
       router.push(nextUrl)
     },
     [router],

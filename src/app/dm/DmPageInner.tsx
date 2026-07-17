@@ -1,7 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { getSession } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
@@ -31,11 +31,26 @@ const MarkdownEditor = dynamic(
 )
 
 export default function DmPageInner() {
+  const [activeQuery, setActiveQuery] = useState(() => window.location.search)
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const convId = searchParams.get('conv')
-  const userId = searchParams.get('user')
   const session = getSession()
+
+  // 同步 URL query — 同时处理浏览器前进/后退 (popstate) 和
+  // 从 layout 侧栏发起的导航 (dm-route-change 自定义事件)
+  useEffect(() => {
+    const syncQuery = () => setActiveQuery(window.location.search)
+    syncQuery()
+    window.addEventListener('popstate', syncQuery)
+    window.addEventListener('dm-route-change', syncQuery)
+    return () => {
+      window.removeEventListener('popstate', syncQuery)
+      window.removeEventListener('dm-route-change', syncQuery)
+    }
+  }, [])
+
+  const params = useMemo(() => new URLSearchParams(activeQuery), [activeQuery])
+  const convId = params.get('conv')
+  const userId = params.get('user')
 
   if (!session) {
     return null
