@@ -112,6 +112,10 @@ export default function DmFilePad() {
       if (conversationId) params.set('conv', conversationId)
       if (userId) params.set('user', userId)
       const nextUrl = params.toString() ? `/dm?${params.toString()}` : '/dm'
+      if (window.location.pathname + window.location.search !== nextUrl) {
+        window.history.replaceState({}, '', nextUrl)
+        window.dispatchEvent(new CustomEvent('dm-route-change'))
+      }
       router.push(nextUrl)
     },
     [router],
