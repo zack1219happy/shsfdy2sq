@@ -34,6 +34,25 @@
   color: #1a1a1a;
 }
 
+.createBtn {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--border-radius);
+  color: var(--color-text-light);
+  font-size: 0.85rem;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.createBtn:hover {
+  background: var(--color-hover-bg);
+  color: var(--color-primary);
+}
+
 /* ---- 树容器 ---- */
 
 .treeContainer {

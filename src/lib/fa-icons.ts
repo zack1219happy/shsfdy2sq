@@ -14,6 +14,7 @@ import {
   faBuilding,
   faCalendarAlt,
   faCheck,
+  faChevronDown,
   faChevronLeft,
   faChevronRight,
   faCircleExclamation,
@@ -32,6 +33,7 @@ import {
   faHome,
   faKey,
   faLightbulb,
+  faLink,
   faMapMarkedAlt,
   faNewspaper,
   faPalette,
@@ -87,6 +89,7 @@ register(faCircleExclamation)
 cssAlias(faCircleExclamation, 'exclamation-circle')
 cssAlias(faCalendarAlt, 'calendar-alt')
 register(faCheck)
+register(faChevronDown)
 register(faChevronLeft)
 register(faChevronRight)
 register(faCoins)
@@ -104,6 +107,7 @@ register(faHome)
 cssAlias(faHome, 'home')
 register(faKey)
 register(faLightbulb)
+register(faLink)
 register(faMapMarkedAlt)
 cssAlias(faMapMarkedAlt, 'map-marked-alt')
 register(faMarkdown)

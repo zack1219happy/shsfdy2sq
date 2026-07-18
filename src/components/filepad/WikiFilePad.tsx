@@ -11,6 +11,7 @@ import {
   faFolderOpen,
   faFileLines,
   faGavel,
+  faPlus,
 } from '@fortawesome/free-solid-svg-icons'
 import type { NavNode } from '@/lib/navigation'
 import { resolveIcon } from '@/lib/fa-icons'
@@ -75,6 +76,13 @@ export default function WikiFilePad({ tree }: Props) {
       <div className={styles.titleRow}>
         <FontAwesomeIcon icon={faBook} className={styles.titleIcon} />
         <span className={styles.titleText}>Wiki</span>
+        <Link
+          href="/wiki/create"
+          className={styles.createBtn}
+          title="新建页面"
+        >
+          <FontAwesomeIcon icon={faPlus} />
+        </Link>
       </div>
 
       <div className={styles.treeContainer}>

@@ -463,6 +463,7 @@ export const titleSlugMap: Record<string, string> = {
   "xyc": "people/xyc",
   "xzn": "people/xzn",
   "yjr": "people/yjr",
+  "yjy": "people/yjy",
   "zfy": "people/zfy",
   "zjs": "people/zjs",
   "zmz": "people/zmz",

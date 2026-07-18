@@ -1,0 +1,248 @@
+/* ============================================
+   Wiki 新建页面样式
+   ============================================ */
+
+.createPage {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 76px 24px 60px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.header h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ---- 路径 / Slug 输入区 ---- */
+
+.pathSection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pathLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.pathRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pathPrefix {
+  font-size: 0.9rem;
+  color: var(--color-text-light);
+  white-space: nowrap;
+  padding: 8px 0;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', monospace;
+}
+
+.slugInput {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  font-size: 0.95rem;
+  background: var(--color-bg);
+  color: var(--color-text);
+  outline: none;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', monospace;
+  transition: border-color 0.15s;
+}
+
+.slugInput:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.12);
+}
+
+.slugInput::placeholder {
+  color: var(--color-text-light);
+  font-family: inherit;
+}
+
+/* ---- 文件夹选择器 ---- */
+
+.folderSelector {
+  position: relative;
+}
+
+.folderToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  font-size: 0.82rem;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  background: var(--color-bg);
+  transition: border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.folderToggle:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.folderDropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 100;
+  min-width: 200px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.folderOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: var(--color-text);
+  transition: background 0.1s;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+
+.folderOption:hover {
+  background: var(--color-hover-bg);
+}
+
+.folderOptionActive {
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.folderOptionIcon {
+  color: var(--color-text-light);
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.folderSlug {
+  font-size: 0.75rem;
+  color: var(--color-text-light);
+  margin-left: auto;
+}
+
+/* ---- 路径预览 ---- */
+
+.pathPreview {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: var(--color-hover-bg);
+  border-radius: var(--border-radius);
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+}
+
+.pathPreviewSlug {
+  color: var(--color-primary);
+  font-weight: 600;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', monospace;
+}
+
+.previewChanged {
+  color: var(--color-primary);
+}
+
+.previewNote {
+  font-weight: 400;
+  font-size: 0.78rem;
+  color: var(--color-text-light);
+  margin-left: 6px;
+}
+
+.pathHint {
+  font-size: 0.78rem;
+  color: var(--color-text-light);
+  margin-top: 2px;
+}
+
+/* ---- 表单 ---- */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ---- 加载/错误状态 ---- */
+
+.loading {
+  text-align: center;
+  padding: 60px 16px;
+  color: var(--color-text-light);
+  font-size: 0.9rem;
+}
+
+.error {
+  padding: 12px 16px;
+  background: #fef2f2;
+  color: #dc2626;
+  border-radius: var(--border-radius);
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+}
+
+/* ---- 成功提示 ---- */
+
+.successCard {
+  text-align: center;
+  padding: 60px 24px;
+}
+
+.successIcon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+}
+
+.successTitle {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 8px;
+}
+
+.successDesc {
+  font-size: 0.9rem;
+  color: var(--color-text-light);
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
