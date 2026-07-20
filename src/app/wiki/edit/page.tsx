@@ -61,7 +61,7 @@ export default function WikiEditPage() {
     try {
       await submitWikiRevision(slug, title.trim(), content.trim())
       showWarningToast('编辑已提交审核 ✅')
-      router.push(`/wiki/${slug}`)
+      router.push(`/wiki/page?slug=${slug}`)
     } catch (e: any) {
       setError(e?.message || '提交失败')
     } finally {
@@ -102,7 +102,7 @@ export default function WikiEditPage() {
         <div style={{ display: 'flex', gap: 8 }}>
           <button
             className={`${forumStyles.btn} ${forumStyles.btnOutline}`}
-            onClick={() => router.push(`/wiki/${slug}`)}
+            onClick={() => router.push(`/wiki/page?slug=${slug}`)}
           >
             ← 返回
           </button>

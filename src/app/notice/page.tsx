@@ -106,7 +106,7 @@ export default function NoticePage() {
                 : isWish
                   ? `${basePath}/wishes/post?id=${n.page?.replace('wishes/', '') || ''}&comment=${n.comment_id || ''}&_=${Date.now()}`
                   : page
-                    ? `${basePath}/wiki/${page}/?comment=${n.comment_id}&_=${Date.now()}`
+                    ? `${basePath}/wiki/page?slug=${page}&comment=${n.comment_id}&_=${Date.now()}`
                     : undefined
 
             let label = '评论'

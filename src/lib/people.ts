@@ -88,7 +88,7 @@ export function resolvePerson(
     const displayText = entry.initials
     const href = isTeacher
       ? `${basePath}/wiki/people/teachers#${entry.initials}`
-      : `${basePath}/wiki/${(entry as PersonEntry).newSlug}`
+      : `${basePath}/wiki/page?slug=${(entry as PersonEntry).newSlug}`
     return { displayText, href, entry }
   }
 
@@ -143,4 +143,31 @@ export function resolveText(text: string, registry: PersonRegistry): string {
       }
     },
   )
+}
+
+/**
+ * 替换文本中所有 [stu:xxx] / [usr:xxx] / [tch:xxx] / [per:xxx]
+ * 为对应的 HTML 链接（<a> 标签），用于页面标题等非 markdown 路径。
+ * */
+export function resolveTextHtml(text: string, registry: PersonRegistry, basePath = ''): string {
+  return text.replace(
+    /\[(stu|usr|tch|per):([^\]]+)\]/g,
+    (_match, type, input) => {
+      try {
+        const resolved = resolvePerson(input.trim(), type.toLowerCase(), registry)
+        if (!resolved.href) return resolved.displayText // per 类型无链接
+        const href = resolved.href.startsWith('http') || resolved.href.startsWith('/')
+          ? resolved.href
+          : basePath + '/' + resolved.href
+        return `<a href="${href}" class="person-link person-${type}">${escHtml(resolved.displayText)}</a>`
+      } catch {
+        return _match // 解析失败则保留原样
+      }
+    },
+  )
+}
+
+/** 简单的 HTML 转义 */
+function escHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }

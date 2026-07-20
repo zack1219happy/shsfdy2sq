@@ -256,7 +256,7 @@ function replaceWikiLinks(html: string, currentSlug: string): string {
         ? '#'
         : slug === 'home'
           ? `${base}/wiki/`
-          : `${base}/wiki/${slug}`
+          : `${base}/wiki/page?slug=${slug}`
       return `<a href="${href}" class="wiki-link">${(label || title).trim()}</a>`
     }
   )

@@ -237,7 +237,7 @@ export function replaceWikiLinks(
         (_match, title, label) => {
           const slug = titleSlugMap[title.trim()]
           if (!slug) return _match
-          const href = slug === 'home' ? `${bp}/wiki/` : `${bp}/wiki/${slug}`
+          const href = slug === 'home' ? `${bp}/wiki/` : `${bp}/wiki/page?slug=${slug}`
           return `<a href="${href}" class="wiki-link">${(label || title).trim()}</a>`
         },
       )

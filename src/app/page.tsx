@@ -138,7 +138,7 @@ export default function HomePage() {
                 {randomPages.map((page) => (
                   <Link
                     key={page.slug}
-                    href={`/wiki/${page.slug}`}
+                    href={`/wiki/page?slug=${page.slug}`}
                     className={styles.listItem}
                   >
                     <span className={styles.wikiTitle}>· {page.title}</span>
