@@ -30,17 +30,19 @@ interface Props {
 const norm = (p: string) => p.replace(/\/+$/, '') || '/'
 
 /** 从 Supabase 返回的页面列表构建导航树（客户端版） */
-function buildNavTree(pages: { slug: string; title: string }[]): NavNode[] {
+function buildNavTree(pages: { slug: string; title: string; frontmatter: Record<string, unknown> }[]): NavNode[] {
   const rootMap = new Map<string, NavNode>()
   const childrenMap = new Map<string, NavNode[]>()
 
   // 处理所有页面
   for (const p of pages) {
     const segments = p.slug.split('/')
+    const icon = (p.frontmatter?.icon as string) || undefined
     const node: NavNode = {
       id: segments[segments.length - 1],
       title: resolveText(p.title, personRegistry),
       type: 'page',
+      icon,
       hasContent: true,
       pathKey: p.slug,
     }
@@ -105,7 +107,7 @@ export default function WikiFilePad(_props: Props) {
   const rawPathname = usePathname()
   const pathname = norm(rawPathname)
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
-  const [pages, setPages] = useState<{ slug: string; title: string }[] | null>(null)
+  const [pages, setPages] = useState<{ slug: string; title: string; frontmatter: Record<string, unknown> }[] | null>(null)
 
   const [isAdmin, setIsAdmin] = useState(false)
 
@@ -119,7 +121,7 @@ export default function WikiFilePad(_props: Props) {
   // 客户端拉取所有 wiki 页面构建导航树（实时同步 DB 的最新状态）
   useEffect(() => {
     fetchAllWikiPages()
-      .then((all) => setPages(all.map((p) => ({ slug: p.slug, title: p.title }))))
+      .then((all) => setPages(all.map((p) => ({ slug: p.slug, title: p.title, frontmatter: p.frontmatter ?? {} }))))
       .catch(() => setPages([]))
   }, [])
 

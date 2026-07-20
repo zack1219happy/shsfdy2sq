@@ -32,6 +32,7 @@ import {
   faGift,
   faHome,
   faKey,
+  faLaughBeam,
   faLightbulb,
   faLink,
   faMapMarkedAlt,
@@ -106,6 +107,8 @@ register(faGift)
 register(faHome)
 cssAlias(faHome, 'home')
 register(faKey)
+register(faLaughBeam)
+cssAlias(faLaughBeam, 'laugh-beam')
 register(faLightbulb)
 register(faLink)
 register(faMapMarkedAlt)
