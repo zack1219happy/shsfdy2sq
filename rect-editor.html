@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>矩形编辑器 · Rectangle Canvas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300..700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f3efe8;
+  --surface: #ffffff;
+  --toolbar: #1a1a2e;
+  --text: #2d2d3a;
+  --text-light: #8a8a9a;
+  --text-on-dark: #e8e4de;
+  --accent: #e86a58;
+  --accent-hover: #d45543;
+  --border-radius: 8px;
+  --border-radius-lg: 14px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.08);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.12);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,.15);
+  --font: 'DM Sans', system-ui, -apple-system, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ── Toolbar ── */
+header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  background: var(--toolbar);
+  color: var(--text-on-dark);
+  flex-shrink: 0;
+  z-index: 100;
+}
+header h1 {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -.02em;
+  margin-right: auto;
+  opacity: .85;
+}
+.toolbar-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.toolbar-hint {
+  font-size: 12px;
+  opacity: .45;
+  margin-right: 12px;
+}
+.toolbar-hint kbd {
+  display: inline-block;
+  padding: 0 5px;
+  font-size: 11px;
+  font-family: var(--font);
+  background: rgba(255,255,255,.12);
+  border-radius: 4px;
+  line-height: 1.6;
+  margin: 0 1px;
+}
+.btn {
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 7px 18px;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all .15s ease;
+}
+.btn-primary {
+  background: var(--accent);
+  color: white;
+}
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-secondary {
+  background: rgba(255,255,255,.1);
+  color: var(--text-on-dark);
+}
+.btn-secondary:hover { background: rgba(255,255,255,.18); }
+.toolbar-count {
+  font-size: 12px;
+  opacity: .5;
+  margin-left: 4px;
+}
+
+/* ── Canvas ── */
+main {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+  background-color: #faf8f4;
+  background-image: radial-gradient(circle, #d6d0c4 .8px, transparent .8px);
+  background-size: 24px 24px;
+}
+
+#canvasArea {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Rectangles ── */
+.rect {
+  position: absolute;
+  border-radius: var(--border-radius);
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: box-shadow .15s ease;
+  box-shadow: var(--shadow-sm);
+  min-width: 20px;
+  min-height: 20px;
+  opacity: .6;
+}
+.rect:hover {
+  box-shadow: var(--shadow-md);
+}
+.rect.selected {
+  box-shadow: var(--shadow-md);
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.rect.dragging {
+  cursor: grabbing;
+  box-shadow: var(--shadow-lg);
+  z-index: 9999 !important;
+  transition: none;
+  opacity: 1;
+}
+.rect .rect-label {
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 8px 10px;
+  text-align: center;
+  word-break: break-word;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  max-width: 100%;
+  pointer-events: none;
+  color: rgba(0,0,0,.75);
+}
+.rect .rect-placeholder {
+  font-size: 11px;
+  color: rgba(0,0,0,.2);
+  pointer-events: none;
+  display: none;
+}
+.rect.selected .rect-placeholder { display: block; }
+
+/* ── Resize Handles ── */
+.handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: white;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity .12s ease, transform .12s ease;
+  transform: scale(.8);
+}
+.rect.selected .handle { opacity: 1; transform: scale(1); }
+.handle:hover { transform: scale(1.3) !important; background: var(--accent); }
+
+.handle-nw { top: -6px; left: -6px; cursor: nw-resize; }
+.handle-n  { top: -6px; left: 50%; margin-left: -6px; cursor: n-resize; }
+.handle-ne { top: -6px; right: -6px; cursor: ne-resize; }
+.handle-e  { top: 50%; margin-top: -6px; right: -6px; cursor: e-resize; }
+.handle-se { bottom: -6px; right: -6px; cursor: se-resize; }
+.handle-s  { bottom: -6px; left: 50%; margin-left: -6px; cursor: s-resize; }
+.handle-sw { bottom: -6px; left: -6px; cursor: sw-resize; }
+.handle-w  { top: 50%; margin-top: -6px; left: -6px; cursor: w-resize; }
+
+/* ── Modal ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.35);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity .2s ease;
+  pointer-events: none;
+}
+.modal-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+.modal-card {
+  background: var(--surface);
+  border-radius: var(--border-radius-lg);
+  padding: 28px 32px;
+  min-width: 360px;
+  max-width: 540px;
+  width: calc(100% - 48px);
+  box-shadow: var(--shadow-lg);
+  transform: scale(.96) translateY(8px);
+  transition: transform .2s ease;
+}
+.modal-overlay.open .modal-card {
+  transform: scale(1) translateY(0);
+}
+.modal-card h2 {
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 18px;
+  letter-spacing: -.01em;
+}
+.modal-card textarea {
+  width: 100%;
+  font-family: var(--font);
+  font-size: 14px;
+  padding: 12px 14px;
+  border: 1.5px solid #ddd;
+  border-radius: var(--border-radius);
+  resize: vertical;
+  min-height: 100px;
+  outline: none;
+  transition: border-color .15s ease;
+  line-height: 1.5;
+}
+.modal-card textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(232,106,88,.15);
+}
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+.modal-actions .btn { padding: 8px 22px; }
+
+/* ── Export Modal ── */
+#exportOutput {
+  background: #1a1a2e;
+  color: #cdd6f4;
+  font-family: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 20px;
+  border-radius: var(--border-radius);
+  max-height: 400px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.copy-feedback {
+  font-size: 13px;
+  color: #2ecc71;
+  opacity: 0;
+  transition: opacity .2s ease;
+  margin-right: auto;
+}
+.copy-feedback.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- ─── Toolbar ─── -->
+<header>
+  <h1>▣ 矩形编辑器</h1>
+  <span class="toolbar-hint">双击批注 · 拖拽缩放 · <kbd>C</kbd>复制 <kbd>B</kbd><kbd>F</kbd>层</span>
+  <div class="toolbar-actions">
+    <span class="toolbar-count" id="countDisplay">0 个</span>
+    <button class="btn btn-primary" id="addBtn">＋ 添加矩形</button>
+    <button class="btn btn-secondary" id="exportBtn">⬇ 导出</button>
+  </div>
+</header>
+
+<!-- ─── Canvas ─── -->
+<main id="canvas">
+  <div id="canvasArea"></div>
+</main>
+
+<!-- ─── Annotation Modal ─── -->
+<div class="modal-overlay" id="annotationModal">
+  <div class="modal-card">
+    <h2>✎ 编辑批注</h2>
+    <textarea id="annotationInput" placeholder="输入批注文字……"></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="annotationCancel">取消</button>
+      <button class="btn btn-primary" id="annotationSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Export Modal ─── -->
+<div class="modal-overlay" id="exportModal">
+  <div class="modal-card">
+    <h2>⬇ 导出 JSON</h2>
+    <pre id="exportOutput"></pre>
+    <div class="modal-actions">
+      <span class="copy-feedback" id="copyFeedback">✓ 已复制到剪贴板</span>
+      <button class="btn btn-secondary" id="exportClose">关闭</button>
+      <button class="btn btn-primary" id="exportCopy">📋 复制 JSON</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── Colors ──────────────────────────────────────────────
+const COLORS = [
+  '#FFD6A5', '#FDFFB6', '#CAFFBF', '#9BF6FF', '#A0C4FF',
+  '#BDB2FF', '#FFC6FF', '#FFADAD', '#A7D0CD', '#E4C1F9',
+  '#F9C6D2', '#D0E1D5', '#F0CAA3', '#C9E4DE', '#FBC8D5',
+];
+
+// ─── State ───────────────────────────────────────────────
+const state = {
+  rects: [],
+  selectedId: null,
+  nextId: 1,
+  zCounter: 1,
+  drag: null,    // { type:'move'|'resize', id, mx,my, rx,ry, rw,rh, handle? }
+};
+
+// ─── DOM refs ────────────────────────────────────────────
+const canvasArea = document.getElementById('canvasArea');
+const canvas = document.getElementById('canvas');
+const countDisplay = document.getElementById('countDisplay');
+
+// ─── Helpers ─────────────────────────────────────────────
+function randomColor() {
+  return COLORS[Math.floor(Math.random() * COLORS.length)];
+}
+
+function getRect(id) {
+  return state.rects.find(r => r.id === id);
+}
+
+function getCanvasRect() {
+  return canvasArea.getBoundingClientRect();
+}
+
+function getNextPos() {
+  const n = state.rects.length;
+  const offset = 60 + ((n * 37) % 300);
+  return { x: offset, y: offset };
+}
+
+// ─── Auto-save (localStorage) ────────────────────────────
+const STORAGE_KEY = 'rect-editor-state';
+
+function saveState() {
+  try {
+    const data = {
+      rects: state.rects.map(r => ({ ...r })),
+      nextId: state.nextId,
+      zCounter: state.zCounter,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    // storage full or unavailable — silently ignore
+  }
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (!data.rects || !data.rects.length) return false;
+    state.rects = data.rects;
+    state.nextId = data.nextId || 1;
+    state.zCounter = data.zCounter || 1;
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+// ─── Layer ordering ──────────────────────────────────────
+function moveLayer(id, direction) {
+  const sorted = [...state.rects].sort((a, b) => a.z - b.z);
+  const idx = sorted.findIndex(r => r.id === id);
+  if (idx === -1) return;
+  const newIdx = idx + direction;
+  if (newIdx < 0 || newIdx >= sorted.length) return;
+  const cur = sorted[idx];
+  const nbr = sorted[newIdx];
+  const tmp = cur.z;
+  cur.z = nbr.z;
+  nbr.z = tmp;
+  // 更新 DOM z-index
+  state.rects.forEach(r => {
+    const el = canvasArea.querySelector(`[data-id="${CSS.escape(r.id)}"]`);
+    if (el) el.style.zIndex = r.z;
+  });
+  saveState();
+}
+
+// ─── Selection ───────────────────────────────────────────
+function selectRect(id) {
+  state.selectedId = id;
+  const r = getRect(id);
+  if (r) {
+    r.z = ++state.zCounter;
+    // 更新 DOM 层级保证选中矩形在最前
+    const el = canvasArea.querySelector(`[data-id="${CSS.escape(id)}"]`);
+    if (el) el.style.zIndex = r.z;
+  }
+  updateClasses();
+}
+
+function deselect() {
+  state.selectedId = null;
+  updateClasses();
+}
+
+function updateClasses() {
+  canvasArea.querySelectorAll('.rect').forEach(el => {
+    el.classList.toggle('selected', el.dataset.id === state.selectedId);
+  });
+}
+
+// ─── Rendering ───────────────────────────────────────────
+function render() {
+  // simple diff: if count matches IDs match, just reposition; else rebuild
+  const existingEls = canvasArea.querySelectorAll('.rect');
+  if (existingEls.length !== state.rects.length) {
+    rebuildDOM();
+    return;
+  }
+  // Check all IDs match
+  const ids = new Set(state.rects.map(r => r.id));
+  const allMatch = Array.from(existingEls).every(el => ids.has(el.dataset.id));
+  if (!allMatch) {
+    rebuildDOM();
+    return;
+  }
+  // Just reposition
+  state.rects.forEach(rect => {
+    const el = canvasArea.querySelector(`[data-id="${CSS.escape(rect.id)}"]`);
+    if (el) applyStyle(el, rect);
+  });
+  updateClasses();
+  updateCount();
+}
+
+function rebuildDOM() {
+  canvasArea.innerHTML = '';
+  state.rects.forEach(rect => {
+    const el = document.createElement('div');
+    el.className = 'rect';
+    el.dataset.id = rect.id;
+    el.style.zIndex = rect.z || 0;
+    applyStyle(el, rect);
+
+    // Annotation label
+    if (rect.annotation) {
+      const label = document.createElement('span');
+      label.className = 'rect-label';
+      label.textContent = rect.annotation;
+      el.appendChild(label);
+    } else {
+      const placeholder = document.createElement('span');
+      placeholder.className = 'rect-placeholder';
+      placeholder.textContent = '双击批注';
+      el.appendChild(placeholder);
+    }
+
+    // Resize handles
+    ['nw','n','ne','e','se','s','sw','w'].forEach(h => {
+      const handle = document.createElement('div');
+      handle.className = `handle handle-${h}`;
+      handle.dataset.handle = h;
+      el.appendChild(handle);
+    });
+
+    canvasArea.appendChild(el);
+  });
+  updateClasses();
+  updateCount();
+}
+
+function applyStyle(el, rect) {
+  el.style.left = rect.x + 'px';
+  el.style.top = rect.y + 'px';
+  el.style.width = rect.w + 'px';
+  el.style.height = rect.h + 'px';
+  el.style.background = rect.color;
+}
+
+function updateCount() {
+  countDisplay.textContent = state.rects.length + ' 个';
+}
+
+// ─── Add Rect ────────────────────────────────────────────
+function addRect(x, y) {
+  const canvasRect = canvasArea.getBoundingClientRect();
+  const pos = getNextPos();
+  const rect = {
+    id: 'r' + (state.nextId++),
+    x: x != null ? x : pos.x,
+    y: y != null ? y : pos.y,
+    w: 160,
+    h: 110,
+    color: randomColor(),
+    annotation: '',
+    z: ++state.zCounter,
+  };
+  state.rects.push(rect);
+  render();
+  selectRect(rect.id);
+  saveState();
+  return rect;
+}
+
+// ─── Drag: Move ──────────────────────────────────────────
+function startMove(e, id) {
+  const rect = getRect(id);
+  state.drag = {
+    type: 'move',
+    id,
+    mx: e.clientX,
+    my: e.clientY,
+    rx: rect.x,
+    ry: rect.y,
+  };
+  const el = canvasArea.querySelector(`[data-id="${CSS.escape(id)}"]`);
+  if (el) el.classList.add('dragging');
+}
+
+// ─── Drag: Resize ────────────────────────────────────────
+function startResize(e, id, handle) {
+  const rect = getRect(id);
+  state.drag = {
+    type: 'resize',
+    id,
+    handle,
+    mx: e.clientX,
+    my: e.clientY,
+    rx: rect.x,
+    ry: rect.y,
+    rw: rect.w,
+    rh: rect.h,
+  };
+}
+
+// ─── Drag: End ───────────────────────────────────────────
+function endDrag() {
+  if (!state.drag) return;
+  const el = canvasArea.querySelector(`[data-id="${CSS.escape(state.drag.id)}"]`);
+  if (el) el.classList.remove('dragging');
+  state.drag = null;
+  saveState(); // 拖拽/缩放结束自动保存
+}
+
+// ─── Apply rect position during drag ─────────────────────
+function applyRect(rect) {
+  const el = canvasArea.querySelector(`[data-id="${CSS.escape(rect.id)}"]`);
+  if (el) {
+    el.style.left = rect.x + 'px';
+    el.style.top = rect.y + 'px';
+    el.style.width = rect.w + 'px';
+    el.style.height = rect.h + 'px';
+    el.style.zIndex = rect.z || 0;
+  }
+}
+
+// ─── Mouse Events ────────────────────────────────────────
+canvasArea.addEventListener('mousedown', (e) => {
+  const handle = e.target.closest('[data-handle]');
+  if (handle) {
+    const rectEl = handle.closest('.rect');
+    if (!rectEl) return;
+    const id = rectEl.dataset.id;
+    const h = handle.dataset.handle;
+    selectRect(id);
+    startResize(e, id, h);
+    e.preventDefault();
+    return;
+  }
+
+  const rectEl = e.target.closest('.rect');
+  if (rectEl) {
+    const id = rectEl.dataset.id;
+    selectRect(id);
+    startMove(e, id);
+    e.preventDefault();
+    return;
+  }
+
+  deselect();
+});
+
+document.addEventListener('mousemove', (e) => {
+  const d = state.drag;
+  if (!d) return;
+
+  e.preventDefault();
+  const rect = getRect(d.id);
+  if (!rect) return;
+
+  const dx = e.clientX - d.mx;
+  const dy = e.clientY - d.my;
+
+  if (d.type === 'move') {
+    rect.x = d.rx + dx;
+    rect.y = d.ry + dy;
+    applyRect(rect);
+  } else if (d.type === 'resize') {
+    let { rx, ry, rw, rh } = d;
+    let nx = rx, ny = ry, nw = rw, nh = rh;
+
+    if (d.handle.includes('e')) nw = Math.max(20, rw + dx);
+    if (d.handle.includes('w')) {
+      nw = Math.max(20, rw - dx);
+      nx = rx + rw - nw;
+    }
+    if (d.handle.includes('s')) nh = Math.max(20, rh + dy);
+    if (d.handle.includes('n')) {
+      nh = Math.max(20, rh - dy);
+      ny = ry + rh - nh;
+    }
+
+    rect.x = nx;
+    rect.y = ny;
+    rect.w = nw;
+    rect.h = nh;
+    applyRect(rect);
+  }
+});
+
+document.addEventListener('mouseup', () => {
+  endDrag();
+});
+
+// ─── Double-click: annotation ────────────────────────────
+let annotatingId = null;
+const annotationModal = document.getElementById('annotationModal');
+const annotationInput = document.getElementById('annotationInput');
+const annotationSave = document.getElementById('annotationSave');
+const annotationCancel = document.getElementById('annotationCancel');
+
+canvasArea.addEventListener('dblclick', (e) => {
+  const rectEl = e.target.closest('.rect');
+  if (!rectEl) return;
+  const id = rectEl.dataset.id;
+  openAnnotation(id);
+});
+
+function openAnnotation(id) {
+  const rect = getRect(id);
+  if (!rect) return;
+  annotatingId = id;
+  annotationInput.value = rect.annotation || '';
+  annotationModal.classList.add('open');
+  setTimeout(() => annotationInput.focus(), 100);
+}
+
+function saveAnnotation() {
+  if (!annotatingId) return;
+  const rect = getRect(annotatingId);
+  if (rect) {
+    rect.annotation = annotationInput.value.trim();
+  }
+  closeAnnotation();
+  // annotation content changed — rebuild DOM to show new text
+  rebuildDOM();
+  updateClasses();
+  updateCount();
+  saveState();
+}
+
+function closeAnnotation() {
+  annotationModal.classList.remove('open');
+  annotatingId = null;
+}
+
+annotationSave.addEventListener('click', saveAnnotation);
+annotationCancel.addEventListener('click', closeAnnotation);
+annotationInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeAnnotation();
+  if (e.key === 'Enter' && e.ctrlKey) saveAnnotation();
+});
+// Click backdrop to close
+annotationModal.addEventListener('click', (e) => {
+  if (e.target === annotationModal) closeAnnotation();
+});
+
+// ─── Export ───────────────────────────────────────────────
+const exportModal = document.getElementById('exportModal');
+const exportOutput = document.getElementById('exportOutput');
+const exportCopy = document.getElementById('exportCopy');
+const exportClose = document.getElementById('exportClose');
+const copyFeedback = document.getElementById('copyFeedback');
+
+document.getElementById('exportBtn').addEventListener('click', openExport);
+exportClose.addEventListener('click', () => exportModal.classList.remove('open'));
+exportModal.addEventListener('click', (e) => {
+  if (e.target === exportModal) exportModal.classList.remove('open');
+});
+
+function openExport() {
+  const data = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    canvas: {
+      width: canvasArea.scrollWidth,
+      height: canvasArea.scrollHeight,
+    },
+    rectangles: state.rects.map(r => ({
+      id: r.id,
+      x: Math.round(r.x),
+      y: Math.round(r.y),
+      width: Math.round(r.w),
+      height: Math.round(r.h),
+      color: r.color,
+      annotation: r.annotation || '',
+    })),
+  };
+  exportOutput.textContent = JSON.stringify(data, null, 2);
+  copyFeedback.classList.remove('show');
+  exportModal.classList.add('open');
+}
+
+exportCopy.addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(exportOutput.textContent);
+    copyFeedback.classList.add('show');
+    setTimeout(() => copyFeedback.classList.remove('show'), 2000);
+  } catch {
+    // fallback: select text
+    const range = document.createRange();
+    range.selectNodeContents(exportOutput);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+});
+
+// ─── Keyboard shortcuts ──────────────────────────────────
+document.addEventListener('keydown', (e) => {
+  if (annotationModal.classList.contains('open')) return;
+  if (exportModal.classList.contains('open')) return;
+  // Don't handle when typing in inputs
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+  // Delete selected rect
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    if (!state.selectedId) return;
+    state.rects = state.rects.filter(r => r.id !== state.selectedId);
+    state.selectedId = null;
+    render();
+    saveState();
+    e.preventDefault();
+    return;
+  }
+
+  // C — 复制矩形（右下偏移）
+  if (e.key === 'c' || e.key === 'C') {
+    if (!state.selectedId) return;
+    const src = getRect(state.selectedId);
+    if (!src) return;
+    const dup = {
+      id: 'r' + (state.nextId++),
+      x: src.x + 24,
+      y: src.y + 24,
+      w: src.w,
+      h: src.h,
+      color: randomColor(),
+      annotation: '',
+      z: ++state.zCounter,
+    };
+    state.rects.push(dup);
+    render();
+    selectRect(dup.id);
+    saveState();
+    e.preventDefault();
+    return;
+  }
+
+  // F — 向前一层（提高层级，显示在前面）
+  if (e.key === 'f' || e.key === 'F') {
+    if (!state.selectedId) return;
+    moveLayer(state.selectedId, 1);
+    e.preventDefault();
+    return;
+  }
+
+  // B — 向后一层（降低层级，显示在后面）
+  if (e.key === 'b' || e.key === 'B') {
+    if (!state.selectedId) return;
+    moveLayer(state.selectedId, -1);
+    e.preventDefault();
+    return;
+  }
+});
+
+// ─── Init ────────────────────────────────────────────────
+document.getElementById('addBtn').addEventListener('click', () => addRect());
+
+function fitCanvas() {
+  const rect = canvas.getBoundingClientRect();
+  canvasArea.style.width = rect.width + 'px';
+  canvasArea.style.height = rect.height + 'px';
+}
+window.addEventListener('resize', fitCanvas);
+fitCanvas();
+
+// 恢复上次会话或创建示例矩形
+const restored = loadState();
+if (restored) {
+  rebuildDOM();
+  // 恢复 DOM z-index
+  state.rects.forEach(r => {
+    const el = canvasArea.querySelector(`[data-id="${CSS.escape(r.id)}"]`);
+    if (el) el.style.zIndex = r.z;
+  });
+} else {
+  addRect(140, 100);
+}
+</script>
+</body>
+</html>
