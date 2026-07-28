@@ -37,7 +37,7 @@ jobs:
         run: npm ci
 
       - name: Scan markdown files for new icons
-        run: node scripts/scan-icons.js
+        run: node build_scripts/scan-icons.js
 
       - name: Build static export
         run: npm run export
