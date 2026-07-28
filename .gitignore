@@ -43,9 +43,9 @@ _scripts/
 # Echo agent runtime state
 agents/Echo/agent.json
 
-# misc scripts
-scripts/check-login-activity.mjs
-scripts/.last-check.json
+# dev / build scripts (非运行时，含凭据风险)
+scripts/
+agents/
 
 # electron-builder output
 release/
