@@ -329,7 +329,7 @@ function normalizeWikiComments(raw: WikiComment[]): UnifiedComment[] {
 
 const MarkdownEditor = dynamic(
   () => import('@/components/MarkdownEditor').then((m) => m.MarkdownEditor),
-  { ssr: false },
+  { ssr: false, loading: () => <div className={commentStyles.editorLoading}>加载编辑器…</div> },
 )
 
 /* ---------- CommentForm ---------- */

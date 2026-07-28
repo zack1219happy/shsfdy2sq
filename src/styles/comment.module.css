@@ -32,6 +32,13 @@
   overflow: hidden;
 }
 
+.editorLoading {
+  padding: 40px 16px;
+  text-align: center;
+  color: var(--color-text-light);
+  font-size: 0.85rem;
+}
+
 .editorWrap .editorWrapInner {
   border: none !important;
   border-radius: 0 !important;

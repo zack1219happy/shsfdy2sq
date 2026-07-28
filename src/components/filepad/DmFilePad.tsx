@@ -191,7 +191,7 @@ export default function DmFilePad() {
                       }}
                     >
                       <span className={styles.userItemName}>
-                        <UserName username={u.username} />
+                        <UserName username={u.username} link={false} />
                         {existingConv && (
                           <span className={styles.userItemHint}>已有对话</span>
                         )}
@@ -222,7 +222,7 @@ export default function DmFilePad() {
               >
                 <div className={styles.itemTop}>
                   <span className={styles.itemName}>
-                    <UserName username={conv.other_username} />
+                    <UserName username={conv.other_username} link={false} />
                     {conv.unread_count > 0 && (
                       <span className={styles.unreadBadge}>
                         {conv.unread_count > 99 ? '99+' : conv.unread_count}
