@@ -44,12 +44,13 @@ export function UserName({ username, className, hideTags, link = true }: Props) 
     return <span className={className}>{content}</span>
   }
 
-  const href = `${BASE_PATH}/user/mypage?user=${encodeURIComponent(username)}`
+  // router.push 自动处理 basePath，不要加 BASE_PATH 前缀
+  const path = `/user/mypage?user=${encodeURIComponent(username)}`
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation()
     window.dispatchEvent(new CustomEvent('mypage-route-change'))
-    router.push(href)
+    router.push(path)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -57,7 +58,7 @@ export function UserName({ username, className, hideTags, link = true }: Props) 
       e.preventDefault()
       e.stopPropagation()
       window.dispatchEvent(new CustomEvent('mypage-route-change'))
-      router.push(href)
+      router.push(path)
     }
   }
 
