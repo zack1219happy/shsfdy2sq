@@ -625,3 +625,10 @@ export async function fetchUserEquipped(): Promise<UserDecoration> {
   if (error) return { color: null, tags: [] }
   return (data as UserDecoration) ?? { color: null, tags: [] }
 }
+
+/** 获取当前用户的独有标签（非 shop 商品） */
+export async function fetchUserExclusiveTags(): Promise<TagData[]> {
+  const { data, error } = await supabase.rpc('get_user_exclusive_tags')
+  if (error) return []
+  return (data ?? []) as TagData[]
+}

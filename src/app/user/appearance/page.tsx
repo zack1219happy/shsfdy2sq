@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import FaIcon from '@/components/FaIcon'
 import { getSession } from '@/lib/auth'
-import { fetchUserPurchases, equipColor, equipTags, fetchUserEquipped } from '@/lib/gist-api'
+import { fetchUserPurchases, equipColor, equipTags, fetchUserEquipped, fetchUserExclusiveTags } from '@/lib/gist-api'
 import type { UserPurchase, TagData } from '@/types/gist'
 import { BUILTIN_TAGS, CUSTOM_TAG_VALUE } from '@/types/gist'
 import styles from '@/styles/points.module.css'
@@ -20,6 +20,9 @@ export default function AppearancePage() {
 
   // 已购买的商品
   const [purchases, setPurchases] = useState<UserPurchase[]>([])
+
+  // 独有标签（非 shop 商品）
+  const [exclusiveTags, setExclusiveTags] = useState<TagData[]>([])
 
   // 当前装备
   const [currentColor, setCurrentColor] = useState<string | null>(null)
@@ -43,11 +46,13 @@ export default function AppearancePage() {
     setPageState('loading')
     setErrorMsg('')
     try {
-      const [purchasesData, equipped] = await Promise.all([
+      const [purchasesData, equipped, exclusive] = await Promise.all([
         fetchUserPurchases(),
         fetchUserEquipped(),
+        fetchUserExclusiveTags(),
       ])
       setPurchases(purchasesData)
+      setExclusiveTags(exclusive)
       setCurrentColor(equipped.color)
       setCurrentTags(equipped.tags.map(t => t.v))
 
@@ -287,7 +292,7 @@ export default function AppearancePage() {
         <h3 className={styles.appearanceSectionTitle}>
           <FaIcon name="star" /> 标签（最多 3 个，已选 {currentTags.length}/3）
         </h3>
-        {builtinTags.length === 0 && ownedTags.length === 0 && !customTagPurchase ? (
+        {builtinTags.length === 0 && ownedTags.length === 0 && exclusiveTags.length === 0 && !customTagPurchase ? (
           <div className={styles.appearanceEmpty}>
             还没有标签哦，<Link href="/user/shop" className={styles.appearanceEmptyLink}>去商城看看</Link>
           </div>
@@ -317,6 +322,22 @@ export default function AppearancePage() {
                   onClick={() => !atLimit && handleTagToggle(item.value)}
                 >
                   {item.name}
+                  {isActive && ' ✓'}
+                </span>
+              )
+            })}
+
+            {/* 独有标签（非 shop 商品，需手动装备） */}
+            {exclusiveTags.map((tag, i) => {
+              const isActive = currentTags.includes(tag.v)
+              const atLimit = !isActive && currentTags.length >= 3
+              return (
+                <span
+                  key={`exclusive-${i}`}
+                  className={`${styles.appearanceTagItem} ${isActive ? styles.appearanceTagItemActive : ''} ${atLimit ? styles.appearanceTagItemDisabled : ''}`}
+                  onClick={() => !atLimit && handleTagToggle(tag.v)}
+                >
+                  {tag.v}
                   {isActive && ' ✓'}
                 </span>
               )
@@ -424,6 +445,11 @@ function getTagBuiltinStyle(text: string): CSSProperties | null {
     color: '#fff',
     fontWeight: 700,
     textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+  }
+  if (text === '社区提案者') return {
+    background: 'linear-gradient(135deg, #ef4444, #3b82f6)',
+    color: '#ffd700',
+    fontWeight: 600,
   }
   return null
 }

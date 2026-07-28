@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faUser, faCoins, faGift, faPalette, faCog } from '@fortawesome/free-solid-svg-icons'
+import { faUser, faHome, faCoins, faGift, faPalette, faCog } from '@fortawesome/free-solid-svg-icons'
 import styles from '@/styles/filepad.module.css'
 
 export default function UserFilePad() {
@@ -13,6 +13,11 @@ export default function UserFilePad() {
         <span className={styles.titleText}>用户</span>
       </div>
       <div className={styles.treeContainer}>
+        <Link href="/user/mypage" className={styles.treePage}>
+          <span className={styles.chevronSlot} />
+          <FontAwesomeIcon icon={faHome} className={styles.treeIcon} />
+          <span className={styles.treeLabel}>用户主页</span>
+        </Link>
         <Link href="/user/points" className={styles.treePage}>
           <span className={styles.chevronSlot} />
           <FontAwesomeIcon icon={faCoins} className={styles.treeIcon} />
