@@ -29,6 +29,7 @@ export default function NoticePage() {
         forum_post_update: '关注更新',
         forum_like: '赞',
         plaza_like: '赞',
+        plaza_tip: '投币',
         wish_reply: '工单回复',
         wish_status_update: '工单动态',
       } as Record<string, string>)[typeFilter] ?? '通知'
@@ -97,7 +98,7 @@ export default function NoticePage() {
         <div className={styles.noticeList}>
           {filtered.map((n) => {
             const isForum = n.type === 'forum_like' || (n.type?.startsWith('forum_') && n.page?.startsWith('forum/'))
-            const isPlaza = n.type === 'plaza_like' || (n.type?.startsWith('forum_') && n.page?.startsWith('plaza/'))
+            const isPlaza = n.type === 'plaza_like' || n.type === 'plaza_tip' || (n.type?.startsWith('plaza_') && n.page?.startsWith('plaza/'))
             const isWish = n.type === 'wish_reply' || n.type === 'wish_status_update'
             const basePath = BASE_PATH
             const page = n.page ? (registry.oldToNewSlug[n.page] ?? n.page) : undefined
@@ -119,6 +120,7 @@ export default function NoticePage() {
               else if (n.type === 'forum_post_update') label = '关注更新'
             } else if (isPlaza) {
               if (n.type === 'plaza_like') label = '赞'
+              else if (n.type === 'plaza_tip') label = '投币'
               else if (n.type === 'forum_reply') label = '文章回复'
               else if (n.type === 'forum_own_post') label = '文章动态'
               else label = '文章通知'

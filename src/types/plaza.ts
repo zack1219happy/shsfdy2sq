@@ -19,6 +19,8 @@ export interface PlazaArticle {
   updated_at: string
   /** 是否已被管理员奖励积分 */
   is_awarded?: boolean
+  /** 累计收到投币积分 */
+  tip_count?: number
 }
 
 export interface PlazaArticleDetail extends PlazaArticle {

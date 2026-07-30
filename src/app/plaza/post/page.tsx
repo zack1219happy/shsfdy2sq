@@ -19,6 +19,7 @@ import {
   deletePlazaComment,
   fetchPlazaCategories,
   awardPlazaArticlePoints,
+  tipPlazaArticle,
 } from '@/lib/gist-api'
 import { loadPinyinInitialsFromDB } from '@/lib/people'
 import TableOfContents from '@/components/TableOfContents'
@@ -149,6 +150,35 @@ export default function PlazaArticlePage() {
       setAwardSubmitting(false)
     }
   }
+
+  // 投币弹窗
+  const [showTipModal, setShowTipModal] = useState(false)
+  const [tipAmount, setTipAmount] = useState(5)
+  const [tipCustom, setTipCustom] = useState(false)
+  const [tipSubmitting, setTipSubmitting] = useState(false)
+  const [tipResult, setTipResult] = useState<{ success: boolean; text: string } | null>(null)
+
+  const handleTipSubmit = async () => {
+    if (!article || tipAmount <= 0) return
+    setTipSubmitting(true)
+    setTipResult(null)
+    try {
+      const ok = await tipPlazaArticle(article.id, tipAmount)
+      if (ok) {
+        setTipResult({ success: true, text: `成功投币 ${tipAmount} 积分` })
+        setArticle((prev) => prev ? { ...prev, tip_count: (prev.tip_count ?? 0) + tipAmount } : prev)
+        setTimeout(() => setShowTipModal(false), 1000)
+      } else {
+        setTipResult({ success: false, text: '投币失败' })
+      }
+    } catch (e: any) {
+      setTipResult({ success: false, text: e.message || '投币失败' })
+    } finally {
+      setTipSubmitting(false)
+    }
+  }
+
+  const TIP_PRESETS = [1, 2, 5, 10]
 
   const startEdit = () => {
     if (!article) return
@@ -362,6 +392,15 @@ export default function PlazaArticlePage() {
                   🏆 奖励
                 </button>
               )}
+              {session && !isAuthor && !editing && (
+                <button
+                  className={pointsStyles.awardBtn}
+                  onClick={() => { setShowTipModal(true); setTipResult(null); setTipCustom(false) }}
+                  title="投币"
+                >
+                  <FaIcon name="coins" /> 投币
+                </button>
+              )}
               <button
                 className={styles.backBtnIcon}
                 onClick={editing ? cancelEdit : () => router.push('/plaza')}
@@ -386,6 +425,11 @@ export default function PlazaArticlePage() {
               <span style={{ color: '#b35a00', fontSize: '0.82rem' }}>🔒 私密</span>
             )}
             {editing && <span style={{ color: 'var(--color-primary)' }}>编辑中</span>}
+            {(article.tip_count ?? 0) > 0 && (
+              <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+                🪙 {article.tip_count}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -512,6 +556,63 @@ export default function PlazaArticlePage() {
             {awardResult && (
               <div className={`${pointsStyles.awardResult} ${awardResult.success ? pointsStyles.awardSuccess : pointsStyles.awardError}`}>
                 {awardResult.text}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 投币弹窗 */}
+      {showTipModal && (
+        <div className={pointsStyles.awardModal} onClick={() => setShowTipModal(false)}>
+          <div className={pointsStyles.awardCard} onClick={(e) => e.stopPropagation()}>
+            <div className={pointsStyles.awardHeader}>
+              <h3>🪙 投币</h3>
+              <button className={pointsStyles.awardClose} onClick={() => setShowTipModal(false)}>✕</button>
+            </div>
+            <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: 12 }}>
+              打赏 {article?.author_username} — 消耗你的积分
+            </p>
+            <div className={pointsStyles.awardPresets}>
+              {TIP_PRESETS.map((v) => (
+                <button
+                  key={v}
+                  className={`${pointsStyles.awardPreset} ${!tipCustom && tipAmount === v ? pointsStyles.awardPresetActive : ''}`}
+                  onClick={() => { setTipAmount(v); setTipCustom(false) }}
+                >
+                  {v} 分
+                </button>
+              ))}
+              <button
+                className={`${pointsStyles.awardPreset} ${tipCustom ? pointsStyles.awardPresetActive : ''}`}
+                onClick={() => { setTipCustom(true); setTipAmount(0) }}
+              >
+                自定义
+              </button>
+            </div>
+            {tipCustom && (
+              <div className={pointsStyles.awardField}>
+                <label>积分数量</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={9999}
+                  value={tipAmount || ''}
+                  onChange={(e) => setTipAmount(Number(e.target.value) || 0)}
+                  autoFocus
+                />
+              </div>
+            )}
+            <button
+              className={pointsStyles.awardSubmit}
+              onClick={handleTipSubmit}
+              disabled={tipSubmitting || tipAmount <= 0}
+            >
+              {tipSubmitting ? '发送中…' : `确认投币 ${tipAmount} 分`}
+            </button>
+            {tipResult && (
+              <div className={`${pointsStyles.awardResult} ${tipResult.success ? pointsStyles.awardSuccess : pointsStyles.awardError}`}>
+                {tipResult.text}
               </div>
             )}
           </div>

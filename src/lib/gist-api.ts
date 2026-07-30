@@ -586,6 +586,15 @@ export async function awardPlazaArticlePoints(articleId: string, amount: number)
   return !!data
 }
 
+export async function tipPlazaArticle(articleId: string, amount: number): Promise<boolean> {
+  const { data, error } = await supabase.rpc('tip_plaza_article', {
+    p_article_id: articleId,
+    p_amount: amount,
+  })
+  if (error) throw new Error(error.message)
+  return !!data
+}
+
 /* =============================================================
    Shop API — 积分商城
    ============================================================= */
