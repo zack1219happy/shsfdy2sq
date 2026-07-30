@@ -36,7 +36,8 @@ export default function HomePage() {
     const base = BASE_PATH
     Promise.all([
       fetchForumPosts().then((data) => {
-        setPosts(data.slice(0, 5))
+        // 按创建时间倒序排（不区分置顶），取最新 5 条
+        setPosts(data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5))
       }),
       fetchAgreementPage('notice')
         .then((page) => setAnnouncement(page?.content ?? '')),
