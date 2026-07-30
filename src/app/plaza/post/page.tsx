@@ -358,10 +358,10 @@ export default function PlazaArticlePage() {
                 autoFocus
               />
             ) : (
-              <h1 className={styles.detailTitle} style={{ position: 'relative' }}>
+              <h1 className={styles.detailTitle}>
                 <span dangerouslySetInnerHTML={{ __html: renderClient(article.title) }} />
                 {isAdmin && article.is_awarded && (
-                  <span style={{ position: 'absolute', top: 4, right: 0, fontSize: '0.8rem', opacity: 0.45 }}>
+                  <span style={{ fontSize: '0.8rem', opacity: 0.45, marginLeft: 8 }}>
                     🏅
                   </span>
                 )}
@@ -385,20 +385,11 @@ export default function PlazaArticlePage() {
               )}
               {isAdmin && !editing && (
                 <button
-                  className={pointsStyles.awardBtn}
+                  className={styles.backBtnIcon}
                   onClick={() => { setShowAwardModal(true); setAwardResult(null) }}
                   title="奖励积分"
                 >
-                  🏆 奖励
-                </button>
-              )}
-              {session && !isAuthor && !editing && (
-                <button
-                  className={pointsStyles.awardBtn}
-                  onClick={() => { setShowTipModal(true); setTipResult(null); setTipCustom(false) }}
-                  title="投币"
-                >
-                  <FaIcon name="coins" /> 投币
+                  <FaIcon name="gift" />
                 </button>
               )}
               <button
@@ -425,11 +416,6 @@ export default function PlazaArticlePage() {
               <span style={{ color: '#b35a00', fontSize: '0.82rem' }}>🔒 私密</span>
             )}
             {editing && <span style={{ color: 'var(--color-primary)' }}>编辑中</span>}
-            {(article.tip_count ?? 0) > 0 && (
-              <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
-                🪙 {article.tip_count}
-              </span>
-            )}
           </div>
         </div>
       </div>
@@ -486,6 +472,18 @@ export default function PlazaArticlePage() {
               <button className={`${styles.voteIcon} ${myVote === 'down' ? styles.voteIconActiveDown : ''}`}
                 onClick={() => handleVote('down')} title="踩"><FaIcon name="thumbs-down" /></button>
               <span className={`${styles.voteCount} ${(article.downvote_count ?? 0) > 0 ? styles.voteCountNegative : ''}`}>{article.downvote_count ?? 0}</span>
+              {session && !isAuthor && !editing && (
+                <button
+                  className={styles.voteIcon}
+                  onClick={() => { setShowTipModal(true); setTipResult(null); setTipCustom(false) }}
+                  title="投币"
+                >
+                  <FaIcon name="coins" />
+                </button>
+              )}
+              {(article.tip_count ?? 0) > 0 && (
+                <span className={styles.voteCount}>{article.tip_count}</span>
+              )}
             </div>
 
             {/* 评论区 */}

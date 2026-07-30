@@ -1,17 +1,17 @@
 # ============================================
 # electron-builder 配置 — Windows 安装包
 # ============================================
-appId: com.shs.wiki
-productName: 二旦班知识库
-copyright: Copyright © 2024 上中二旦
+appId: shsfdy2sq
+productName: 二旦社区
+copyright: Copyright © 2026 上中二旦
 
 directories:
   output: release
-  buildResources: resources
 
 files:
   - electron/**/*
   - out/**/*
+  - '!**/node_modules/@next/**'
 
 win:
   target:
@@ -19,6 +19,9 @@ win:
       arch:
         - x64
   icon: out/logo.png
+  electronLanguages:
+    - zh-CN
+    - en-US
 
 nsis:
   oneClick: false
@@ -26,4 +29,4 @@ nsis:
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
   createStartMenuShortcut: true
-  shortcutName: 二旦班知识库
+  shortcutName: 二旦社区

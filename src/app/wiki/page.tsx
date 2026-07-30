@@ -8,7 +8,7 @@ import WikiEditPanel from '@/components/WikiEditPanel'
 import WikiContentDB from '@/components/WikiContentDB'
 import type { NavNode } from '@/lib/navigation'
 
-const homeCrumb: NavNode[] = [{ id: 'home', title: '首页', type: 'page', pathKey: 'home' }]
+const homeCrumb: NavNode[] = [{ id: 'home', title: '首页', type: 'page', pathKey: '' }]
 
 export default async function WikiHomePage() {
   // 从 DB 加载首页内容

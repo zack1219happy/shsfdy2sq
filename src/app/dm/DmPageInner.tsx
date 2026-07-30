@@ -196,6 +196,7 @@ function DmChatView({
   } | null>(null)
   const [failedIds, setFailedIds] = useState<string[]>([])
   const [sendError, setSendError] = useState<string | null>(null)
+  const [editorKey, setEditorKey] = useState(0)
   const listRef = useRef<HTMLDivElement | null>(null)
   const sendingRef = useRef(false)
 
@@ -368,6 +369,7 @@ function DmChatView({
       },
     ])
     setInput('')
+    setEditorKey((k) => k + 1)
     setSendError(null)
     window.dispatchEvent(new CustomEvent('dm-new-message'))
     window.dispatchEvent(new CustomEvent('new-dm'))
@@ -486,6 +488,7 @@ function DmChatView({
         <div className={styles.editorWrap}>
           <span className={styles.editorHint}>Ctrl+Enter 发送</span>
           <MarkdownEditor
+            key={editorKey}
             value={input}
             onChange={setInput}
             config={{ preview: false, fullScreen: false, scrollSync: false }}

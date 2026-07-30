@@ -41,7 +41,12 @@ export default function ExternalLinkHandler({ children }: { children: React.Reac
         if (url.origin !== window.location.origin) {
           e.preventDefault()
           e.stopPropagation()
-          window.open(href, '_blank', 'noopener,noreferrer')
+          // Electron 环境走系统浏览器打开
+          if ((window as any).electronAPI?.isElectron) {
+            ;(window as any).electronAPI.openExternal(href)
+          } else {
+            window.open(href, '_blank', 'noopener,noreferrer')
+          }
         }
         // 同源链接保持默认行为（当前页导航）
       } catch {

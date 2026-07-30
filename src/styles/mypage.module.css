@@ -542,6 +542,28 @@
   margin-left: auto;
 }
 
+/* ---- 统计条响应式显示 ---- */
+
+.barStatsWrap {
+  display: flex;
+  margin-left: auto;
+}
+
+.homeStatsWrap {
+  display: none;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 768px) {
+  .barStatsWrap {
+    display: none;
+  }
+
+  .homeStatsWrap {
+    display: block;
+  }
+}
+
 /* ---------- 加载/错误状态 ---------- */
 
 .loadingState,
@@ -799,6 +821,10 @@
   .headerInner {
     flex-direction: column;
     gap: 12px;
+  }
+
+  .headerLeft {
+    padding-left: 16px;
   }
 
   .headerRight {

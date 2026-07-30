@@ -165,7 +165,11 @@ function UserMypage() {
       window.removeEventListener('mypage-route-change', sync)
     }
   }, [])
-  const urlUser = useMemo(() => new URLSearchParams(activeQuery).get('user'), [activeQuery])
+  const urlUser = useMemo(() => {
+    // 优先从 activeQuery（事件驱动更新），首次渲染时可能为空，备选直读 URL
+    const q = activeQuery || (typeof window !== 'undefined' ? window.location.search : '')
+    return new URLSearchParams(q).get('user') || null
+  }, [activeQuery])
 
   // 防止重复加载
   const loadedUserRef = useRef('')
@@ -264,8 +268,16 @@ function UserMypage() {
   }, [])
 
   const loadArticles = useCallback(async (username: string) => {
-    const { data } = await supabase.rpc('get_user_plaza_articles', { p_username: username, p_limit: 50, p_offset: 0 })
-    if (data) setArticles(data as PlazaArticleItem[])
+    try {
+      const { data, error } = await supabase.rpc('get_user_plaza_articles', { p_username: username, p_limit: 50, p_offset: 0 })
+      if (error) {
+        console.error('loadArticles error:', error)
+        return
+      }
+      if (data) setArticles(data as PlazaArticleItem[])
+    } catch (e) {
+      console.error('loadArticles exception:', e)
+    }
   }, [])
 
   const loadFollows = useCallback(async (username: string) => {
@@ -348,12 +360,14 @@ function UserMypage() {
               <TabBtn tab="follows" label="关注"    activeTab={activeTab} onSelect={handleTabSelect} />
             </div>
             {stats && (
-              <StatsStrip
-                stats={stats}
-                isSelf={isSelf}
-                visibility={privacy.stats}
-                onToggleVisibility={isSelf ? () => togglePrivacy('stats') : undefined}
-              />
+              <div className={styles.barStatsWrap}>
+                <StatsStrip
+                  stats={stats}
+                  isSelf={isSelf}
+                  visibility={privacy.stats}
+                  onToggleVisibility={isSelf ? () => togglePrivacy('stats') : undefined}
+                />
+              </div>
             )}
           </div>
 
@@ -364,6 +378,7 @@ function UserMypage() {
               dailyPoints={dailyPoints}
               privacy={privacy}
               onTogglePrivacy={togglePrivacy}
+              stats={stats}
             />
           )}
           {activeTab === 'posts' && (
@@ -622,16 +637,27 @@ function StatsStrip({
    ============================================================== */
 
 function HomeTab({
-  isSelf, profile, dailyPoints, privacy, onTogglePrivacy,
+  isSelf, profile, dailyPoints, privacy, onTogglePrivacy, stats,
 }: {
   isSelf: boolean
   profile: UserProfile
   dailyPoints: DailyPoints[]
   privacy: PrivacySettings
   onTogglePrivacy: (section: keyof PrivacySettings) => void
+  stats: UserStats | null
 }) {
   return (
     <div className={styles.tabContent}>
+      {stats && (
+        <div className={styles.homeStatsWrap}>
+          <StatsStrip
+            stats={stats}
+            isSelf={isSelf}
+            visibility={privacy.stats}
+            onToggleVisibility={isSelf ? () => onTogglePrivacy('stats') : undefined}
+          />
+        </div>
+      )}
       <HeatmapWidget
         dailyPoints={dailyPoints}
         isSelf={isSelf}

@@ -39,7 +39,7 @@ interface Heading {
 /** 从 slug 构建面包屑导航 */
 function buildBreadcrumbs(slugPath: string): NavNode[] {
   const segments = slugPath.split('/')
-  const crumbs: NavNode[] = [{ id: 'home', title: '首页', type: 'page', pathKey: 'home' }]
+  const crumbs: NavNode[] = [{ id: 'home', title: '首页', type: 'page', pathKey: '' }]
   let path = ''
   for (const seg of segments) {
     if (seg === 'home' && segments.length === 1) continue
