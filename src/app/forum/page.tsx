@@ -317,7 +317,7 @@ function PostCard({ post, onClick, onRefresh }: { post: ForumPost; onClick: () =
   const score = post.upvotes - post.downvotes
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
   const session = getSession()
-  const isAdmin = session && (session as any).role && ['admin', 'super_admin'].includes((session as any).role)
+  const isAdmin = session && ['admin', 'super_admin'].includes(session.role)
 
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     if (!isAdmin) return

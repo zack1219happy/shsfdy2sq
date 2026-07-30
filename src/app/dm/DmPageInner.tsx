@@ -378,6 +378,11 @@ function DmChatView({
       setMessages((prev) =>
         prev.map((m) => (m.id === tempId ? { ...m, id: realId } : m)),
       )
+      // 清理 failedIds 中的残留 tempId（如果之前失败过但这次成功）
+      setFailedIds((prev) => prev.filter(id => id !== tempId))
+      // 成功后补发事件，确保侧栏读到最新数据
+      window.dispatchEvent(new CustomEvent('dm-new-message'))
+      window.dispatchEvent(new CustomEvent('new-dm'))
     } catch (e: any) {
       setFailedIds((prev) => [...prev, tempId])
       setSendError(e?.message || '发送失败')

@@ -48,6 +48,8 @@ const MarkdownEditor = dynamic(
    - 静态路由 ?slug=xxx，与论坛帖子一致
    ============================================================== */
 
+const TIP_PRESETS = [1, 2, 5, 10]
+
 export default function PlazaArticlePage() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -177,8 +179,6 @@ export default function PlazaArticlePage() {
       setTipSubmitting(false)
     }
   }
-
-  const TIP_PRESETS = [1, 2, 5, 10]
 
   const startEdit = () => {
     if (!article) return
