@@ -16,6 +16,8 @@ interface UsePreviewOptions {
   onPreviewScroll?: (lineNumber: number) => void
   /** 标题→slug 映射，传入后启用 [[WikiLink]] 渲染 */
   titleSlugMap?: Record<string, string>
+  /** 跳过 DOMPurify 净化（用于已启用 JS 的文章预览） */
+  noSanitize?: boolean
 }
 
 interface UsePreviewReturn {
@@ -36,6 +38,7 @@ export function usePreview({
   content,
   onPreviewScroll,
   titleSlugMap: propMap,
+  noSanitize,
 }: UsePreviewOptions): UsePreviewReturn {
   const previewRef = useRef<HTMLDivElement | null>(null)
   const basePath = BASE_PATH
@@ -47,11 +50,11 @@ export function usePreview({
 
   // 通过 render-client 统一渲染（开启 highlight + texmath + injectLn）
   const previewHtml = useMemo(() => {
-    const raw = renderClientWithRegistry(content, registry, { highlight: true, texmath: true, injectLn: true })
+    const raw = renderClientWithRegistry(content, registry, { highlight: true, texmath: true, injectLn: true }, !noSanitize)
     // 渲染 [[Wiki 链接]]
     const withLinks = replaceWikiLinks(raw, effectiveMap, basePath)
     return withLinks
-  }, [content, effectiveMap, basePath])
+  }, [content, effectiveMap, basePath, noSanitize])
 
   // 滚动事件监听（scroll sync）
   useEffect(() => {

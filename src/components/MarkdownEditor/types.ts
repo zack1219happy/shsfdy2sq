@@ -120,4 +120,6 @@ export interface EditorProps {
   titleSlugMap?: Record<string, string>
   /** 按 Ctrl+Enter 时触发（用于私信等场景的快捷发送） */
   onSubmit?: () => void
+  /** 预览时跳过 DOMPurify 净化（用于已启用 JS 的文章） */
+  noSanitizePreview?: boolean
 }

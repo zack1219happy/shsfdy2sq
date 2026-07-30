@@ -18,6 +18,8 @@ interface Props {
   titleSlugMap?: Record<string, string>
   /** 页面 slug，用于从 DB 加载 _assets/ 图片 base64 */
   slug?: string
+  /** 跳过 DOMPurify 净化（用于启用了 JS 的页面） */
+  noSanitize?: boolean
 }
 
 /**
@@ -30,10 +32,21 @@ interface Props {
  * - DOMPurify 净化
  * - 代码块复制按钮
  */
-export default function WikiContent({ content, format, className, titleSlugMap: propMap, slug }: Props) {
+export default function WikiContent({ content, format, className, titleSlugMap: propMap, slug, noSanitize }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const basePath = BASE_PATH
   const [assetMap, setAssetMap] = useState<Map<string, string> | null>(null)
+  // JS 模式下冻结 html 字符串，阻止 React 在后续 re-render 中覆写 DOM
+  //（否则脚本动态添加的节点如游戏格子会被清除）
+  const frozenJsHtmlRef = useRef<string | null>(null)
+  const prevContentRef = useRef(content)
+  const prevNoSanitizeRef = useRef(false)
+
+  // 检测 noSanitize 从 false→true（重新进入 JS 模式）→ 重置冻结快照
+  if (noSanitize && !prevNoSanitizeRef.current) {
+    frozenJsHtmlRef.current = null
+  }
+  prevNoSanitizeRef.current = noSanitize ?? false
 
   // 从 DB 加载当前页面的图片 base64（向上遍历父 slug）
   useEffect(() => {
@@ -58,11 +71,25 @@ export default function WikiContent({ content, format, className, titleSlugMap: 
   // 优先使用传入的映射，否则使用自动生成的默认映射
   const effectiveMap = propMap ?? defaultTitleSlugMap
   const html = useMemo(() => {
-    // 1. 确定格式并转 HTML
+    // (a) 检测内容是否变了 → 重置 JS 冻结快照 + details 状态
+    if (prevContentRef.current !== content) {
+      frozenJsHtmlRef.current = null
+      detailsStateRef.current = {}
+      prevContentRef.current = content
+    }
+
+    // (b) JS 模式下已冻结 html → 返回缓存，防止 React re-render 覆写 DOM
+    if (noSanitize && frozenJsHtmlRef.current !== null) {
+      console.log('[dbg3] using frozen html (len=' + frozenJsHtmlRef.current.length + ')')
+      return frozenJsHtmlRef.current
+    }
+
+    // (c) 正常计算
+    const shouldSanitize = !noSanitize
     const rawHtml =
       format === 'markdown' || (format !== 'html' && !looksLikeHtml(content))
-        ? renderClientWithRegistry(content, registry, { highlight: true, texmath: true, anchor: true })
-        : (typeof window !== 'undefined' ? DOMPurify.sanitize(content) : content)
+        ? renderClientWithRegistry(content, registry, { highlight: true, texmath: true, anchor: true }, shouldSanitize)
+        : (typeof window !== 'undefined' && shouldSanitize ? DOMPurify.sanitize(content) : content)
 
     // 2. 替换 Wiki 链接
     const withLinks = replaceWikiLinks(rawHtml, effectiveMap, basePath)
@@ -70,21 +97,20 @@ export default function WikiContent({ content, format, className, titleSlugMap: 
     // 3. 替换 _assets/ 图片为 DB base64 data URL
     const withAssets = replaceAssetSrcs(withLinks, assetMap)
 
+    // (d) JS 模式下首次计算 → 冻结
+    if (noSanitize) {
+      frozenJsHtmlRef.current = withAssets
+      console.log('[dbg3] frozen html set (len=' + withAssets.length + ')')
+    }
+
     return withAssets
-  }, [content, format, effectiveMap, basePath, assetMap])
+  }, [content, format, effectiveMap, basePath, assetMap, noSanitize])
 
   // ---- callout details open state persistence ----
   // 原生 <details> 的 open 状态不在 React 控制中，dangerouslySetInnerHTML
   // 被重新设置时所有 <details> 会回到初始状态。用 ref 保存当前状态，
   // useLayoutEffect 在同帧 paint 前恢复，避免用户看到闪烁。
   const detailsStateRef = useRef<Record<string, boolean>>({})
-  const prevContentRef = useRef(content)
-
-  // 内容变化（编辑后）→ 清空保存的状态
-  if (prevContentRef.current !== content) {
-    detailsStateRef.current = {}
-    prevContentRef.current = content
-  }
 
   // 监听 toggle 事件，持续同步 open 状态到 ref
   // capture phase 确保嵌套 details 也能被捕获
@@ -118,6 +144,54 @@ export default function WikiContent({ content, format, className, titleSlugMap: 
       }
     }
   })
+
+  // 当 noSanitize 为 true 时，手动执行内联 <script> 标签
+  //（浏览器不会执行 innerHTML 插入的脚本，需重新创建）
+  useEffect(() => {
+    const el = ref.current
+    if (!el || !noSanitize) {
+      console.log('[dbg2] skip script exec: el=', !!el, 'noSanitize=', noSanitize)
+      return
+    }
+    const scripts = el.querySelectorAll<HTMLScriptElement>('script')
+    console.log('[dbg2] found scripts:', scripts.length)
+    const created: HTMLScriptElement[] = []
+    let needsDomContentLoaded = false
+    scripts.forEach((oldScript, idx) => {
+      const text = oldScript.textContent || ''
+      console.log('[dbg2] script', idx, 'src=', oldScript.src, 'text.length=', text.length)
+      // 检测脚本是否依赖 DOMContentLoaded / onload
+      if (!oldScript.src && /DOMContentLoaded|onload|ready\(/.test(text)) {
+        needsDomContentLoaded = true
+        console.log('[dbg2] script', idx, 'HAS DOMContentLoaded/onload reference')
+      }
+      const newScript = document.createElement('script')
+      if (oldScript.src) {
+        newScript.src = oldScript.src
+      } else {
+        newScript.textContent = text
+      }
+      // 复制 data-* 等自定义属性
+      for (const attr of oldScript.attributes) {
+        if (attr.name !== 'src') {
+          newScript.setAttribute(attr.name, attr.value)
+        }
+      }
+      oldScript.replaceWith(newScript)
+      created.push(newScript)
+    })
+    console.log('[dbg2] created scripts:', created.length, 'needsDomContentLoaded:', needsDomContentLoaded)
+    // 动态插入的 script 标签中若依赖 DOMContentLoaded，该事件不会再触发，
+    // 手动派发一次以便脚本中注册的事件处理器能执行
+    if (needsDomContentLoaded) {
+      document.dispatchEvent(new Event('DOMContentLoaded'))
+      console.log('[dbg2] dispatched DOMContentLoaded')
+    }
+    return () => {
+      console.log('[dbg2] cleanup: removing', created.length, 'scripts')
+      created.forEach((s) => s.remove())
+    }
+  }, [html, noSanitize])
 
   // 代码块复制按钮
   useCodeCopy(ref)

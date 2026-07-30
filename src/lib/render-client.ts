@@ -30,7 +30,7 @@ import katex from 'katex'
 import texmath from 'markdown-it-texmath'
 import anchor from 'markdown-it-anchor'
 import DOMPurify from 'dompurify'
-import { calloutPlugin, personPlugin } from './md-plugins'
+import { calloutPlugin, personPlugin, rawHtmlBlockPlugin } from './md-plugins'
 import type { PersonRegistry } from './people'
 
 // ============================================================
@@ -134,6 +134,7 @@ export function createClientMd(options?: ClientMdOptions): MarkdownIt {
 
   // ---------- 共享插件 ----------
   calloutPlugin(md)
+  rawHtmlBlockPlugin(md)
   if (opts.personRegistry) {
     personPlugin(md, opts.personRegistry)
   }

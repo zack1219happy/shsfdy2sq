@@ -25,6 +25,8 @@ export interface PlazaArticle {
 
 export interface PlazaArticleDetail extends PlazaArticle {
   content: string
+  /** 文章是否启用了 JS（跳过 DOMPurify） */
+  has_js?: boolean
 }
 
 /** 广场评论（结构与 ForumComment 一致，只是 post_id → article_id） */

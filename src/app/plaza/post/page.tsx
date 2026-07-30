@@ -30,6 +30,7 @@ import { getCategoryPathById } from '@/types/plaza'
 import type { UnifiedComment } from '@/components/CommentSection'
 import { UserName } from '@/components/UserName'
 import { showWarningToast } from '@/lib/toast'
+import JSSafetyDialog from '@/components/JSSafetyDialog'
 import { useAutoSave, loadDraft } from '@/hooks/useAutoSave'
 import { extractHeadingsFromHtml } from '@/lib/plaza-headings'
 import styles from '@/styles/forum.module.css'
@@ -64,11 +65,16 @@ export default function PlazaArticlePage() {
   const [editTitle, setEditTitle] = useState('')
   const [editContent, setEditContent] = useState('')
   const [editIsPublic, setEditIsPublic] = useState(true)
+  const [editHasJs, setEditHasJs] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [comments, setComments] = useState<PlazaComment[]>([])
   const [refreshCooldown, setRefreshCooldown] = useState(0)
   const [spinning, setSpinning] = useState(false)
   const [categories, setCategories] = useState<PlazaCategory[]>([])
+  // JS 模式：null=待决定，'safe'=安全模式，'js'=原文模式
+  const [jsMode, setJsMode] = useState<'safe' | 'js' | null>(null)
+  const [showDialog, setShowDialog] = useState(false)
+  const [hasJs, setHasJs] = useState(false)
 
   useEffect(() => {
     if (!slug) return
@@ -100,19 +106,65 @@ export default function PlazaArticlePage() {
     fetchPlazaCategories().then(setCategories).catch(() => {})
   }, [])
 
-  // 编辑草稿恢复
+  // ── JS 安全模式：检测 has_js 并恢复 localStorage 偏好 ──
+  const handleJsChoice = useCallback((mode: 'safe' | 'js', dismiss: boolean) => {
+    setJsMode(mode)
+    setShowDialog(false)
+    if (dismiss && slug) {
+      try {
+        localStorage.setItem(`plaza_js_dismiss_${slug}`, mode)
+      } catch { /* 忽略 */ }
+    }
+  }, [slug])
+
+  const toggleJsMode = useCallback(() => {
+    setJsMode((prev) => (prev === 'js' ? 'safe' : 'js'))
+  }, [])
+
+  useEffect(() => {
+    if (!article) return
+    const articleHasJs = article.has_js === true
+    setHasJs(articleHasJs)
+
+    if (!articleHasJs) {
+      setJsMode('safe')
+      return
+    }
+
+    if (editing) {
+      // 编辑模式不需要弹窗
+      setJsMode('safe')
+      return
+    }
+
+    // JS 页面：检查 localStorage 是否有偏好
+    try {
+      const stored = localStorage.getItem(`plaza_js_dismiss_${slug}`)
+      if (stored === 'safe' || stored === 'js') {
+        setJsMode(stored)
+        return
+      }
+    } catch { /* 忽略 */ }
+
+    // 无存储偏好 → 显示弹窗
+    setShowDialog(true)
+  }, [article, slug, editing])
+
+  // ── 编辑草稿恢复 ──
   useEffect(() => {
     if (!slug) return
     interface DraftData {
       title: string
       content: string
       isPublic: boolean
+      hasJs: boolean
     }
     const draft = loadDraft<DraftData>(`plaza_edit_${slug}`)
     if (draft) {
       if (draft.title) setEditTitle(draft.title)
       if (draft.content) setEditContent(draft.content)
       if (draft.isPublic !== undefined) setEditIsPublic(draft.isPublic)
+      if (draft.hasJs !== undefined) setEditHasJs(draft.hasJs)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -121,7 +173,7 @@ export default function PlazaArticlePage() {
   const editHasContent = editTitle.trim() !== '' || editContent.trim() !== ''
   const { clearDraft: clearEditDraft } = useAutoSave({
     key: `plaza_edit_${slug}`,
-    data: { title: editTitle, content: editContent, isPublic: editIsPublic },
+    data: { title: editTitle, content: editContent, isPublic: editIsPublic, hasJs: editHasJs },
     enabled: editing && editHasContent,
   })
 
@@ -185,6 +237,7 @@ export default function PlazaArticlePage() {
     setEditTitle(article.title)
     setEditContent(article.content)
     setEditIsPublic(article.is_public)
+    setEditHasJs(article.has_js === true)
     setEditing(true)
   }
 
@@ -193,6 +246,7 @@ export default function PlazaArticlePage() {
     setEditTitle('')
     setEditContent('')
     setEditIsPublic(true)
+    setEditHasJs(false)
     clearEditDraft()
   }
 
@@ -206,12 +260,13 @@ export default function PlazaArticlePage() {
         editContent.trim(),
         article.category_id,
         editIsPublic,
+        editHasJs,
       )
       clearEditDraft()
       setEditing(false)
       setArticle((prev) =>
         prev
-          ? { ...prev, title: editTitle.trim(), content: editContent.trim(), is_public: editIsPublic }
+          ? { ...prev, title: editTitle.trim(), content: editContent.trim(), is_public: editIsPublic, has_js: editHasJs }
           : null,
       )
     } catch (e: any) {
@@ -392,6 +447,19 @@ export default function PlazaArticlePage() {
                   <FaIcon name="gift" />
                 </button>
               )}
+              {hasJs && jsMode && !editing && (
+                <button
+                  className={styles.backBtnIcon}
+                  onClick={toggleJsMode}
+                  title={jsMode === 'js' ? 'JS 模式（点击切换到安全模式）' : '安全模式（点击切换到原文）'}
+                  style={{
+                    color: jsMode === 'js' ? '#e74c3c' : undefined,
+                    opacity: jsMode === 'js' ? 1 : 0.6,
+                  }}
+                >
+                  <FaIcon name="code" />
+                </button>
+              )}
               <button
                 className={styles.backBtnIcon}
                 onClick={editing ? cancelEdit : () => router.push('/plaza')}
@@ -442,8 +510,47 @@ export default function PlazaArticlePage() {
               </span>
             </div>
 
+            {/* 编辑模式：JS 开关 */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 4px' }}>
+              <span style={{ fontSize: '0.82rem', color: 'var(--color-text-secondary)', fontWeight: 500 }}>
+                JavaScript
+                <span
+                  title="开启后，读者可选择直接运行页面中的 JavaScript（跳过安全过滤）。仅在您信任内容的情况下使用。"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 14,
+                    height: 14,
+                    borderRadius: '50%',
+                    border: '1px solid var(--color-border, #ddd)',
+                    fontSize: '0.65rem',
+                    cursor: 'help',
+                    color: 'var(--color-text-secondary, #999)',
+                    marginLeft: 4,
+                    verticalAlign: 'middle',
+                  }}
+                >
+                  ?
+                </span>
+              </span>
+              <div
+                className={styles.toggleSwitch + (editHasJs ? ' ' + styles.toggleOn : '')}
+                onClick={() => setEditHasJs(!editHasJs)}
+                role="switch"
+                aria-checked={editHasJs}
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setEditHasJs(!editHasJs) } }}
+              >
+                <div className={styles.toggleSlider} />
+              </div>
+              <span style={{ fontSize: '0.82rem', color: 'var(--color-text-light)' }}>
+                {editHasJs ? '开启' : '关闭'}
+              </span>
+            </div>
+
             <div className={styles.editorWrapper} style={{ minHeight: '300px' }}>
-              <MarkdownEditor value={editContent} onChange={setEditContent} className={styles.editorNoBorder} />
+              <MarkdownEditor value={editContent} onChange={setEditContent} className={styles.editorNoBorder} noSanitizePreview={editHasJs} />
             </div>
             <div className={styles.formActions}>
               <button className={`${styles.btn} ${styles.btnOutline}`} onClick={cancelEdit}>
@@ -461,7 +568,7 @@ export default function PlazaArticlePage() {
         ) : (
           <div className={styles.detail}>
             <div className={styles.detailBody}>
-              <WikiContent content={article.content} className="wiki-body" />
+              <WikiContent content={article.content} className="wiki-body" noSanitize={jsMode === 'js'} />
             </div>
 
             {/* 点赞栏 */}
@@ -472,18 +579,17 @@ export default function PlazaArticlePage() {
               <button className={`${styles.voteIcon} ${myVote === 'down' ? styles.voteIconActiveDown : ''}`}
                 onClick={() => handleVote('down')} title="踩"><FaIcon name="thumbs-down" /></button>
               <span className={`${styles.voteCount} ${(article.downvote_count ?? 0) > 0 ? styles.voteCountNegative : ''}`}>{article.downvote_count ?? 0}</span>
-              {session && !isAuthor && !editing && (
+              {session && !editing && (
                 <button
                   className={styles.voteIcon}
-                  onClick={() => { setShowTipModal(true); setTipResult(null); setTipCustom(false) }}
+                  onClick={isAuthor ? undefined : () => { setShowTipModal(true); setTipResult(null); setTipCustom(false) }}
                   title="投币"
+                  style={{ opacity: isAuthor ? 0.4 : 1, cursor: isAuthor ? 'default' : 'pointer' }}
                 >
                   <FaIcon name="coins" />
                 </button>
               )}
-              {(article.tip_count ?? 0) > 0 && (
-                <span className={styles.voteCount}>{article.tip_count}</span>
-              )}
+              <span className={styles.voteCount}>{article.tip_count ?? 0}</span>
             </div>
 
             {/* 评论区 */}
@@ -615,6 +721,11 @@ export default function PlazaArticlePage() {
             )}
           </div>
         </div>
+      )}
+
+      {/* JS 安全警告弹窗 */}
+      {showDialog && (
+        <JSSafetyDialog onChoice={handleJsChoice} />
       )}
     </>
   )

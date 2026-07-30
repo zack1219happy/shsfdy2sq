@@ -392,6 +392,7 @@ export async function createPlazaArticle(
   content: string,
   categoryId: string,
   isPublic: boolean,
+  hasJs?: boolean,
 ): Promise<string> {
   const { data, error } = await supabase.rpc('create_plaza_article', {
     p_title: title.trim(),
@@ -399,6 +400,7 @@ export async function createPlazaArticle(
     p_content: content.trim(),
     p_category_id: categoryId,
     p_is_public: isPublic,
+    p_has_js: hasJs ?? false,
   })
   if (error) throw new Error('发布文章失败: ' + error.message)
   return data as string
@@ -410,6 +412,7 @@ export async function updatePlazaArticle(
   content: string,
   categoryId: string,
   isPublic: boolean,
+  hasJs?: boolean,
 ): Promise<void> {
   const { error } = await supabase.rpc('update_plaza_article', {
     p_article_id: id,
@@ -417,6 +420,7 @@ export async function updatePlazaArticle(
     p_content: content.trim(),
     p_category_id: categoryId,
     p_is_public: isPublic,
+    p_has_js: hasJs ?? false,
   })
   if (error) throw new Error('编辑失败: ' + error.message)
 }

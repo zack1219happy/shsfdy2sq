@@ -32,6 +32,7 @@ export default function NewArticlePage() {
   const [categoryId, setCategoryId] = useState<string | null>(null) // 用户选的分类 ID
   const [categoryName, setCategoryName] = useState<string | null>(null) // 用户选的分类名（用于显示）
   const [isPublic, setIsPublic] = useState(false) // 默认私密
+  const [hasJs, setHasJs] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [dupWarning, setDupWarning] = useState<{ existing_title: string; created_at: string } | null>(null)
@@ -56,6 +57,7 @@ export default function NewArticlePage() {
       categoryId: string | null
       categoryName: string | null
       isPublic: boolean
+      hasJs: boolean
     }
     const draft = loadDraft<DraftData>('plaza_new')
     if (draft) {
@@ -64,6 +66,7 @@ export default function NewArticlePage() {
       if (draft.categoryId) setCategoryId(draft.categoryId)
       if (draft.categoryName) setCategoryName(draft.categoryName)
       if (draft.isPublic !== undefined) setIsPublic(draft.isPublic)
+      if (draft.hasJs !== undefined) setHasJs(draft.hasJs)
     }
   }, [])
 
@@ -71,7 +74,7 @@ export default function NewArticlePage() {
   const hasContent = title.trim() !== '' || content.trim() !== ''
   const { clearDraft } = useAutoSave({
     key: 'plaza_new',
-    data: { title, content, categoryId, categoryName, isPublic },
+    data: { title, content, categoryId, categoryName, isPublic, hasJs },
     enabled: hasContent,
   })
 
@@ -117,7 +120,7 @@ export default function NewArticlePage() {
           .replace(/^-+|-+$/g, '') +
         '-' +
         Date.now().toString(36)
-      await createPlazaArticle(title.trim(), slug, content.trim(), categoryId, isPublic)
+      await createPlazaArticle(title.trim(), slug, content.trim(), categoryId, isPublic, hasJs)
       clearDraft()
       router.push('/plaza/post?slug=' + encodeURIComponent(slug))
     } catch (e: any) {
@@ -125,7 +128,7 @@ export default function NewArticlePage() {
     } finally {
       setSubmitting(false)
     }
-  }, [title, content, session, categoryId, categories, isPublic, router])
+  }, [title, content, session, categoryId, categories, isPublic, hasJs, router])
 
   /** 忽略重复警告，强制发布 */
   const handleForceSubmit = useCallback(async () => {
@@ -145,7 +148,7 @@ export default function NewArticlePage() {
           .replace(/^-+|-+$/g, '') +
         '-' +
         Date.now().toString(36)
-      await createPlazaArticle(title.trim(), slug, content.trim(), categoryId, isPublic)
+      await createPlazaArticle(title.trim(), slug, content.trim(), categoryId, isPublic, hasJs)
       clearDraft()
       router.push('/plaza/post?slug=' + encodeURIComponent(slug))
     } catch (e: any) {
@@ -153,7 +156,7 @@ export default function NewArticlePage() {
     } finally {
       setSubmitting(false)
     }
-  }, [title, content, session, categoryId, categories, isPublic, router])
+  }, [title, content, session, categoryId, categories, isPublic, hasJs, router])
 
   if (!session) {
     return (
@@ -219,8 +222,47 @@ export default function NewArticlePage() {
           </span>
         </div>
 
+        {/* JS 开关 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: '0.82rem', color: 'var(--color-text-secondary)', fontWeight: 500 }}>
+            JavaScript
+            <span
+              title="开启后，读者可选择直接运行页面中的 JavaScript（跳过安全过滤）。仅在您信任内容的情况下使用。"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 14,
+                height: 14,
+                borderRadius: '50%',
+                border: '1px solid var(--color-border, #ddd)',
+                fontSize: '0.65rem',
+                cursor: 'help',
+                color: 'var(--color-text-secondary, #999)',
+                marginLeft: 4,
+                verticalAlign: 'middle',
+              }}
+            >
+              ?
+            </span>
+          </span>
+          <div
+            className={Styles.toggleSwitch + (hasJs ? ' ' + Styles.toggleOn : '')}
+            onClick={() => setHasJs(!hasJs)}
+            role="switch"
+            aria-checked={hasJs}
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setHasJs(!hasJs) } }}
+          >
+            <div className={Styles.toggleSlider} />
+          </div>
+          <span style={{ fontSize: '0.82rem', color: 'var(--color-text-light)' }}>
+            {hasJs ? '开启' : '关闭'}
+          </span>
+        </div>
+
         <div className={Styles.editorWrapper}>
-          <MarkdownEditor value={content} onChange={setContent} className={Styles.editorNoBorder} />
+          <MarkdownEditor value={content} onChange={setContent} className={Styles.editorNoBorder} noSanitizePreview={hasJs} />
         </div>
 
         {error && <p className={Styles.error}>{error}</p>}

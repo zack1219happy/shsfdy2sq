@@ -24,6 +24,7 @@ export default function Editor({
   className,
   titleSlugMap,
   onSubmit,
+  noSanitizePreview,
 }: EditorProps) {
   // 1. Config
   const merged: MarkdownEditorConfig = useMemo(
@@ -120,6 +121,7 @@ export default function Editor({
         }
       : undefined,
     titleSlugMap,
+    noSanitize: noSanitizePreview,
   })
   useCodeCopy(previewRef)
 
