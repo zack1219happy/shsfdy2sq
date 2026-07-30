@@ -82,6 +82,13 @@
   padding: 40px 16px;
 }
 
+.sendError {
+  color: #e74c3c;
+  font-size: 0.8rem;
+  text-align: center;
+  padding: 12px 16px;
+}
+
 /* ---- 消息行 ---- */
 
 .message {
@@ -162,6 +169,11 @@
   color: #9ca3af;
   font-style: italic;
   font-size: 0.8rem;
+}
+
+.bubbleFailed {
+  border: 1px solid #e74c3c;
+  opacity: 0.75;
 }
 
 .recalledText {

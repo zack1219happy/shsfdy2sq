@@ -250,6 +250,12 @@ export async function deleteForumComment(commentId: string): Promise<boolean> {
   return !!data
 }
 
+export async function togglePinForumPost(postId: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc('toggle_pin_forum_post', { p_post_id: postId })
+  if (error) throw new Error('操作失败: ' + error.message)
+  return !!data
+}
+
 /* =============================================================
    Visibility API — 帖子可见性
    ============================================================= */

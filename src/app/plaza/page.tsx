@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import FaIcon from '@/components/FaIcon'
 import { renderClient } from '@/lib/render-client'
+import { getSession } from '@/lib/auth'
 import { fetchPlazaArticles, fetchPlazaCategories } from '@/lib/gist-api'
 import type { PlazaArticleListResult, PlazaCategory } from '@/types/plaza'
 import { UserName } from '@/components/UserName'
@@ -138,6 +139,8 @@ export default function PlazaListPage() {
 
 function ArticleCard({ article, onClick }: { article: PlazaArticleListResult; onClick: () => void }) {
   const score = (article.like_count ?? 0) - (article.downvote_count ?? 0)
+  const session = getSession()
+  const isAdmin = session && ['admin', 'super_admin'].includes(session.role)
   return (
     <div
       className={styles.postCard}
@@ -146,10 +149,14 @@ function ArticleCard({ article, onClick }: { article: PlazaArticleListResult; on
       tabIndex={0}
       onKeyDown={(e) => { if (e.key === 'Enter') onClick() }}
     >
-      <div
-        className={styles.postTitle}
-        dangerouslySetInnerHTML={{ __html: renderClient(article.title) }}
-      />
+      <div className={styles.postTitle} style={{ position: 'relative' }}>
+        <span dangerouslySetInnerHTML={{ __html: renderClient(article.title) }} />
+        {isAdmin && article.is_awarded && (
+          <span style={{ position: 'absolute', top: 0, right: 0, fontSize: '0.72rem', opacity: 0.45, lineHeight: 1 }}>
+            🏅
+          </span>
+        )}
+      </div>
       <div className={styles.postMeta}>
         <UserName username={article.author_username} className={styles.postAuthor} />
         <span>{formatDate(article.created_at)}</span>

@@ -43,6 +43,7 @@ export interface ForumPost {
   comment_count: number
   excluded_visibility?: string[] | null
   agent_visible?: boolean
+  is_pinned?: boolean
 }
 
 export interface UserInfo {
@@ -65,7 +66,7 @@ export interface ForumComment {
   deleted: boolean
 }
 
-export type NotificationType = 'comment_reply' | 'page_owner' | 'forum_reply' | 'forum_post_update' | 'forum_own_post' | 'dm' | 'wish_reply' | 'wish_status_update'
+export type NotificationType = 'comment_reply' | 'page_owner' | 'forum_reply' | 'forum_post_update' | 'forum_own_post' | 'dm' | 'wish_reply' | 'wish_status_update' | 'forum_like' | 'plaza_like'
 
 export interface ForumNotification extends Notification {
   type: NotificationType

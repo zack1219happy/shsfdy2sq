@@ -29,6 +29,54 @@ interface Props {
 /** 去掉尾斜杠，用于路径比较 */
 const norm = (p: string) => p.replace(/\/+$/, '') || '/'
 
+/** 从 person registry 构建外班同学 initials 集合 */
+function getExternalInitials(): Set<string> {
+  const set = new Set<string>()
+  for (const s of personRegistry.students || []) {
+    if (s.external === 'true') set.add(s.initials)
+  }
+  return set
+}
+
+/**
+ * 在导航树中将外班同学移到「外班同学」子文件夹下
+ */
+function groupExternalStudents(tree: NavNode[]): NavNode[] {
+  const externalInitials = getExternalInitials()
+  if (externalInitials.size === 0) return tree
+
+  const peopleFolder = tree.find((n) => n.pathKey === 'people' || n.id === 'people')
+  if (!peopleFolder || !peopleFolder.children) return tree
+
+  const regularKids: NavNode[] = []
+  const externalKids: NavNode[] = []
+
+  for (const child of peopleFolder.children) {
+    if (child.type === 'folder' && child.id === 'teachers') {
+      // 教师文件夹保持原位
+      regularKids.push(child)
+      continue
+    }
+    if (externalInitials.has(child.id) && child.type === 'page') {
+      externalKids.push(child)
+    } else {
+      regularKids.push(child)
+    }
+  }
+
+  if (externalKids.length === 0) return tree
+
+  const externalFolder: NavNode = {
+    id: 'external',
+    title: '外班同学',
+    type: 'folder',
+    children: externalKids,
+  }
+
+  peopleFolder.children = [...regularKids, externalFolder]
+  return tree
+}
+
 /** 从 Supabase 返回的页面列表构建导航树（客户端版） */
 function buildNavTree(pages: { slug: string; title: string; frontmatter: Record<string, unknown> }[]): NavNode[] {
   const rootMap = new Map<string, NavNode>()
@@ -125,10 +173,11 @@ export default function WikiFilePad(_props: Props) {
       .catch(() => setPages([]))
   }, [])
 
-  // 构建导航树
+  // 构建导航树，并对人物分组
   const tree = useMemo(() => {
     if (!pages) return [] as NavNode[]
-    return buildNavTree(pages)
+    const raw = buildNavTree(pages)
+    return groupExternalStudents(raw)
   }, [pages])
 
   const toggle = useCallback((key: string) => {

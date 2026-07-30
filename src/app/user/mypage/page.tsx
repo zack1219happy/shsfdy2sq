@@ -844,10 +844,6 @@ function PostsTab({
         >
           <div className={styles.listCardBody}>
             <h4 className={styles.listCardTitle}>{post.title}</h4>
-            <p className={styles.listCardExcerpt}>
-              {post.content.replace(/<[^>]+>/g, '').slice(0, 120)}
-              {post.content.length > 120 ? '…' : ''}
-            </p>
           </div>
           <div className={styles.listCardMeta}>
             <span><FaIcon name="arrow-up" /> {post.upvotes}</span>
@@ -921,10 +917,6 @@ function ArticlesTab({
                 <span className={styles.privateBadge}><FaIcon name="key" /> 私密</span>
               )}
             </h4>
-            <p className={styles.listCardExcerpt}>
-              {article.content.replace(/<[^>]+>/g, '').slice(0, 120)}
-              {article.content.length > 120 ? '…' : ''}
-            </p>
           </div>
           <div className={styles.listCardMeta}>
             <span><FaIcon name="arrow-up" /> {article.upvote_count}</span>

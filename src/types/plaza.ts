@@ -17,6 +17,8 @@ export interface PlazaArticle {
   downvote_count: number
   created_at: string
   updated_at: string
+  /** 是否已被管理员奖励积分 */
+  is_awarded?: boolean
 }
 
 export interface PlazaArticleDetail extends PlazaArticle {

@@ -6,13 +6,15 @@
 export interface PersonEntry {
   initials: string
   name: string
-  pinyin: string
-  pinyinPrefix: string
-  pinyinRestInitials: string
-  hyphenForm: string
-  oldSlug: string
+  pinyin: string | null
+  pinyinPrefix: string | null
+  pinyinRestInitials: string | null
+  hyphenForm: string | null
+  oldSlug: string | null
   newSlug: string
-  gender: string
+  gender: string | null
+  /** 是否外班同学（不在本班的学生） */
+  external?: string | null
 }
 
 export interface TeacherEntry {
@@ -114,7 +116,7 @@ export function resolvePerson(
   // ----- 兜底：尝试 oldSlug 尾段匹配（仅学生，教师无独立页面）-----
   if (!isTeacher) {
     const slugTailMatched = (entries as PersonEntry[]).filter(e => {
-      const tail = e.oldSlug.split('/').pop()
+      const tail = e.oldSlug?.split('/').pop()
       return tail === input
     })
     if (slugTailMatched.length >= 1) return uniqueMatch(slugTailMatched)

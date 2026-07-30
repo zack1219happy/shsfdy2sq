@@ -102,6 +102,7 @@ function NewChatView({
   const [otherUser, setOtherUser] = useState<UserInfo | null>(null)
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   useEffect(() => {
     fetchAllUsers().then((users) => {
@@ -113,9 +114,9 @@ function NewChatView({
   const handleSend = useCallback(async () => {
     if (!input.trim() || sending) return
     setSending(true)
+    setErrorMsg(null)
     try {
-      const msgId = await sendMessage(otherUserId, input.trim())
-      // 发送成功后获取对话 ID 并跳转
+      await sendMessage(otherUserId, input.trim())
       const convs = await getConversations()
       const conv = convs.find((c) => c.other_user_id === otherUserId)
       if (conv) {
@@ -124,7 +125,7 @@ function NewChatView({
         router.replace('/dm')
       }
     } catch (e: any) {
-      alert(e?.message || '发送失败')
+      setErrorMsg(e?.message || '发送失败')
     } finally {
       setSending(false)
     }
@@ -139,7 +140,11 @@ function NewChatView({
       </div>
 
       <div className={styles.messageList}>
-        <p className={styles.status}>发送第一条消息给对方 👋</p>
+        {errorMsg ? (
+          <div className={styles.sendError}>{errorMsg}</div>
+        ) : (
+          <p className={styles.status}>发送第一条消息给对方 👋</p>
+        )}
       </div>
 
       <div className={styles.inputArea}>
@@ -180,7 +185,6 @@ function DmChatView({
 }) {
   const [messages, setMessages] = useState<DmMessage[]>([])
   const [loading, setLoading] = useState(true)
-  const [sending, setSending] = useState(false)
   const [input, setInput] = useState('')
   const [otherUser, setOtherUser] = useState<{ id: string; username: string; name: string } | null>(null)
   const otherUserNameRef = useRef('')
@@ -190,7 +194,10 @@ function DmChatView({
     messageId: string
     canRecall: boolean
   } | null>(null)
+  const [failedIds, setFailedIds] = useState<string[]>([])
+  const [sendError, setSendError] = useState<string | null>(null)
   const listRef = useRef<HTMLDivElement | null>(null)
+  const sendingRef = useRef(false)
 
   // 加载消息
   useEffect(() => {
@@ -338,33 +345,46 @@ function DmChatView({
     }
   }, [conversationId])
 
-  // 发送
+  // 发送（乐观）
   const handleSend = useCallback(async () => {
-    if (!input.trim() || !otherUser || sending) return
-    setSending(true)
+    if (!input.trim() || !otherUser || sendingRef.current) return
+    sendingRef.current = true
+
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+    const text = input.trim()
+    const username = getSession()?.username || ''
+
+    // 乐观显示消息，不等待后端
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: tempId,
+        sender_id: currentUserId,
+        sender_username: username,
+        content: text,
+        created_at: new Date().toISOString(),
+        recalled_at: null,
+        is_mine: true,
+      },
+    ])
+    setInput('')
+    setSendError(null)
+    window.dispatchEvent(new CustomEvent('dm-new-message'))
+    window.dispatchEvent(new CustomEvent('new-dm'))
+
     try {
-      const msgId = await sendMessage(otherUser.id, input.trim())
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: msgId,
-          sender_id: currentUserId,
-          sender_username: getSession()?.username || '',
-          content: input.trim(),
-          created_at: new Date().toISOString(),
-          recalled_at: null,
-          is_mine: true,
-        },
-      ])
-      setInput('')
-      window.dispatchEvent(new CustomEvent('dm-new-message'))
-      window.dispatchEvent(new CustomEvent('new-dm'))
+      const realId = await sendMessage(otherUser.id, text)
+      // 替换临时 ID 为真实 ID
+      setMessages((prev) =>
+        prev.map((m) => (m.id === tempId ? { ...m, id: realId } : m)),
+      )
     } catch (e: any) {
-      alert(e?.message || '发送失败')
+      setFailedIds((prev) => [...prev, tempId])
+      setSendError(e?.message || '发送失败')
     } finally {
-      setSending(false)
+      sendingRef.current = false
     }
-  }, [input, otherUser, sending, currentUserId])
+  }, [input, otherUser, currentUserId])
 
   // 撤回
   const handleRecall = useCallback(async (messageId: string) => {
@@ -387,11 +407,12 @@ function DmChatView({
     (e: React.MouseEvent, msg: DmMessage) => {
       e.preventDefault()
       if (!msg.is_mine) return
+      if (failedIds.includes(msg.id)) return
       const created = new Date(msg.created_at).getTime()
       const canRecall = Date.now() - created < 2 * 60 * 1000 && !msg.recalled_at
       setContextMenu({ x: e.clientX, y: e.clientY, messageId: msg.id, canRecall })
     },
-    [],
+    [failedIds],
   )
 
   // 点击外部关闭右键菜单
@@ -414,33 +435,44 @@ function DmChatView({
       <div ref={listRef} className={styles.messageList}>
         {loading ? (
           <p className={styles.status}>加载中…</p>
-        ) : messages.length === 0 ? (
-          <p className={styles.status}>开始聊天吧 👋</p>
         ) : (
-          messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`${styles.message} ${msg.is_mine ? styles.messageMine : styles.messageOther}`}
-              onContextMenu={(e) => handleContextMenu(e, msg)}
-            >
-              <span className={styles.messageAuthor}>
-                <UserName username={msg.sender_username} />
-              </span>
-              <div
-                className={`${styles.bubble} ${msg.is_mine ? styles.bubbleMine : styles.bubbleOther} ${msg.recalled_at ? styles.bubbleRecalled : ''}`}
-              >
-                {msg.recalled_at ? (
-                  <span className={styles.recalledText}>消息已撤回</span>
-                ) : (
-                  <div className={styles.bubbleContent} dangerouslySetInnerHTML={{ __html: replaceWikiLinks(renderClientWithRegistry(msg.content, registry), titleSlugMap, BASE_PATH).replace(/\n+$/, '') }} />
-                )}
-              </div>
-              <span className={styles.messageTime}>
-                {formatMsgTime(msg.created_at)}
-                {msg.is_mine && msg.recalled_at && ' (已撤回)'}
-              </span>
-            </div>
-          ))
+          <>
+            {messages.length === 0 ? (
+              <p className={styles.status}>开始聊天吧 👋</p>
+            ) : (
+              messages.map((msg) => {
+                const isFailed = failedIds.includes(msg.id)
+                return (
+                  <div
+                    key={msg.id}
+                    className={`${styles.message} ${msg.is_mine ? styles.messageMine : styles.messageOther}`}
+                    onContextMenu={(e) => handleContextMenu(e, msg)}
+                  >
+                    <span className={styles.messageAuthor}>
+                      <UserName username={msg.sender_username} />
+                    </span>
+                    <div
+                      className={`${styles.bubble} ${msg.is_mine ? styles.bubbleMine : styles.bubbleOther} ${msg.recalled_at ? styles.bubbleRecalled : ''} ${isFailed ? styles.bubbleFailed : ''}`}
+                    >
+                      {msg.recalled_at ? (
+                        <span className={styles.recalledText}>消息已撤回</span>
+                      ) : (
+                        <div className={styles.bubbleContent} dangerouslySetInnerHTML={{ __html: replaceWikiLinks(renderClientWithRegistry(msg.content, registry), titleSlugMap, BASE_PATH).replace(/\n+$/, '') }} />
+                      )}
+                    </div>
+                    <span className={styles.messageTime}>
+                      {formatMsgTime(msg.created_at)}
+                      {msg.is_mine && msg.recalled_at && ' (已撤回)'}
+                      {isFailed && ' · 发送失败'}
+                    </span>
+                  </div>
+                )
+              })
+            )}
+            {sendError && (
+              <div className={styles.sendError}>{sendError}</div>
+            )}
+          </>
         )}
       </div>
 
@@ -460,9 +492,9 @@ function DmChatView({
           <button
             className={styles.sendBtn}
             onClick={handleSend}
-            disabled={sending || !input.trim()}
+            disabled={!input.trim()}
           >
-            {sending ? '发送中…' : '发送'}
+            发送
           </button>
         </div>
       </div>

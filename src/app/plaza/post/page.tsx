@@ -328,10 +328,14 @@ export default function PlazaArticlePage() {
                 autoFocus
               />
             ) : (
-              <h1
-                className={styles.detailTitle}
-                dangerouslySetInnerHTML={{ __html: renderClient(article.title) }}
-              />
+              <h1 className={styles.detailTitle} style={{ position: 'relative' }}>
+                <span dangerouslySetInnerHTML={{ __html: renderClient(article.title) }} />
+                {isAdmin && article.is_awarded && (
+                  <span style={{ position: 'absolute', top: 4, right: 0, fontSize: '0.8rem', opacity: 0.45 }}>
+                    🏅
+                  </span>
+                )}
+              </h1>
             )}
             <div style={{ display: 'flex', gap: 4 }}>
               {isAuthor && !editing && (

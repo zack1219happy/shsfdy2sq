@@ -49,16 +49,16 @@ export function UserName({ username, className, hideTags, link = true }: Props) 
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation()
-    window.dispatchEvent(new CustomEvent('mypage-route-change'))
     router.push(path)
+    window.dispatchEvent(new CustomEvent('mypage-route-change'))
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()
       e.stopPropagation()
-      window.dispatchEvent(new CustomEvent('mypage-route-change'))
       router.push(path)
+      window.dispatchEvent(new CustomEvent('mypage-route-change'))
     }
   }
 

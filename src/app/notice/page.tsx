@@ -27,6 +27,8 @@ export default function NoticePage() {
         forum_reply: '论坛回复',
         forum_own_post: '帖子动态',
         forum_post_update: '关注更新',
+        forum_like: '赞',
+        plaza_like: '赞',
         wish_reply: '工单回复',
         wish_status_update: '工单动态',
       } as Record<string, string>)[typeFilter] ?? '通知'
@@ -94,28 +96,30 @@ export default function NoticePage() {
       {!loading && !error && filtered.length > 0 && (
         <div className={styles.noticeList}>
           {filtered.map((n) => {
-            const isForum = n.type?.startsWith('forum_') && n.page?.startsWith('forum/')
-            const isPlaza = n.type?.startsWith('forum_') && n.page?.startsWith('plaza/')
+            const isForum = n.type === 'forum_like' || (n.type?.startsWith('forum_') && n.page?.startsWith('forum/'))
+            const isPlaza = n.type === 'plaza_like' || (n.type?.startsWith('forum_') && n.page?.startsWith('plaza/'))
             const isWish = n.type === 'wish_reply' || n.type === 'wish_status_update'
             const basePath = BASE_PATH
             const page = n.page ? (registry.oldToNewSlug[n.page] ?? n.page) : undefined
             const href = isForum
-              ? `${basePath}/forum/post?id=${n.page?.replace('forum/', '') || ''}&comment=${n.comment_id}&_=${Date.now()}`
+              ? `${basePath}/forum/post?id=${n.page?.replace('forum/', '') || ''}${n.comment_id ? '&comment=' + n.comment_id : ''}&_=${Date.now()}`
               : isPlaza
-                ? `${basePath}/plaza/post?slug=${encodeURIComponent(n.page?.replace('plaza/', '') || '')}&comment=${n.comment_id}&_=${Date.now()}`
+                ? `${basePath}/plaza/post?slug=${encodeURIComponent(n.page?.replace('plaza/', '') || '')}${n.comment_id ? '&comment=' + n.comment_id : ''}&_=${Date.now()}`
                 : isWish
-                  ? `${basePath}/wishes/post?id=${n.page?.replace('wishes/', '') || ''}&comment=${n.comment_id || ''}&_=${Date.now()}`
+                  ? `${basePath}/wishes/post?id=${n.page?.replace('wishes/', '') || ''}${n.comment_id ? '&comment=' + n.comment_id : ''}&_=${Date.now()}`
                   : page
-                    ? `${basePath}/wiki/page?slug=${page}&comment=${n.comment_id}&_=${Date.now()}`
+                    ? `${basePath}/wiki/page?slug=${page}${n.comment_id ? '&comment=' + n.comment_id : ''}&_=${Date.now()}`
                     : undefined
 
             let label = '评论'
             if (isForum) {
-              if (n.type === 'forum_reply') label = '论坛回复'
+              if (n.type === 'forum_like') label = '赞'
+              else if (n.type === 'forum_reply') label = '论坛回复'
               else if (n.type === 'forum_own_post') label = '帖子动态'
               else if (n.type === 'forum_post_update') label = '关注更新'
             } else if (isPlaza) {
-              if (n.type === 'forum_reply') label = '文章回复'
+              if (n.type === 'plaza_like') label = '赞'
+              else if (n.type === 'forum_reply') label = '文章回复'
               else if (n.type === 'forum_own_post') label = '文章动态'
               else label = '文章通知'
             } else if (isWish) {
