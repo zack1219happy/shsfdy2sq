@@ -36,6 +36,7 @@
     "markdown-it-highlightjs": "^4.3.0",
     "markdown-it-texmath": "^1.0.0",
     "next": "^16.2.10",
+    "node-notifier": "^10.0.1",
     "pg": "^8.22.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
