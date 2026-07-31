@@ -53,7 +53,25 @@ export function usePreview({
     const raw = renderClientWithRegistry(content, registry, { highlight: true, texmath: true, injectLn: true }, !noSanitize)
     // 渲染 [[Wiki 链接]]
     const withLinks = replaceWikiLinks(raw, effectiveMap, basePath)
-    return withLinks
+    // 处理 ```sandbox 块
+    const SANDBOX_RE = /<div class="js-sandbox"[^>]*data-payload="([^"]*)"[^>]*><\/div>/g
+    const withSandbox = withLinks.replace(SANDBOX_RE, (_match: string, payload: string) => {
+      const decoded = decodeURIComponent(payload)
+      if (noSanitize) {
+        const dataUri = 'data:text/html;charset=utf-8,' + encodeURIComponent(decoded)
+        return `<iframe src="${dataUri}" sandbox="allow-scripts" style="width:100%;border:none;display:block;min-height:300px"></iframe>`
+      }
+      const escaped = decoded
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+      return (
+        `<div class="code-block-wrapper">` +
+        `<div class="code-block-header"><span class="code-lang">sandbox</span></div>` +
+        `<pre class="hljs"><code class="language-sandbox">${escaped}</code></pre></div>`
+      )
+    })
+    return withSandbox
   }, [content, effectiveMap, basePath, noSanitize])
 
   // 滚动事件监听（scroll sync）

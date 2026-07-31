@@ -568,7 +568,7 @@ export default function PlazaArticlePage() {
         ) : (
           <div className={styles.detail}>
             <div className={styles.detailBody}>
-              <WikiContent content={article.content} className="wiki-body" noSanitize={jsMode === 'js'} />
+              <WikiContent content={article.content} className="wiki-body" noSanitize={jsMode === 'js'} format="markdown" />
             </div>
 
             {/* 点赞栏 */}

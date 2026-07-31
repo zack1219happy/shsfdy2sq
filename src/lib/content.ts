@@ -28,7 +28,7 @@ import matter from 'gray-matter'
 import katex from 'katex'
 import DOMPurify from 'isomorphic-dompurify'
 import { getTitleToSlugMap } from './navigation'
-import { calloutPlugin, personPlugin, rawHtmlBlockPlugin } from './md-plugins'
+import { calloutPlugin, personPlugin, rawHtmlBlockPlugin, sandboxBlockPlugin } from './md-plugins'
 import { loadRegistry } from './people-server'
 
 export interface PageContent {
@@ -86,6 +86,7 @@ const md: MarkdownIt = new MarkdownIt({
 
 calloutPlugin(md)
 rawHtmlBlockPlugin(md)
+sandboxBlockPlugin(md)
 personPlugin(md, loadRegistry())
 
 const WIKI_DIR = path.join(process.cwd(), 'data', 'wiki')
