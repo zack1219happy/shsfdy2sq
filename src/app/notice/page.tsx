@@ -97,19 +97,23 @@ export default function NoticePage() {
       {!loading && !error && filtered.length > 0 && (
         <div className={styles.noticeList}>
           {filtered.map((n) => {
-            const isForum = n.type === 'forum_like' || (n.type?.startsWith('forum_') && n.page?.startsWith('forum/'))
-            const isPlaza = n.type === 'plaza_like' || n.type === 'plaza_tip' || (n.type?.startsWith('plaza_') && n.page?.startsWith('plaza/'))
-            const isWish = n.type === 'wish_reply' || n.type === 'wish_status_update'
             const basePath = BASE_PATH
             const page = n.page ? (registry.oldToNewSlug[n.page] ?? n.page) : undefined
+            const pageKey = page ?? ''
+            // 通知指向的内容类型由 page 前缀决定 —— forum_reply / forum_own_post 既可能指向论坛帖子，也可能指向 plaza 文章
+            const isForum = pageKey.startsWith('forum/')
+            const isPlaza = pageKey.startsWith('plaza/')
+            const isWish = pageKey.startsWith('wishes/')
+            // wiki 审核通知的 page 带 'wiki/' 前缀，跳转前去掉
+            const wikiSlug = pageKey.startsWith('wiki/') ? pageKey.slice('wiki/'.length) : pageKey
             const href = isForum
-              ? `${basePath}/forum/post?id=${n.page?.replace('forum/', '') || ''}${n.comment_id ? '&comment=' + n.comment_id : ''}&_=${Date.now()}`
+              ? `${basePath}/forum/post?id=${pageKey.replace('forum/', '') || ''}${n.comment_id ? '&comment=' + n.comment_id : ''}&_=${Date.now()}`
               : isPlaza
-                ? `${basePath}/plaza/post?slug=${encodeURIComponent(n.page?.replace('plaza/', '') || '')}${n.comment_id ? '&comment=' + n.comment_id : ''}&_=${Date.now()}`
+                ? `${basePath}/plaza/post?slug=${encodeURIComponent(pageKey.replace('plaza/', '') || '')}${n.comment_id ? '&comment=' + n.comment_id : ''}&_=${Date.now()}`
                 : isWish
-                  ? `${basePath}/wishes/post?id=${n.page?.replace('wishes/', '') || ''}${n.comment_id ? '&comment=' + n.comment_id : ''}&_=${Date.now()}`
-                  : page
-                    ? `${basePath}/wiki/page?slug=${page}${n.comment_id ? '&comment=' + n.comment_id : ''}&_=${Date.now()}`
+                  ? `${basePath}/wishes/post?id=${pageKey.replace('wishes/', '') || ''}${n.comment_id ? '&comment=' + n.comment_id : ''}&_=${Date.now()}`
+                  : wikiSlug
+                    ? `${basePath}/wiki/page?slug=${wikiSlug}${n.comment_id ? '&comment=' + n.comment_id : ''}&_=${Date.now()}`
                     : undefined
 
             let label = '评论'
