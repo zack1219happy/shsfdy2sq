@@ -57,6 +57,27 @@ export default function SandboxBox({ content, noSanitize }: Props) {
         iframeRef.current = iframe
     }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+    // 切换到 JS 模式时（容器 visible → block），重新读取高度
+    // mount 时 iframe 在 display:none 下加载，scrollHeight 为 0
+    useEffect(() => {
+        if (!noSanitize || !iframeRef.current) return
+        const iframe = iframeRef.current
+        // 等浏览器完成 layout 后再读
+        requestAnimationFrame(() => {
+            try {
+                const doc = iframe.contentDocument
+                if (!doc) return
+                const h = Math.max(
+                    doc.body?.scrollHeight || 0,
+                    doc.body?.offsetHeight || 0,
+                    doc.documentElement?.scrollHeight || 0,
+                    doc.documentElement?.offsetHeight || 0,
+                )
+                if (h > 50) iframe.style.height = h + 'px'
+            } catch { /* 跨域限制 */ }
+        })
+    }, [noSanitize])
+
     const toggleFullscreen = () => {
         if (isFullscreen) {
             document.exitFullscreen()
