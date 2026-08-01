@@ -25,6 +25,7 @@ export default function Editor({
   titleSlugMap,
   onSubmit,
   noSanitizePreview,
+  previewClassName,
 }: EditorProps) {
   // 1. Config
   const merged: MarkdownEditorConfig = useMemo(
@@ -196,7 +197,7 @@ export default function Editor({
           >
             <div ref={previewRef} className={styles.previewArea}>
               <div
-                className={`wiki-body ${styles.previewContent}`}
+                className={`wiki-body ${styles.previewContent} ${previewClassName ?? ''}`}
                 dangerouslySetInnerHTML={{ __html: previewHtml }}
               />
             </div>

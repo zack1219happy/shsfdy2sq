@@ -251,6 +251,11 @@
   border-radius: 0 !important;
 }
 
+/* 编辑器预览：模拟聊天气泡的 pre-wrap 换行（预览所见即所得） */
+.editorPreviewContent {
+  white-space: pre-wrap;
+}
+
 .sendBtn {
   position: absolute;
   bottom: 10px;

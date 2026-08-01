@@ -378,6 +378,7 @@ function CommentForm({
           onChange={setContent}
           config={{ preview: false, fullScreen: false, scrollSync: false }}
           className={commentStyles.editorWrapInner}
+          previewClassName={commentStyles.editorPreviewContent}
         />
       </div>
 

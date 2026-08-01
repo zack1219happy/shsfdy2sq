@@ -45,6 +45,11 @@
   height: 200px;
 }
 
+/* 编辑器预览：模拟评论正文的 pre-wrap 换行（预览所见即所得） */
+.editorPreviewContent {
+  white-space: pre-wrap;
+}
+
 .field {
   display: flex;
   flex-direction: column;

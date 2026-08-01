@@ -155,6 +155,7 @@ function NewChatView({
             onChange={setInput}
             config={{ preview: false, fullScreen: false, scrollSync: false }}
             className={styles.editorInner}
+            previewClassName={styles.editorPreviewContent}
             onSubmit={handleSend}
           />
         </div>
@@ -493,6 +494,7 @@ function DmChatView({
             onChange={setInput}
             config={{ preview: false, fullScreen: false, scrollSync: false }}
             className={styles.editorInner}
+            previewClassName={styles.editorPreviewContent}
             onSubmit={handleSend}
           />
         </div>

@@ -116,6 +116,8 @@ export interface EditorProps {
   onChange: (value: string) => void
   config?: MarkdownEditorConfig
   className?: string
+  /** 预览内容容器的附加类名（用于按实际正文环境渲染预览，如评论的 pre-wrap 换行） */
+  previewClassName?: string
   /** 标题→slug 映射，传入后预览面板启用 [[WikiLink]] 渲染 */
   titleSlugMap?: Record<string, string>
   /** 按 Ctrl+Enter 时触发（用于私信等场景的快捷发送） */
