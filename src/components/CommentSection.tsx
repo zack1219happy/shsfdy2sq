@@ -49,6 +49,8 @@ interface CommentSectionProps {
   scrollKey?: number
   /** 隐藏默认的标题栏（由父组件自定义） */
   hideTitle?: boolean
+  /** 额外拥有删除权的人（如主页主人可删他人留言） */
+  extraDeleteUserId?: string
 }
 
 // ============================================================
@@ -63,6 +65,7 @@ export default function CommentSection({
   targetCommentId: externalTargetId,
   scrollKey: externalScrollKey,
   hideTitle,
+  extraDeleteUserId,
 }: CommentSectionProps) {
   // ---- 自取模式 vs 受控模式 ----
   const isSelfManaged = !!pageSlug
@@ -158,8 +161,10 @@ export default function CommentSection({
   }, [isSelfManaged, pageSlug, externalOnDelete])
 
   const canDelete = useCallback(
-    (authorId?: string) => canDeleteComment(session, authorId),
-    [session],
+    (authorId?: string) =>
+      canDeleteComment(session, authorId) ||
+      (extraDeleteUserId != null && session?.userId === extraDeleteUserId),
+    [session, extraDeleteUserId],
   )
 
   const handleReplyClick = useCallback((id: string, author: string) => {

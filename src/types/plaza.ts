@@ -45,6 +45,52 @@ export interface PlazaComment {
 /** 文章列表返回类型（与 PlazaArticle 一致） */
 export type PlazaArticleListResult = PlazaArticle
 
+/** 沙箱 JS getUserInfo() 返回值（未登录为 null） */
+export interface PlazaUserInfo {
+  username: string
+  student_id: string
+  total_points: number
+}
+
+/** 文章打赏记录（getArticleTips 返回项） */
+export interface PlazaTipRecord {
+  username: string
+  amount: number
+  created_at: string
+}
+
+/** sendPoints 返回值 */
+export interface SendPointsResult {
+  success: boolean
+  message?: string
+}
+
+/** 沙箱持久化存储接口（per 读者 per 文章，value 为字符串） */
+export interface PlazaStorageApi {
+  getItem: (key: string) => Promise<string | null>
+  setItem: (key: string, value: string) => Promise<boolean>
+}
+
+/** 暴露给沙箱 JS 的全局 API（window.plazaAPI） */
+export interface PlazaAPI {
+  /** 当前读者信息；未登录返回 null */
+  getUserInfo: () => Promise<PlazaUserInfo | null>
+  /** 调整当前 sandbox iframe 高度（像素） */
+  setWindowHeight: (height: number) => void
+  /**
+   * 作者预埋悬赏：作者扣分 → 当前读者收分
+   * @param amount 本次发放量
+   * @param articleCap 该文章累计发放上限
+   * @param balanceFloor 作者余额保底线（发完须 ≥ 该值）
+   * @param oncePerUser 为 true 时每读者仅限领取一次
+   */
+  sendPoints: (amount: number, articleCap: number, balanceFloor: number, oncePerUser?: boolean) => Promise<SendPointsResult>
+  /** 该文章收到的读者打赏记录 */
+  getArticleTips: () => Promise<PlazaTipRecord[]>
+  storage: PlazaStorageApi
+}
+
+
 /**
  * 数据库分类节点（扁平记录，前端构建树结构）
  */

@@ -2,6 +2,63 @@
 
 import { useRef, useEffect, useMemo, useState } from 'react'
 
+// 注入到 sandbox iframe 的桥接脚本：定义 iframe 内 window.plazaAPI
+// - setWindowHeight 基于 frameElement 实现（同源，定位自身 iframe），并标记 fixedHeight
+// - 其余方法代理父页面 window.plazaAPI（getUserInfo/sendPoints/getArticleTips/storage）
+const SANDBOX_BRIDGE =
+    '<script>' +
+    '(function(){' +
+    'var parentApi = window.parent ? window.parent.plazaAPI : null;' +
+    'var frameEl = window.frameElement;' +
+    'function proxy(method){' +
+    '  return function(){' +
+    '    if(!parentApi || !parentApi[method]) return null;' +
+    '    return parentApi[method].apply(parentApi, arguments);' +
+    '  };' +
+    '}' +
+    'window.plazaAPI = {' +
+    '  getUserInfo: proxy("getUserInfo"),' +
+    '  setWindowHeight: function(h){' +
+    '    if(frameEl){' +
+    '      var v = Number(h);' +
+    '      if(v > 0){' +
+    '        frameEl.style.height = v + "px";' +
+    '        frameEl.dataset.fixedHeight = "1";' +
+    '      }' +
+    '    }' +
+    '  },' +
+    '  sendPoints: proxy("sendPoints"),' +
+    '  getArticleTips: proxy("getArticleTips"),' +
+    '  storage: {' +
+    '    getItem: function(k){' +
+    '      var s = parentApi && parentApi.storage;' +
+    '      return s && s.getItem ? s.getItem(k) : null;' +
+    '    },' +
+    '    setItem: function(k, v){' +
+    '      var s = parentApi && parentApi.storage;' +
+    '      return s && s.setItem ? s.setItem(k, v) : false;' +
+    '    }' +
+    '  }' +
+    '};' +
+    '})();' +
+    '</script>'
+
+// 自动撑高 iframe；若内容已通过 setWindowHeight 手动固定高度则跳过
+function applyAutoHeight(iframe: HTMLIFrameElement) {
+    if (iframe.dataset.fixedHeight === '1') return
+    try {
+        const doc = iframe.contentDocument
+        if (!doc) return
+        const h = Math.max(
+            doc.body?.scrollHeight || 0,
+            doc.body?.offsetHeight || 0,
+            doc.documentElement?.scrollHeight || 0,
+            doc.documentElement?.offsetHeight || 0,
+        )
+        if (h > 50) iframe.style.height = h + 'px'
+    } catch { /* 跨域限制，保留 min-height */ }
+}
+
 interface Props {
     /** 原始 HTML/CSS/JS 内容（已从 data-payload 解码） */
     content: string
@@ -37,21 +94,12 @@ export default function SandboxBox({ content, noSanitize }: Props) {
         iframeCreated.current = true
 
         const iframe = document.createElement('iframe')
-        iframe.srcdoc = content
+        // 桥接脚本置于 srcdoc 最前，保证在作者内容脚本之前定义 window.plazaAPI
+        iframe.srcdoc = SANDBOX_BRIDGE + content
         iframe.sandbox = 'allow-scripts allow-same-origin'
         iframe.style.cssText = 'width:100%;border:none;display:block;min-height:300px;border-radius:var(--border-radius)'
         iframe.addEventListener('load', () => {
-            try {
-                const doc = iframe.contentDocument
-                if (!doc) return
-                const h = Math.max(
-                    doc.body?.scrollHeight || 0,
-                    doc.body?.offsetHeight || 0,
-                    doc.documentElement?.scrollHeight || 0,
-                    doc.documentElement?.offsetHeight || 0,
-                )
-                if (h > 50) iframe.style.height = h + 'px'
-            } catch { /* 跨域限制，保留 min-height */ }
+            applyAutoHeight(iframe)
         })
         iframeContainerRef.current!.appendChild(iframe)
         iframeRef.current = iframe
@@ -64,17 +112,7 @@ export default function SandboxBox({ content, noSanitize }: Props) {
         const iframe = iframeRef.current
         // 等浏览器完成 layout 后再读
         requestAnimationFrame(() => {
-            try {
-                const doc = iframe.contentDocument
-                if (!doc) return
-                const h = Math.max(
-                    doc.body?.scrollHeight || 0,
-                    doc.body?.offsetHeight || 0,
-                    doc.documentElement?.scrollHeight || 0,
-                    doc.documentElement?.offsetHeight || 0,
-                )
-                if (h > 50) iframe.style.height = h + 'px'
-            } catch { /* 跨域限制 */ }
+            applyAutoHeight(iframe)
         })
     }, [noSanitize])
 

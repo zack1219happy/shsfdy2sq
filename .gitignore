@@ -32,6 +32,7 @@ playwright.config.js
 # local planning & AI config docs
 PLAN.md
 CLAUDE.md
+SANDBOX.md
 
 # generated preview
 __icon_preview.html

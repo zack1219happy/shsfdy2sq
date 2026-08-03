@@ -20,12 +20,17 @@ import {
   fetchPlazaCategories,
   awardPlazaArticlePoints,
   tipPlazaArticle,
+  fetchMyPoints,
+  sendPlazaPoints,
+  fetchPlazaArticleTips,
+  getPlazaStorage,
+  setPlazaStorage,
 } from '@/lib/gist-api'
 import { loadPinyinInitialsFromDB } from '@/lib/people'
 import TableOfContents from '@/components/TableOfContents'
 import CommentSection from '@/components/CommentSection'
 import type { Heading } from '@/lib/content'
-import type { PlazaArticleDetail, PlazaComment, PlazaCategory } from '@/types/plaza'
+import type { PlazaArticleDetail, PlazaComment, PlazaCategory, PlazaAPI } from '@/types/plaza'
 import { getCategoryPathById } from '@/types/plaza'
 import type { UnifiedComment } from '@/components/CommentSection'
 import { UserName } from '@/components/UserName'
@@ -40,6 +45,13 @@ const MarkdownEditor = dynamic(
   () => import('@/components/MarkdownEditor').then((m) => m.MarkdownEditor),
   { ssr: false },
 )
+
+declare global {
+  interface Window {
+    /** 暴露给 ```sandbox 沙箱 JS 的全局 API（同源 iframe 内通过 window.plazaAPI 访问） */
+    plazaAPI?: PlazaAPI
+  }
+}
 
 /* ==============================================================
    文章详情页 — 查看 / 编辑 / 删除 / 赞+踩
@@ -100,6 +112,36 @@ export default function PlazaArticlePage() {
       }
     })()
   }, [slug])
+
+  // ── 注入沙箱 JS 全局 API：window.plazaAPI ──
+  // 每个 sandbox iframe（同源）内的桥接脚本会把自身 window.plazaAPI 指向这里，
+  // 并把 setWindowHeight 替换为基于 frameElement 的实现。
+  useEffect(() => {
+    if (!article) return
+    const api: PlazaAPI = {
+      getUserInfo: async () => {
+        const s = getSession()
+        if (!s) return null
+        const totalPoints = await fetchMyPoints()
+        return { username: s.username, student_id: s.studentId, total_points: totalPoints }
+      },
+      setWindowHeight: (_height: number) => {
+        // 真实实现由 SandboxBox 注入 iframe 的桥接脚本负责（frameElement 定位自身 iframe），
+        // 父页面该方法为 no-op，避免误用（无 iframe 上下文无法定位目标）。
+      },
+      sendPoints: (amount, cap, floor, once = false) =>
+        sendPlazaPoints(article.id, amount, cap, floor, once),
+      getArticleTips: () => fetchPlazaArticleTips(article.id),
+      storage: {
+        getItem: (key) => getPlazaStorage(article.id, key),
+        setItem: (key, value) => setPlazaStorage(article.id, key, value),
+      },
+    }
+    window.plazaAPI = api
+    return () => {
+      if (window.plazaAPI === api) delete window.plazaAPI
+    }
+  }, [article])
 
   useEffect(() => {
     loadPinyinInitialsFromDB()

@@ -3,7 +3,7 @@
 import { supabase } from './supabase'
 import { showWarningToast } from './toast'
 import type { Comment, CommentsData, ForumPost, ForumComment, NotificationType, UserInfo } from '@/types/gist'
-import type { PlazaArticle, PlazaArticleDetail, PlazaArticleListResult, PlazaComment, PlazaCategory } from '@/types/plaza'
+import type { PlazaArticle, PlazaArticleDetail, PlazaArticleListResult, PlazaComment, PlazaCategory, PlazaTipRecord, SendPointsResult } from '@/types/plaza'
 import type { WishItem, WishComment } from '@/types/wishes'
 
 function mapComment(raw: Record<string, unknown>): Comment {
@@ -600,6 +600,59 @@ export async function tipPlazaArticle(articleId: string, amount: number): Promis
 }
 
 /* =============================================================
+   Plaza Sandbox API — 沙箱 JS 交互能力
+   ============================================================= */
+
+/** 作者预埋悬赏：作者扣分 → 当前读者收分 */
+export async function sendPlazaPoints(
+  articleId: string,
+  amount: number,
+  articleCap: number,
+  balanceFloor: number,
+  oncePerUser = false,
+): Promise<SendPointsResult> {
+  const { data, error } = await supabase.rpc('send_plaza_points', {
+    p_article_id: articleId,
+    p_amount: amount,
+    p_article_cap: articleCap,
+    p_balance_floor: balanceFloor,
+    p_once_per_user: oncePerUser,
+  })
+  if (error) return { success: false, message: error.message }
+  return { success: data === true }
+}
+
+/** 获取文章收到的读者打赏记录 */
+export async function fetchPlazaArticleTips(articleId: string): Promise<PlazaTipRecord[]> {
+  const { data, error } = await supabase.rpc('get_plaza_article_tips', {
+    p_article_id: articleId,
+  })
+  if (error) throw new Error('获取打赏记录失败: ' + error.message)
+  return (data ?? []) as PlazaTipRecord[]
+}
+
+/** 读取当前用户在当前文章的持久化存储 */
+export async function getPlazaStorage(articleId: string, key: string): Promise<string | null> {
+  const { data, error } = await supabase.rpc('get_plaza_storage', {
+    p_article_id: articleId,
+    p_key: key,
+  })
+  if (error) return null
+  return (data as string) ?? null
+}
+
+/** 写入当前用户在当前文章的持久化存储 */
+export async function setPlazaStorage(articleId: string, key: string, value: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc('set_plaza_storage', {
+    p_article_id: articleId,
+    p_key: key,
+    p_value: value,
+  })
+  if (error) return false
+  return true
+}
+
+/* =============================================================
    Shop API — 积分商城
    ============================================================= */
 
@@ -650,4 +703,44 @@ export async function fetchUserExclusiveTags(): Promise<TagData[]> {
   const { data, error } = await supabase.rpc('get_user_exclusive_tags')
   if (error) return []
   return (data ?? []) as TagData[]
+}
+
+/* =============================================================
+   User Messages API — 用户主页留言板
+   ============================================================= */
+
+export interface UserMessage {
+  id: string
+  parent_id: string | null
+  author_id: string
+  author_username: string
+  content: string
+  created_at: string
+  deleted: boolean
+}
+
+export async function fetchUserMessages(targetUserId: string): Promise<UserMessage[]> {
+  const { data, error } = await supabase.rpc('get_user_messages', { p_target_user_id: targetUserId })
+  if (error) throw new Error('获取留言失败: ' + error.message)
+  return ((data ?? []) as UserMessage[]).map((c: any) => ({ ...c, deleted: !!c.deleted }))
+}
+
+export async function addUserMessage(
+  targetUserId: string,
+  content: string,
+  parentId?: string,
+): Promise<string> {
+  const { data, error } = await supabase.rpc('add_user_message', {
+    p_target_user_id: targetUserId,
+    p_content: content.trim(),
+    p_parent_id: parentId || null,
+  })
+  if (error) throw new Error('留言失败: ' + error.message)
+  return data as string
+}
+
+export async function deleteUserMessage(commentId: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc('delete_user_message', { p_comment_id: commentId })
+  if (error) throw new Error('删除失败: ' + error.message)
+  return !!data
 }

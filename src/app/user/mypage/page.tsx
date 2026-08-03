@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic'
 import FaIcon from '@/components/FaIcon'
 import { UserName } from '@/components/UserName'
 import WikiContent from '@/components/WikiContent'
+import MessageBoard from '@/components/MessageBoard'
 import { getSession } from '@/lib/auth'
 import { getPinyinInitials, loadPinyinInitialsFromDB } from '@/lib/people'
 import { supabase } from '@/lib/supabase'
@@ -169,6 +170,12 @@ function UserMypage() {
     // 优先从 activeQuery（事件驱动更新），首次渲染时可能为空，备选直读 URL
     const q = activeQuery || (typeof window !== 'undefined' ? window.location.search : '')
     return new URLSearchParams(q).get('user') || null
+  }, [activeQuery])
+
+  // 通知跳转锚点：URL 中 comment id → 滚动到对应留言
+  const urlCommentId = useMemo(() => {
+    const q = activeQuery || (typeof window !== 'undefined' ? window.location.search : '')
+    return new URLSearchParams(q).get('comment') || null
   }, [activeQuery])
 
   // 防止重复加载
@@ -379,6 +386,8 @@ function UserMypage() {
               privacy={privacy}
               onTogglePrivacy={togglePrivacy}
               stats={stats}
+              targetCommentId={urlCommentId}
+              scrollKey={urlCommentId ? urlCommentId.length : 0}
             />
           )}
           {activeTab === 'posts' && (
@@ -637,7 +646,7 @@ function StatsStrip({
    ============================================================== */
 
 function HomeTab({
-  isSelf, profile, dailyPoints, privacy, onTogglePrivacy, stats,
+  isSelf, profile, dailyPoints, privacy, onTogglePrivacy, stats, targetCommentId, scrollKey,
 }: {
   isSelf: boolean
   profile: UserProfile
@@ -645,6 +654,8 @@ function HomeTab({
   privacy: PrivacySettings
   onTogglePrivacy: (section: keyof PrivacySettings) => void
   stats: UserStats | null
+  targetCommentId: string | null
+  scrollKey: number
 }) {
   return (
     <div className={styles.tabContent}>
@@ -665,6 +676,17 @@ function HomeTab({
         onToggleVisibility={isSelf ? () => onTogglePrivacy('heatmap') : undefined}
       />
       <BioSection isSelf={isSelf} bio={profile.bio} />
+
+      <section className={styles.card}>
+        <h3 className={styles.cardTitle}>
+          <FaIcon name="comments" /> 留言板
+        </h3>
+        <MessageBoard
+          targetUserId={profile.id}
+          targetCommentId={targetCommentId}
+          scrollKey={scrollKey}
+        />
+      </section>
     </div>
   )
 }

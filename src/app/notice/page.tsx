@@ -32,6 +32,7 @@ export default function NoticePage() {
         plaza_tip: '投币',
         wish_reply: '工单回复',
         wish_status_update: '工单动态',
+        user_message: '主页留言',
       } as Record<string, string>)[typeFilter] ?? '通知'
     : '通知'
 
@@ -101,20 +102,23 @@ export default function NoticePage() {
             const page = n.page ? (registry.oldToNewSlug[n.page] ?? n.page) : undefined
             const pageKey = page ?? ''
             // 通知指向的内容类型由 page 前缀决定 —— forum_reply / forum_own_post 既可能指向论坛帖子，也可能指向 plaza 文章
+            const isUser = pageKey.startsWith('user/')
             const isForum = pageKey.startsWith('forum/')
             const isPlaza = pageKey.startsWith('plaza/')
             const isWish = pageKey.startsWith('wishes/')
             // wiki 审核通知的 page 带 'wiki/' 前缀，跳转前去掉
             const wikiSlug = pageKey.startsWith('wiki/') ? pageKey.slice('wiki/'.length) : pageKey
-            const href = isForum
-              ? `${basePath}/forum/post?id=${pageKey.replace('forum/', '') || ''}${n.comment_id ? '&comment=' + n.comment_id : ''}&_=${Date.now()}`
-              : isPlaza
-                ? `${basePath}/plaza/post?slug=${encodeURIComponent(pageKey.replace('plaza/', '') || '')}${n.comment_id ? '&comment=' + n.comment_id : ''}&_=${Date.now()}`
-                : isWish
-                  ? `${basePath}/wishes/post?id=${pageKey.replace('wishes/', '') || ''}${n.comment_id ? '&comment=' + n.comment_id : ''}&_=${Date.now()}`
-                  : wikiSlug
-                    ? `${basePath}/wiki/page?slug=${wikiSlug}${n.comment_id ? '&comment=' + n.comment_id : ''}&_=${Date.now()}`
-                    : undefined
+            const href = isUser
+              ? `${basePath}/user/mypage?user=${encodeURIComponent(pageKey.replace('user/', '') || '')}${n.comment_id ? '&comment=' + n.comment_id : ''}&_=${Date.now()}`
+              : isForum
+                ? `${basePath}/forum/post?id=${pageKey.replace('forum/', '') || ''}${n.comment_id ? '&comment=' + n.comment_id : ''}&_=${Date.now()}`
+                : isPlaza
+                  ? `${basePath}/plaza/post?slug=${encodeURIComponent(pageKey.replace('plaza/', '') || '')}${n.comment_id ? '&comment=' + n.comment_id : ''}&_=${Date.now()}`
+                  : isWish
+                    ? `${basePath}/wishes/post?id=${pageKey.replace('wishes/', '') || ''}${n.comment_id ? '&comment=' + n.comment_id : ''}&_=${Date.now()}`
+                    : wikiSlug
+                      ? `${basePath}/wiki/page?slug=${wikiSlug}${n.comment_id ? '&comment=' + n.comment_id : ''}&_=${Date.now()}`
+                      : undefined
 
             let label = '评论'
             if (isForum) {
@@ -131,6 +135,8 @@ export default function NoticePage() {
             } else if (isWish) {
               if (n.type === 'wish_reply') label = '工单回复'
               else if (n.type === 'wish_status_update') label = '工单动态'
+            } else if (isUser) {
+              label = '主页留言'
             }
 
             const isDeleted = n.excerpt === '评论已删除'
