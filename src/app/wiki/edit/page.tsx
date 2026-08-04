@@ -20,7 +20,7 @@ export default function WikiEditPage() {
   const searchParams = useSearchParams()
   const slug = searchParams.get('slug') || ''
 
-  const [session, setSession] = useState(getSession())
+  const [session] = useState(getSession())
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(true)
@@ -28,7 +28,7 @@ export default function WikiEditPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!slug) { setLoading(false); return }
+    if (!slug) return
     ;(async () => {
       try {
         // 尝试从 DB 加载，fallback 到静态内容
@@ -46,8 +46,8 @@ export default function WikiEditPage() {
         } else {
           setError('页面不存在')
         }
-      } catch (e: any) {
-        setError(e?.message || '加载失败')
+      } catch (e) {
+        setError((e as { message?: string })?.message || '加载失败')
       } finally {
         setLoading(false)
       }
@@ -62,8 +62,8 @@ export default function WikiEditPage() {
       await submitWikiRevision(slug, title.trim(), content.trim())
       showWarningToast('编辑已提交审核 ✅')
       router.push(`/wiki/page?slug=${slug}`)
-    } catch (e: any) {
-      setError(e?.message || '提交失败')
+    } catch (e) {
+      setError((e as { message?: string })?.message || '提交失败')
     } finally {
       setSubmitting(false)
     }

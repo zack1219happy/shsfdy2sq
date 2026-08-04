@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
 
 interface Toast {
@@ -10,6 +10,9 @@ interface Toast {
 }
 
 let nextToastId = 0
+
+/** 空订阅：仅用于 SSR/hydration 阶段区分客户端挂载状态 */
+const emptySubscribe = () => () => {}
 
 /**
  * ToastProvider — 基于 React Portal 的全局 Toast 通知
@@ -21,11 +24,8 @@ let nextToastId = 0
  */
 export default function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  // SSR/hydration 阶段返回 false，挂载后返回 true，避免在服务端访问 document.body
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false)
 
   const addToast = useCallback((message: string) => {
     const id = nextToastId++

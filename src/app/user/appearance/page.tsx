@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState, type CSSProperties } from 'react'
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import FaIcon from '@/components/FaIcon'
@@ -14,7 +14,7 @@ type PageState = 'loading' | 'ready' | 'error'
 
 export default function AppearancePage() {
   const router = useRouter()
-  const [session, setSession] = useState(getSession())
+  const [session] = useState(getSession())
   const [pageState, setPageState] = useState<PageState>('loading')
   const [errorMsg, setErrorMsg] = useState('')
 
@@ -36,21 +36,12 @@ export default function AppearancePage() {
   // 操作状态
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
-    if (!session) { router.push('/'); return }
-    loadData()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   const loadData = useCallback(async () => {
-    setPageState('loading')
-    setErrorMsg('')
-    try {
-      const [purchasesData, equipped, exclusive] = await Promise.all([
-        fetchUserPurchases(),
-        fetchUserEquipped(),
-        fetchUserExclusiveTags(),
-      ])
+    await Promise.all([
+      fetchUserPurchases(),
+      fetchUserEquipped(),
+      fetchUserExclusiveTags(),
+    ]).then(([purchasesData, equipped, exclusive]) => {
       setPurchases(purchasesData)
       setExclusiveTags(exclusive)
       setCurrentColor(equipped.color)
@@ -69,17 +60,29 @@ export default function AppearancePage() {
       if (customTag) setCustomTagText(customTag.v)
 
       setPageState('ready')
-    } catch (e) {
+    }).catch((e) => {
       setErrorMsg(e instanceof Error ? e.message : '加载失败')
       setPageState('error')
-    }
+    })
+  }, [])
+
+  const handleRetry = useCallback(() => {
+    setPageState('loading')
+    setErrorMsg('')
+    loadData()
+  }, [loadData])
+
+  useEffect(() => {
+    if (!session) { router.push('/'); return }
+    loadData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // 已购颜色
   const ownedColors = purchases.filter(p => p.item_type === 'color')
   // 已购标签（排除自定义 item）
   const ownedTags = purchases.filter(p => p.item_type === 'tag' && p.value !== CUSTOM_TAG_VALUE)
-  const customTagPurchase = purchases.find(p => p.item_type === 'tag' && p.value === CUSTOM_TAG_VALUE)
+  const customTagPurchase = useMemo(() => purchases.find(p => p.item_type === 'tag' && p.value === CUSTOM_TAG_VALUE), [purchases])
   const isCustomEquipped = customTagText.trim().length > 0 && currentTags.includes(customTagText.trim())
 
   // 当前用户名（从 session）
@@ -90,12 +93,17 @@ export default function AppearancePage() {
   const displayTags = [...builtinTags, ...currentTags]
 
   // 标签颜色映射（tag value → tag_color，来自购买记录）
-  const tagColorMap: Record<string, string | null> = {}
-  for (const p of ownedTags) {
-    tagColorMap[p.value] = p.tag_color
-  }
+  const tagColorMap: Record<string, string | null> = useMemo(() => {
+    const map: Record<string, string | null> = {}
+    for (const p of purchases) {
+      if (p.item_type === 'tag' && p.value !== CUSTOM_TAG_VALUE) {
+        map[p.value] = p.tag_color
+      }
+    }
+    return map
+  }, [purchases])
   // 自定义灰色（购买了"自定义灰色"商品的用户可以用，未购买时自定义 tag 显示纯灰）
-  const customGrayColor: string | null = customTagPurchase?.tag_color ?? null
+  const customGrayColor: string | null = useMemo(() => customTagPurchase?.tag_color ?? null, [customTagPurchase])
 
   // 处理颜色选择
   const handleColorSelect = useCallback(async (itemId: string, colorValue: string) => {
@@ -154,7 +162,7 @@ export default function AppearancePage() {
     } finally {
       setSaving(false)
     }
-  }, [saving, currentTags])
+  }, [saving, currentTags, tagColorMap, customGrayColor])
 
   // 自定义 tag — 单击切换装备
   const handleCustomTagToggle = useCallback(async () => {
@@ -176,7 +184,7 @@ export default function AppearancePage() {
       if (!r.success) setCurrentTags(currentTags)
     } catch { setCurrentTags(currentTags) }
     finally { setSaving(false) }
-  }, [saving, customTagText, currentTags])
+  }, [saving, customTagText, currentTags, tagColorMap, customGrayColor])
 
   // 自定义 tag — 双击编辑
   const handleCustomTagStartEdit = useCallback(() => {
@@ -200,7 +208,7 @@ export default function AppearancePage() {
       if (!r.success) setCurrentTags(currentTags)
     } catch { setCurrentTags(currentTags) }
     finally { setSaving(false) }
-  }, [customTagText, currentTags, ownedTags, session])
+  }, [customTagText, currentTags, ownedTags, tagColorMap, customGrayColor, session])
 
   if (!session) return null
 
@@ -219,7 +227,7 @@ export default function AppearancePage() {
         <h2 className={styles.appearanceTitle}><FaIcon name="palette" /> 名称装扮</h2>
         <div className={styles.statusError}>
           <p>{errorMsg}</p>
-          <button className={styles.pageBtn} onClick={loadData}>重试</button>
+          <button className={styles.pageBtn} onClick={handleRetry}>重试</button>
         </div>
       </div>
     )

@@ -44,9 +44,16 @@ export default function WikiContent({ content, format, className, titleSlugMap: 
     const basePath = BASE_PATH
     const [assetMap, setAssetMap] = useState<Map<string, string> | null>(null)
 
+    // slug 变为空时重置 assetMap（渲染期调整，替代 effect 内同步 setState）
+    const [prevSlug, setPrevSlug] = useState(slug)
+    if (prevSlug !== slug) {
+        setPrevSlug(slug)
+        if (!slug) setAssetMap(null)
+    }
+
     // 从 DB 加载当前页面的图片 base64（向上遍历父 slug）
     useEffect(() => {
-        if (!slug) { setAssetMap(null); return }
+        if (!slug) return
         let cancelled = false
         const segments = slug.split('/')
         ;(async () => {
@@ -87,10 +94,6 @@ export default function WikiContent({ content, format, className, titleSlugMap: 
     // ---- callout details open state persistence ----
     const detailsStateRef = useRef<Record<string, boolean>>({})
     const prevContentRef = useRef(content)
-    if (prevContentRef.current !== content) {
-        detailsStateRef.current = {}
-        prevContentRef.current = content
-    }
 
     useEffect(() => {
         const el = ref.current
@@ -111,6 +114,11 @@ export default function WikiContent({ content, format, className, titleSlugMap: 
     }, [html])
 
     useLayoutEffect(() => {
+        // content 变化时重置保存的 open 状态（移入 effect，避免渲染期访问 ref）
+        if (prevContentRef.current !== content) {
+            detailsStateRef.current = {}
+            prevContentRef.current = content
+        }
         const el = ref.current
         if (!el) return
         const all = el.querySelectorAll<HTMLDetailsElement>('details.callout')

@@ -21,10 +21,14 @@ interface StaticFallback {
   headings: Heading[]
 }
 
+interface AgreementSlugRow {
+  slug: string
+}
+
 async function getDBSlugs(): Promise<string[]> {
   try {
     const { data } = await supabase.rpc('get_agreement_slugs')
-    return (data ?? []).map((r: any) => r.slug)
+    return ((data ?? []) as AgreementSlugRow[]).map((r) => r.slug)
   } catch {
     return []
   }

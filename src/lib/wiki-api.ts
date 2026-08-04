@@ -35,6 +35,23 @@ export interface WikiRevision {
   is_conflict: boolean
 }
 
+/** 我提交的待审核修订（get_my_pending_revisions 行） */
+export interface MyPendingRevision {
+  id: string
+  slug: string
+  page_title: string
+  status: string
+  created_at: string
+}
+
+/** 指定页面的我的待审核修订（get_user_pending_revision 行） */
+export interface UserPendingRevision {
+  id: string
+  title: string
+  content: string
+  created_at: string
+}
+
 export interface RevisionDetail {
   id: string
   slug: string
@@ -139,18 +156,18 @@ export async function rejectWikiRevision(
 
 // ── 获取自己的 pending ──
 
-export async function fetchMyPendingRevisions(): Promise<{ id: string; slug: string; page_title: string; status: string; created_at: string }[]> {
+export async function fetchMyPendingRevisions(): Promise<MyPendingRevision[]> {
   const { data, error } = await supabase.rpc('get_my_pending_revisions')
   if (error) throw new Error('获取我的修订失败: ' + error.message)
-  return (data ?? []) as any[]
+  return (data ?? []) as MyPendingRevision[]
 }
 
 // ── 获取指定页面的自己的 pending ──
 
-export async function fetchUserPendingRevision(slug: string): Promise<{ id: string; title: string; content: string; created_at: string } | null> {
+export async function fetchUserPendingRevision(slug: string): Promise<UserPendingRevision | null> {
   const { data, error } = await supabase.rpc('get_user_pending_revision', { p_slug: slug })
   if (error) throw new Error('获取我的待审核失败: ' + error.message)
-  return (data as any[])?.[0] ?? null
+  return (data as UserPendingRevision[])?.[0] ?? null
 }
 
 // ── 获取页面图片资源（base64） ──
@@ -167,7 +184,7 @@ export interface WikiAsset {
 export async function fetchWikiSlugs(): Promise<string[]> {
   const { data, error } = await supabase.rpc('get_wiki_slugs')
   if (error) throw new Error('获取 wiki slug 列表失败: ' + error.message)
-  return (data ?? []).map((r: any) => r.slug)
+  return (data ?? []).map((r: { slug: string }) => r.slug)
 }
 
 // ── 获取所有 wiki 页面（用于导航树） ──
@@ -206,6 +223,17 @@ export interface PageRequestDetail {
   author_id: string
   author_username: string
   author_name: string
+  status: string
+  created_at: string
+  reviewed_at?: string
+  review_comment?: string
+}
+
+/** 我提交的页面请求（get_my_page_requests 行） */
+export interface MyPageRequest {
+  id: string
+  slug: string
+  title: string
   status: string
   created_at: string
   reviewed_at?: string
@@ -278,10 +306,10 @@ export async function rejectPageRequest(
 }
 
 /** 获取自己的页面请求列表 */
-export async function fetchMyPageRequests(): Promise<{ id: string; slug: string; title: string; status: string; created_at: string; reviewed_at?: string; review_comment?: string }[]> {
+export async function fetchMyPageRequests(): Promise<MyPageRequest[]> {
   const { data, error } = await supabase.rpc('get_my_page_requests')
   if (error) throw new Error('获取我的请求失败: ' + error.message)
-  return (data ?? []) as any[]
+  return (data ?? []) as MyPageRequest[]
 }
 
 /** 检查 slug 是否可用 */

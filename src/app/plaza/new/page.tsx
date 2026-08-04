@@ -51,23 +51,25 @@ export default function NewArticlePage() {
 
   // 恢复草稿
   useEffect(() => {
-    interface DraftData {
-      title: string
-      content: string
-      categoryId: string | null
-      categoryName: string | null
-      isPublic: boolean
-      hasJs: boolean
-    }
-    const draft = loadDraft<DraftData>('plaza_new')
-    if (draft) {
-      if (draft.title) setTitle(draft.title)
-      if (draft.content) setContent(draft.content)
-      if (draft.categoryId) setCategoryId(draft.categoryId)
-      if (draft.categoryName) setCategoryName(draft.categoryName)
-      if (draft.isPublic !== undefined) setIsPublic(draft.isPublic)
-      if (draft.hasJs !== undefined) setHasJs(draft.hasJs)
-    }
+    void (async () => {
+      interface DraftData {
+        title: string
+        content: string
+        categoryId: string | null
+        categoryName: string | null
+        isPublic: boolean
+        hasJs: boolean
+      }
+      const draft = loadDraft<DraftData>('plaza_new')
+      if (draft) {
+        if (draft.title) setTitle(draft.title)
+        if (draft.content) setContent(draft.content)
+        if (draft.categoryId) setCategoryId(draft.categoryId)
+        if (draft.categoryName) setCategoryName(draft.categoryName)
+        if (draft.isPublic !== undefined) setIsPublic(draft.isPublic)
+        if (draft.hasJs !== undefined) setHasJs(draft.hasJs)
+      }
+    })()
   }, [])
 
   // 自动保存草稿
@@ -123,12 +125,12 @@ export default function NewArticlePage() {
       await createPlazaArticle(title.trim(), slug, content.trim(), categoryId, isPublic, hasJs)
       clearDraft()
       router.push('/plaza/post?slug=' + encodeURIComponent(slug))
-    } catch (e: any) {
-      setError(e?.message || '发布失败')
+    } catch (e: unknown) {
+      setError(e instanceof Error && e.message ? e.message : '发布失败')
     } finally {
       setSubmitting(false)
     }
-  }, [title, content, session, categoryId, categories, isPublic, hasJs, router])
+  }, [title, content, session, categoryId, categories, isPublic, hasJs, router, clearDraft])
 
   /** 忽略重复警告，强制发布 */
   const handleForceSubmit = useCallback(async () => {
@@ -151,12 +153,12 @@ export default function NewArticlePage() {
       await createPlazaArticle(title.trim(), slug, content.trim(), categoryId, isPublic, hasJs)
       clearDraft()
       router.push('/plaza/post?slug=' + encodeURIComponent(slug))
-    } catch (e: any) {
-      setError(e?.message || '发布失败')
+    } catch (e: unknown) {
+      setError(e instanceof Error && e.message ? e.message : '发布失败')
     } finally {
       setSubmitting(false)
     }
-  }, [title, content, session, categoryId, categories, isPublic, hasJs, router])
+  }, [title, content, session, categoryId, categories, isPublic, hasJs, router, clearDraft])
 
   if (!session) {
     return (

@@ -44,8 +44,9 @@ export default function ForumPostPage() {
 
   const [post, setPost] = useState<ForumPost | null>(null)
   const [comments, setComments] = useState<ForumComment[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loadedPostId, setLoadedPostId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const loading = loadedPostId !== postId
   const [session, setSession] = useState<{ userId: string; username: string } | null>(null)
   const [myVote, setMyVote] = useState<string | null>(null)
   const [editing, setEditing] = useState(false)
@@ -69,25 +70,25 @@ export default function ForumPostPage() {
   }, [loading, commentId, scrollReady])
 
   /** 全量加载（首次 / 出错时用） */
-  const load = useCallback(async () => {
+  const load = useCallback(() => {
     if (!postId) return
-    try {
-      setLoading(true)
-      setError(null)
-      const [p, c, s, v] = await Promise.all([
-        fetchForumPost(postId),
-        fetchForumComments(postId),
-        getSession(),
-        getUserForumVote(postId).catch(() => null),
-      ])
-      if (!p) { setError('帖子不存在'); return }
-      setPost(p)
-      setComments(c)
-      setSession(s)
-      setMyVote(v)
-      fetchAllUsers().then(setAllUsers).catch(() => {}).finally(() => setUsersLoading(false))
-    } catch (e: any) { setError(e.message) }
-    finally { setLoading(false) }
+    Promise.all([
+      fetchForumPost(postId),
+      fetchForumComments(postId),
+      getSession(),
+      getUserForumVote(postId).catch(() => null),
+    ])
+      .then(([p, c, s, v]) => {
+        setError(null)
+        if (!p) { setError('帖子不存在'); return }
+        setPost(p)
+        setComments(c)
+        setSession(s)
+        setMyVote(v)
+        fetchAllUsers().then(setAllUsers).catch(() => {}).finally(() => setUsersLoading(false))
+      })
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : null))
+      .finally(() => setLoadedPostId(postId))
   }, [postId])
 
   /** 局部刷新：只重拉帖子 + 我的投票（投票后、编辑后），不触发 loading */
@@ -119,20 +120,23 @@ export default function ForumPostPage() {
   // 编辑模式草稿恢复
   useEffect(() => {
     if (!postId) return
-    interface DraftData {
-      title: string
-      content: string
-      excludedUserIds: string[]
-    }
-    const draft = loadDraft<DraftData>(`forum_edit_${postId}`)
-    if (draft && postId) {
-      // 有草稿时自动进入编辑模式
-      if (draft.title) setEditTitle(draft.title)
-      if (draft.content) setEditContent(draft.content)
-      if (draft.excludedUserIds) setEditExcludedIds(draft.excludedUserIds)
-      if ('agentVisible' in draft) setEditAgentVisible((draft as any).agentVisible)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    void (async () => {
+      interface DraftData {
+        title: string
+        content: string
+        excludedUserIds: string[]
+        agentVisible?: boolean
+      }
+      const draft = loadDraft<DraftData>(`forum_edit_${postId}`)
+      if (draft && postId) {
+        // 有草稿时自动进入编辑模式
+        if (draft.title) setEditTitle(draft.title)
+        if (draft.content) setEditContent(draft.content)
+        if (draft.excludedUserIds) setEditExcludedIds(draft.excludedUserIds)
+        if ('agentVisible' in draft) setEditAgentVisible(draft.agentVisible ?? false)
+      }
+    })()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 仅在挂载时恢复一次草稿
   }, [])
 
   // 编辑模式自动保存草稿
@@ -210,7 +214,7 @@ export default function ForumPostPage() {
       clearEditDraft()
       setEditing(false)
       refreshPostOnly()
-    } catch (e: any) { setError(e.message) }
+    } catch (e: unknown) { setError(e instanceof Error ? e.message : null) }
     finally { setSubmitting(false) }
   }
 
@@ -219,7 +223,7 @@ export default function ForumPostPage() {
       await addForumComment(postId, content, parentId)
       // 只刷新评论列表，不触发全量 loading
       refreshCommentsOnly()
-    } catch (e: any) { setError(e.message) }
+    } catch (e: unknown) { setError(e instanceof Error ? e.message : null) }
   }
 
   const handleDeleteComment = async (commentId: string) => {
@@ -227,7 +231,7 @@ export default function ForumPostPage() {
       await deleteForumComment(commentId)
       // 同时刷新评论和帖子（评论数更新）
       await Promise.all([refreshCommentsOnly(), refreshPostOnly()])
-    } catch (e: any) { setError(e.message) }
+    } catch (e: unknown) { setError(e instanceof Error ? e.message : null) }
   }
 
   /** 手动刷新评论（10s 冷却） */

@@ -118,34 +118,44 @@ export default function PlazaFilePad() {
       .catch(() => {})
   }, [])
 
-  // URL 带有 category 参数时自动展开祖先文件夹（仅追加，不覆盖手动折叠）
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const params = new URLSearchParams(window.location.search)
-    const categoryId = params.get('category_id')
-    if (categoryId) {
-      setExpanded((prev) => {
-        const next = new Set(prev)
-        // 找到该分类的节点 ID
-        const cat = categories.find((c) => c.id === categoryId)
-        if (cat) {
-          // 展开到该分类的父级（沿着 parent_id 链一路展开所有祖先）
-          let parentId = cat.parent_id
-          while (parentId) {
-            next.add(parentId)
-            const parent = categories.find((c) => c.id === parentId)
-            parentId = parent?.parent_id || null
+  // URL 带有 category 参数时自动展开祖先文件夹（渲染期调整，仅追加，不覆盖手动折叠）
+  const [prevNavState, setPrevNavState] = useState<{
+    pathname: string
+    categories: PlazaCategory[]
+  } | null>(null)
+  if (
+    prevNavState === null ||
+    prevNavState.pathname !== pathname ||
+    prevNavState.categories !== categories
+  ) {
+    setPrevNavState({ pathname, categories })
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const categoryId = params.get('category_id')
+      if (categoryId) {
+        setExpanded((prev) => {
+          const next = new Set(prev)
+          // 找到该分类的节点 ID
+          const cat = categories.find((c) => c.id === categoryId)
+          if (cat) {
+            // 展开到该分类的父级（沿着 parent_id 链一路展开所有祖先）
+            let parentId = cat.parent_id
+            while (parentId) {
+              next.add(parentId)
+              const parent = categories.find((c) => c.id === parentId)
+              parentId = parent?.parent_id || null
+            }
+            // 展开该分类自身（如果是文件夹）
+            if (categories.some((c) => c.parent_id === cat.id)) {
+              next.add(cat.id)
+            }
           }
-          // 展开该分类自身（如果是文件夹）
-          if (categories.some((c) => c.parent_id === cat.id)) {
-            next.add(cat.id)
-          }
-        }
-        next.add('articles')
-        return next
-      })
+          next.add('articles')
+          return next
+        })
+      }
     }
-  }, [pathname, categories])
+  }
 
   /** 点击文件夹标题 → 展开并跳转 */
   const handleFolderClick = useCallback((folderId: string) => {

@@ -48,5 +48,7 @@ export function useCommentAnchor(
       element.classList.remove(highlightClassName)
       element.removeEventListener('animationend', onAnimationEnd)
     }
+    // scrollKey 未在回调体内引用，但用于强制重建 ref callback 以在外部状态变化时重新触发锚点滚动，必须保留在依赖中
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [highlightClassName, scrollKey])
 }

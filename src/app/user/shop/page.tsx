@@ -12,7 +12,7 @@ type PageState = 'loading' | 'ready' | 'error'
 
 export default function ShopPage() {
   const router = useRouter()
-  const [session, setSession] = useState(getSession())
+  const [session] = useState(getSession())
   const [pageState, setPageState] = useState<PageState>('loading')
   const [items, setItems] = useState<ShopItem[]>([])
   const [ownedIds, setOwnedIds] = useState<Set<string>>(new Set())
@@ -20,29 +20,32 @@ export default function ShopPage() {
   const [errorMsg, setErrorMsg] = useState('')
   const [buyingId, setBuyingId] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!session) { router.push('/'); return }
-    loadShop()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   const loadShop = useCallback(async () => {
-    setPageState('loading')
-    setErrorMsg('')
-    try {
-      const [itemsData, purchases, points] = await Promise.all([
-        fetchShopItems(),
-        fetchUserPurchases(),
-        fetchMyPoints(),
-      ])
+    await Promise.all([
+      fetchShopItems(),
+      fetchUserPurchases(),
+      fetchMyPoints(),
+    ]).then(([itemsData, purchases, points]) => {
       setItems(itemsData)
       setOwnedIds(new Set(purchases.map(p => p.item_id)))
       setMyPoints(points)
       setPageState('ready')
-    } catch (e) {
+    }).catch((e) => {
       setErrorMsg(e instanceof Error ? e.message : '加载失败')
       setPageState('error')
-    }
+    })
+  }, [])
+
+  const handleRetry = useCallback(() => {
+    setPageState('loading')
+    setErrorMsg('')
+    loadShop()
+  }, [loadShop])
+
+  useEffect(() => {
+    if (!session) { router.push('/'); return }
+    loadShop()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleBuy = useCallback(async (itemId: string) => {
@@ -80,7 +83,7 @@ export default function ShopPage() {
         <h2 className={styles.pointsTitle}><FaIcon name="gift" /> 积分商城</h2>
         <div className={styles.statusError}>
           <p>{errorMsg}</p>
-          <button className={styles.pageBtn} onClick={loadShop}>重试</button>
+          <button className={styles.pageBtn} onClick={handleRetry}>重试</button>
         </div>
       </div>
     )

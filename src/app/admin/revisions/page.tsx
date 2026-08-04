@@ -36,14 +36,14 @@ export default function AdminRevisionsPage() {
   const selectedId = searchParams.get('id') || ''
   const prSelectedId = searchParams.get('rid') || ''
 
-  const [session, setSession] = useState(getSession())
+  const [session] = useState(getSession())
 
   // ── 编辑审核状态 ──
   const [revisions, setRevisions] = useState<WikiRevision[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [detail, setDetail] = useState<RevisionDetail | null>(null)
-  const [detailLoading, setDetailLoading] = useState(false)
+  const [detailLoading, setDetailLoading] = useState(true)
   const [editContent, setEditContent] = useState('')
   const [reviewComment, setReviewComment] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -54,7 +54,7 @@ export default function AdminRevisionsPage() {
   const [prLoading, setPrLoading] = useState(true)
   const [prError, setPrError] = useState<string | null>(null)
   const [prDetail, setPrDetail] = useState<PageRequestDetail | null>(null)
-  const [prDetailLoading, setPrDetailLoading] = useState(false)
+  const [prDetailLoading, setPrDetailLoading] = useState(true)
   const [prEditTitle, setPrEditTitle] = useState('')
   const [prEditContent, setPrEditContent] = useState('')
   const [prReviewComment, setPrReviewComment] = useState('')
@@ -62,9 +62,27 @@ export default function AdminRevisionsPage() {
 
   const isAdmin = session && ['admin', 'super_admin'].includes(session.role)
 
+  // ── 渲染期重置加载状态（URL 参数变化时切回加载态，避免在 effect 中同步 setState）──
+  const [prevSelectedId, setPrevSelectedId] = useState(selectedId)
+  if (prevSelectedId !== selectedId) {
+    setPrevSelectedId(selectedId)
+    setDetailLoading(true)
+  }
+  const [prevReqTab, setPrevReqTab] = useState(tab)
+  if (prevReqTab !== tab) {
+    setPrevReqTab(tab)
+    setPrLoading(true)
+  }
+  const prDetailKey = prSelectedId + '|' + tab
+  const [prevPrDetailKey, setPrevPrDetailKey] = useState(prDetailKey)
+  if (prevPrDetailKey !== prDetailKey) {
+    setPrevPrDetailKey(prDetailKey)
+    setPrDetailLoading(true)
+  }
+
   // ── 编辑审核：加载待审列表 ──
   useEffect(() => {
-    if (!isAdmin) { setLoading(false); return }
+    if (!isAdmin) return
     fetchPendingRevisions()
       .then(setRevisions)
       .catch((e) => setError(e.message))
@@ -73,11 +91,7 @@ export default function AdminRevisionsPage() {
 
   // ── 编辑审核：加载修订详情 ──
   useEffect(() => {
-    if (!selectedId || !isAdmin) {
-      setDetail(null)
-      return
-    }
-    setDetailLoading(true)
+    if (!selectedId || !isAdmin) return
     fetchRevisionDetail(selectedId)
       .then((d) => {
         setDetail(d)
@@ -89,8 +103,7 @@ export default function AdminRevisionsPage() {
 
   // ── 新建页面审核：加载待审列表 ──
   useEffect(() => {
-    if (!isAdmin || tab !== 'requests') { setPrLoading(false); return }
-    setPrLoading(true)
+    if (!isAdmin || tab !== 'requests') return
     fetchPendingPageRequests()
       .then(setPrList)
       .catch((e) => setPrError(e.message))
@@ -99,11 +112,7 @@ export default function AdminRevisionsPage() {
 
   // ── 新建页面审核：加载请求详情 ──
   useEffect(() => {
-    if (!prSelectedId || !isAdmin || tab !== 'requests') {
-      setPrDetail(null)
-      return
-    }
-    setPrDetailLoading(true)
+    if (!prSelectedId || !isAdmin || tab !== 'requests') return
     fetchPageRequestDetail(prSelectedId)
       .then((d) => {
         setPrDetail(d)
@@ -142,8 +151,8 @@ export default function AdminRevisionsPage() {
       setDetail(null)
       setReviewComment('')
       router.replace('/admin/revisions')
-    } catch (e: any) {
-      window.alert('批准失败: ' + (e.message || '未知错误'))
+    } catch (e) {
+      window.alert('批准失败: ' + ((e as { message?: string })?.message || '未知错误'))
     } finally {
       setSubmitting(false)
     }
@@ -161,8 +170,8 @@ export default function AdminRevisionsPage() {
       setDetail(null)
       setReviewComment('')
       router.replace('/admin/revisions')
-    } catch (e: any) {
-      window.alert('驳回失败: ' + (e.message || '未知错误'))
+    } catch (e) {
+      window.alert('驳回失败: ' + ((e as { message?: string })?.message || '未知错误'))
     } finally {
       setSubmitting(false)
     }
@@ -179,8 +188,8 @@ export default function AdminRevisionsPage() {
       setPrDetail(null)
       setPrReviewComment('')
       router.replace('/admin/revisions?tab=requests')
-    } catch (e: any) {
-      window.alert('批准失败: ' + (e.message || '未知错误'))
+    } catch (e) {
+      window.alert('批准失败: ' + ((e as { message?: string })?.message || '未知错误'))
     } finally {
       setPrSubmitting(false)
     }
@@ -198,8 +207,8 @@ export default function AdminRevisionsPage() {
       setPrDetail(null)
       setPrReviewComment('')
       router.replace('/admin/revisions?tab=requests')
-    } catch (e: any) {
-      window.alert('驳回失败: ' + (e.message || '未知错误'))
+    } catch (e) {
+      window.alert('驳回失败: ' + ((e as { message?: string })?.message || '未知错误'))
     } finally {
       setPrSubmitting(false)
     }

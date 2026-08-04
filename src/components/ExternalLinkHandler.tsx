@@ -2,6 +2,15 @@
 
 import { useEffect } from 'react'
 
+interface ElectronAPI {
+  isElectron?: boolean
+  openExternal: (href: string) => void
+}
+
+interface ElectronWindow extends Window {
+  electronAPI?: ElectronAPI
+}
+
 /* ==============================================================
    ExternalLinkHandler — 全局外部链接处理
 
@@ -42,8 +51,9 @@ export default function ExternalLinkHandler({ children }: { children: React.Reac
           e.preventDefault()
           e.stopPropagation()
           // Electron 环境走系统浏览器打开
-          if ((window as any).electronAPI?.isElectron) {
-            ;(window as any).electronAPI.openExternal(href)
+          const electronWindow = window as ElectronWindow
+          if (electronWindow.electronAPI?.isElectron) {
+            electronWindow.electronAPI.openExternal(href)
           } else {
             window.open(href, '_blank', 'noopener,noreferrer')
           }

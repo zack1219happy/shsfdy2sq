@@ -18,18 +18,19 @@ export default function WishesListPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [wishes, setWishes] = useState<WishItem[]>([])
-  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  // 记录最后一次完成加载对应的筛选值，用于推导 loading，避免在 effect 中同步 setState
+  const [loadedTier, setLoadedTier] = useState<string | null>(null)
 
   const tierFilter = searchParams.get('tier') || null
+  const loading = loadedTier !== (tierFilter ?? '')
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
     fetchAllWishes(tierFilter || undefined)
       .then((data) => { if (!cancelled) setWishes(data) })
       .catch((e: Error) => { if (!cancelled) setError(e.message) })
-      .finally(() => { if (!cancelled) setLoading(false) })
+      .finally(() => { if (!cancelled) setLoadedTier(tierFilter ?? '') })
     return () => { cancelled = true }
   }, [tierFilter])
 

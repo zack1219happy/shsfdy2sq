@@ -17,7 +17,11 @@ import styles from '@/styles/dm-filepad.module.css'
 
 export default function DmFilePad() {
   const router = useRouter()
-  const [activeConvId, setActiveConvId] = useState<string | null>(null)
+  // 初始 activeConvId 从 URL 读取（对话列表为客户端加载，SSR 阶段不渲染该项，无 hydration mismatch）
+  const [activeConvId, setActiveConvId] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null
+    return new URLSearchParams(window.location.search).get('conv')
+  })
 
   const syncActiveConv = useCallback(() => {
     const params = new URLSearchParams(window.location.search)
@@ -25,7 +29,6 @@ export default function DmFilePad() {
   }, [])
 
   useEffect(() => {
-    syncActiveConv()
     window.addEventListener('popstate', syncActiveConv)
     return () => window.removeEventListener('popstate', syncActiveConv)
   }, [syncActiveConv])
@@ -55,7 +58,8 @@ export default function DmFilePad() {
   }, [])
 
   useEffect(() => {
-    load()
+    // 初始加载通过微任务触发，避免在 effect 内同步调用含 setState 的函数
+    Promise.resolve().then(load)
     intervalRef.current = setInterval(load, 15000)
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current)
@@ -74,10 +78,6 @@ export default function DmFilePad() {
   }, [load])
 
   const session = getSession()
-  const existingUserIds = useMemo(
-    () => new Set(conversations.map((c) => c.other_user_id)),
-    [conversations],
-  )
 
   // 过滤对话
   const filteredConvs = useMemo(() => {

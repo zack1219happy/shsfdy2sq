@@ -38,8 +38,6 @@ interface UseCodeMirrorOptions {
  * 用 onCreateEditor 捕获 EditorView 引用，不依赖 viewRef 更新时序。
  */
 export function useCodeMirror({
-  value,
-  onChange,
   onEditorScroll,
   onSubmit,
 }: UseCodeMirrorOptions): CodeMirrorAPI {
@@ -47,7 +45,11 @@ export function useCodeMirror({
   const [editorView, setEditorView] = useState<EditorView | null>(null)
 
   const onScrollRef = useRef(onEditorScroll)
-  onScrollRef.current = onEditorScroll
+
+  // 保持 ref 指向最新 onEditorScroll（scroll handler 读取时拿到当前值）
+  useEffect(() => {
+    onScrollRef.current = onEditorScroll
+  })
 
   // 用 useState 存 editorView，使 scroll listener effect 能在 view 就绪时重跑
   const onCreateEditor = useCallback((view: EditorView) => {
@@ -84,7 +86,11 @@ export function useCodeMirror({
 
   // Ctrl+Enter 提交
   const onSubmitRef = useRef(onSubmit)
-  onSubmitRef.current = onSubmit
+
+  // 保持 ref 指向最新 onSubmit（keydown handler 读取时拿到当前值）
+  useEffect(() => {
+    onSubmitRef.current = onSubmit
+  })
   useEffect(() => {
     if (!editorView || !onSubmit) return
     const handler = (e: KeyboardEvent) => {

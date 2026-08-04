@@ -46,7 +46,9 @@ export default function HomeNav() {
   // 监听新私信事件（Realtime 通知触发即时刷新）
   useEffect(() => {
     const h = () => {
-      getSession() && getUnreadDmCount().then(setDmUnread).catch(() => {})
+      if (getSession()) {
+        getUnreadDmCount().then(setDmUnread).catch(() => {})
+      }
     }
     window.addEventListener('new-dm', h)
     return () => window.removeEventListener('new-dm', h)
@@ -55,7 +57,9 @@ export default function HomeNav() {
   // 监听新通知事件
   useEffect(() => {
     const h = () => {
-      getSession() && getUnreadCount().then(setNotifUnread).catch(() => {})
+      if (getSession()) {
+        getUnreadCount().then(setNotifUnread).catch(() => {})
+      }
     }
     window.addEventListener('new-notification', h)
     return () => window.removeEventListener('new-notification', h)

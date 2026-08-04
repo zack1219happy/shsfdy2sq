@@ -6,8 +6,6 @@ import { resolvePerson } from '../people'
 // Person 引用插件 — [stu:xxx] / [usr:xxx] / [tch:xxx] / [per:xxx]
 // ============================================================
 
-type TokenContent = { text: string } | { link: string; text: string }
-
 /**
  * markdown-it 内联规则：
  *   [stu:xxx]  / [usr:xxx] → 学生

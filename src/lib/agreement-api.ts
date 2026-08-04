@@ -27,7 +27,7 @@ export async function fetchAgreementPage(slug: string): Promise<AgreementPage | 
 export async function fetchAgreementSlugs(): Promise<string[]> {
   const { data, error } = await supabase.rpc('get_agreement_slugs')
   if (error) throw new Error('获取 agreement slug 列表失败: ' + error.message)
-  return (data ?? []).map((r: any) => r.slug)
+  return (data ?? []).map((r: { slug: string }) => r.slug)
 }
 
 // ── 更新 agreement 页面（管理员直写） ──

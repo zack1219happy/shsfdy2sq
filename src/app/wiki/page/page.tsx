@@ -92,10 +92,16 @@ function WikiPageBySlug() {
   const slug = searchParams.get('slug') || ''
   const [page, setPage] = useState<WikiPage | null | 'loading'>('loading')
 
+  // 渲染期重置加载态（slug 变化时切回加载态，避免在 effect 中同步 setState）
+  const [prevSlug, setPrevSlug] = useState(slug)
+  if (prevSlug !== slug) {
+    setPrevSlug(slug)
+    setPage('loading')
+  }
+
   // 根据 slug 从 Supabase 拉取页面内容
   useEffect(() => {
-    if (!slug) { setPage(null); return }
-    setPage('loading')
+    if (!slug) return
     let cancelled = false
     fetchWikiPage(slug)
       .then((p) => { if (!cancelled) setPage(p ?? null) })

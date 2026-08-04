@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic'
 import FaIcon from '@/components/FaIcon'
 import WikiContent from '@/components/WikiContent'
 import { renderClient, createClientMd } from '@/lib/render-client'
-import { getSession } from '@/lib/auth'
+import { getSession, type UserSession } from '@/lib/auth'
 import {
   fetchPlazaArticle,
   deletePlazaArticle,
@@ -71,7 +71,7 @@ export default function PlazaArticlePage() {
   const [article, setArticle] = useState<PlazaArticleDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [session, setSession] = useState<{ userId: string; username: string } | null>(null)
+  const [session, setSession] = useState<UserSession | null>(null)
   const [myVote, setMyVote] = useState<string | null>(null)
   const [editing, setEditing] = useState(false)
   const [editTitle, setEditTitle] = useState('')
@@ -105,8 +105,8 @@ export default function PlazaArticlePage() {
           fetchPlazaComments(a.id).then(setComments).catch(() => {})
           getUserPlazaVote(a.id).then(setMyVote).catch(() => {})
         }
-      } catch (e: any) {
-        setError(e.message)
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : null)
       } finally {
         setLoading(false)
       }
@@ -125,7 +125,7 @@ export default function PlazaArticlePage() {
         const totalPoints = await fetchMyPoints()
         return { username: s.username, student_id: s.studentId, total_points: totalPoints }
       },
-      setWindowHeight: (_height: number) => {
+      setWindowHeight: () => {
         // 真实实现由 SandboxBox 注入 iframe 的桥接脚本负责（frameElement 定位自身 iframe），
         // 父页面该方法为 no-op，避免误用（无 iframe 上下文无法定位目标）。
       },
@@ -165,50 +165,54 @@ export default function PlazaArticlePage() {
 
   useEffect(() => {
     if (!article) return
-    const articleHasJs = article.has_js === true
-    setHasJs(articleHasJs)
+    void (async () => {
+      const articleHasJs = article.has_js === true
+      setHasJs(articleHasJs)
 
-    if (!articleHasJs) {
-      setJsMode('safe')
-      return
-    }
-
-    if (editing) {
-      // 编辑模式不需要弹窗
-      setJsMode('safe')
-      return
-    }
-
-    // JS 页面：检查 localStorage 是否有偏好
-    try {
-      const stored = localStorage.getItem(`plaza_js_dismiss_${slug}`)
-      if (stored === 'safe' || stored === 'js') {
-        setJsMode(stored)
+      if (!articleHasJs) {
+        setJsMode('safe')
         return
       }
-    } catch { /* 忽略 */ }
 
-    // 无存储偏好 → 显示弹窗
-    setShowDialog(true)
+      if (editing) {
+        // 编辑模式不需要弹窗
+        setJsMode('safe')
+        return
+      }
+
+      // JS 页面：检查 localStorage 是否有偏好
+      try {
+        const stored = localStorage.getItem(`plaza_js_dismiss_${slug}`)
+        if (stored === 'safe' || stored === 'js') {
+          setJsMode(stored)
+          return
+        }
+      } catch { /* 忽略 */ }
+
+      // 无存储偏好 → 显示弹窗
+      setShowDialog(true)
+    })()
   }, [article, slug, editing])
 
   // ── 编辑草稿恢复 ──
   useEffect(() => {
     if (!slug) return
-    interface DraftData {
-      title: string
-      content: string
-      isPublic: boolean
-      hasJs: boolean
-    }
-    const draft = loadDraft<DraftData>(`plaza_edit_${slug}`)
-    if (draft) {
-      if (draft.title) setEditTitle(draft.title)
-      if (draft.content) setEditContent(draft.content)
-      if (draft.isPublic !== undefined) setEditIsPublic(draft.isPublic)
-      if (draft.hasJs !== undefined) setEditHasJs(draft.hasJs)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    void (async () => {
+      interface DraftData {
+        title: string
+        content: string
+        isPublic: boolean
+        hasJs: boolean
+      }
+      const draft = loadDraft<DraftData>(`plaza_edit_${slug}`)
+      if (draft) {
+        if (draft.title) setEditTitle(draft.title)
+        if (draft.content) setEditContent(draft.content)
+        if (draft.isPublic !== undefined) setEditIsPublic(draft.isPublic)
+        if (draft.hasJs !== undefined) setEditHasJs(draft.hasJs)
+      }
+    })()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 仅在挂载时恢复一次草稿
   }, [])
 
   // 编辑模式自动保存草稿
@@ -220,7 +224,7 @@ export default function PlazaArticlePage() {
   })
 
   const isAuthor = session && article && session.userId === article.author_id
-  const isAdmin = session && (session as any).role && ['admin', 'super_admin'].includes((session as any).role)
+  const isAdmin = session && ['admin', 'super_admin'].includes(session.role)
 
   // 奖励积分弹窗
   const [showAwardModal, setShowAwardModal] = useState(false)
@@ -240,8 +244,8 @@ export default function PlazaArticlePage() {
       } else {
         setAwardResult({ success: false, text: '奖励失败' })
       }
-    } catch (e: any) {
-      setAwardResult({ success: false, text: e.message || '奖励失败' })
+    } catch (e: unknown) {
+      setAwardResult({ success: false, text: e instanceof Error && e.message ? e.message : '奖励失败' })
     } finally {
       setAwardSubmitting(false)
     }
@@ -267,8 +271,8 @@ export default function PlazaArticlePage() {
       } else {
         setTipResult({ success: false, text: '投币失败' })
       }
-    } catch (e: any) {
-      setTipResult({ success: false, text: e.message || '投币失败' })
+    } catch (e: unknown) {
+      setTipResult({ success: false, text: e instanceof Error && e.message ? e.message : '投币失败' })
     } finally {
       setTipSubmitting(false)
     }
@@ -311,8 +315,8 @@ export default function PlazaArticlePage() {
           ? { ...prev, title: editTitle.trim(), content: editContent.trim(), is_public: editIsPublic, has_js: editHasJs }
           : null,
       )
-    } catch (e: any) {
-      showWarningToast(e?.message || '编辑失败')
+    } catch (e: unknown) {
+      showWarningToast(e instanceof Error && e.message ? e.message : '编辑失败')
     } finally {
       setSubmitting(false)
     }
@@ -323,8 +327,8 @@ export default function PlazaArticlePage() {
     try {
       await deletePlazaArticle(article!.id)
       router.push('/plaza')
-    } catch (e: any) {
-      showWarningToast(e?.message || '删除失败')
+    } catch (e: unknown) {
+      showWarningToast(e instanceof Error && e.message ? e.message : '删除失败')
     }
   }
 
@@ -386,14 +390,14 @@ export default function PlazaArticlePage() {
     try {
       await addPlazaComment(article.id, content, parentId)
       await Promise.all([refreshComments(), refreshArticle()])
-    } catch (e: any) { showWarningToast(e?.message || '评论失败') }
+    } catch (e: unknown) { showWarningToast(e instanceof Error && e.message ? e.message : '评论失败') }
   }
 
   const handleDeleteComment = async (commentId: string) => {
     try {
       await deletePlazaComment(commentId)
       await Promise.all([refreshComments(), refreshArticle()])
-    } catch (e: any) { showWarningToast(e?.message || '删除失败') }
+    } catch (e: unknown) { showWarningToast(e instanceof Error && e.message ? e.message : '删除失败') }
   }
 
   /** 手动刷新评论（10s 冷却） */
@@ -418,7 +422,7 @@ export default function PlazaArticlePage() {
       const md = createClientMd({ highlight: true, texmath: true, anchor: true })
       return md.render(article.content)
     } catch { return '' }
-  }, [article?.content])
+  }, [article])
 
   const headings: Heading[] = useMemo(
     () => extractHeadingsFromHtml(articleHtml),

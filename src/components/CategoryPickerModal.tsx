@@ -1,11 +1,31 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import FaIcon from '@/components/FaIcon'
-import { fetchPlazaCategories } from '@/lib/gist-api'
 import type { PlazaCategory, PlazaCategoryTreeNode } from '@/types/plaza'
 import { buildCategoryTree } from '@/types/plaza'
 import styles from '@/styles/forum.module.css'
+
+/** 计算初始应展开的分支（有子节点的顶级分类） */
+function computeInitialExpandedIds(categories: PlazaCategory[]): Set<string> {
+  const ids = new Set<string>()
+  for (const cat of categories) {
+    if (cat.parent_id === null && categories.some((c) => c.parent_id === cat.id)) {
+      ids.add(cat.id)
+    }
+  }
+  return ids
+}
+
+/** 收集所有有子节点的节点 id（用于搜索时全展开） */
+function collectExpandableIds(nodes: PlazaCategoryTreeNode[], ids: Set<string>): void {
+  for (const n of nodes) {
+    if (n.children.length > 0) {
+      ids.add(n.id)
+      collectExpandableIds(n.children, ids)
+    }
+  }
+}
 
 /* ==============================================================
    CategoryPickerModal — 分类选择模态框
@@ -35,19 +55,15 @@ export default function CategoryPickerModal({
   onClose,
 }: CategoryPickerModalProps) {
   const [search, setSearch] = useState('')
-  const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  const [expanded, setExpanded] = useState<Set<string>>(() => computeInitialExpandedIds(categories))
   const [localSelected, setLocalSelected] = useState<string | null>(selectedName)
 
-  // 初始展开所有有子节点的分支（方便浏览）
-  useEffect(() => {
-    const ids = new Set<string>()
-    for (const cat of categories) {
-      if (cat.parent_id === null && categories.some((c) => c.parent_id === cat.id)) {
-        ids.add(cat.id)
-      }
-    }
-    setExpanded(ids)
-  }, [categories])
+  // categories 变化时重置展开状态（渲染期调整，替代 effect 内 setState）
+  const [prevCategories, setPrevCategories] = useState(categories)
+  if (categories !== prevCategories) {
+    setPrevCategories(categories)
+    setExpanded(computeInitialExpandedIds(categories))
+  }
 
   // 根据搜索过滤，构建可见树
   const visibleTree = useMemo(() => {
@@ -72,21 +88,19 @@ export default function CategoryPickerModal({
     return filterTree(fullTree)
   }, [categories, search])
 
-  // 搜索后自动展开所有可见分支
-  useEffect(() => {
-    if (!search.trim()) return
-    const ids = new Set<string>()
-    function collect(nodes: PlazaCategoryTreeNode[]) {
-      for (const n of nodes) {
-        if (n.children.length > 0) {
-          ids.add(n.id)
-          collect(n.children)
-        }
-      }
+  // 搜索词或可见树变化时自动展开所有可见分支（渲染期调整）
+  const [prevSearchState, setPrevSearchState] = useState<{
+    search: string
+    visibleTree: PlazaCategoryTreeNode[]
+  }>({ search, visibleTree })
+  if (prevSearchState.search !== search || prevSearchState.visibleTree !== visibleTree) {
+    setPrevSearchState({ search, visibleTree })
+    if (search.trim()) {
+      const ids = new Set<string>()
+      collectExpandableIds(visibleTree, ids)
+      setExpanded(ids)
     }
-    collect(visibleTree)
-    setExpanded(ids)
-  }, [search, visibleTree])
+  }
 
   const toggleExpand = useCallback((id: string) => {
     setExpanded((prev) => {

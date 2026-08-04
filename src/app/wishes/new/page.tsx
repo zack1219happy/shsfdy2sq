@@ -8,7 +8,6 @@ import { supabase } from '@/lib/supabase'
 import { getSession } from '@/lib/auth'
 import { BASE_PATH } from '@/lib/constants'
 import { fetchMyPoints, payWishWithPoints } from '@/lib/gist-api'
-import type { UserSession } from '@/lib/auth'
 import styles from '@/styles/wishes.module.css'
 
 const MarkdownEditor = dynamic(
@@ -178,8 +177,8 @@ export default function WishingPoolPage() {
       setRequestNumber(data.request_number)
       setWishId(data.id)
       setSubmitted(true)
-    } catch (e: any) {
-      setError(e.message || '提交失败，请稍后再试')
+    } catch (e: unknown) {
+      setError((e as { message?: string } | null)?.message || '提交失败，请稍后再试')
     } finally {
       setSubmitting(false)
     }
@@ -199,8 +198,8 @@ export default function WishingPoolPage() {
       if (result.success) {
         setMyPoints((prev) => prev - pointsNeeded)
       }
-    } catch (e: any) {
-      setPointsPayResult({ success: false, message: e.message || '支付请求失败' })
+    } catch (e: unknown) {
+      setPointsPayResult({ success: false, message: (e as { message?: string } | null)?.message || '支付请求失败' })
     } finally {
       setPayingWithPoints(false)
     }
@@ -541,6 +540,7 @@ export default function WishingPoolPage() {
 
                   <div className={styles.paymentBody}>
                     <div className={styles.qrArea}>
+                      {/* eslint-disable-next-line @next/next/no-img-element -- 静态微信收款码，项目全站使用原生 <img>（SSG 导出 + images.unoptimized），改用 next/image 需额外提供 width/height 等属性，会改变既有样式 */}
                       <img
                         src={`${BASE_PATH}/wechat-pay.webp`}
                         alt="微信收款码"

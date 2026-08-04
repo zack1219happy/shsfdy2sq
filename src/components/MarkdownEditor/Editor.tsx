@@ -4,7 +4,7 @@
 
 'use client'
 
-import { useState, useCallback, useRef, useMemo } from 'react'
+import { useState, useCallback, useRef, useMemo, useEffect } from 'react'
 import { useCodeMirror, CodeMirror } from './useCodeMirror'
 import { usePreview } from './usePreview'
 import { useToolbar } from './useToolbar'
@@ -41,14 +41,43 @@ export default function Editor({
     scrollSyncEnabled: merged.scrollSync ?? true,
   })
   const toggleRef = useRef(toggleState)
-  toggleRef.current = toggleState
+
+  // 保持 ref 指向最新 toggleState（scroll 事件处理器读取时拿到当前值）
+  useEffect(() => {
+    toggleRef.current = toggleState
+  })
 
   // 防反馈循环：当一个方向正在同步时，另一个方向跳过
   const syncingRef = useRef(false)
 
   // 3. Dialog
-  const { dialog, openDialog, closeDialog, finishDialog } = useDialog()
+  const { dialog, openDialog, closeDialog } = useDialog()
   const dialogFnRef = useRef<((data: Record<string, string>) => string) | null>(null)
+
+  // 4. CodeMirror Hook
+  const { viewRef, extensions, replaceSelection, scrollToLine, onCreateEditor } =
+    useCodeMirror({
+      value,
+      onChange,
+      onSubmit,
+      onEditorScroll:
+        toggleState.scrollSyncEnabled && !toggleState.previewHidden
+          ? (lineNumber: number) => {
+              if (syncingRef.current) return
+              const st = toggleRef.current
+              if (!st.scrollSyncEnabled || st.previewHidden) return
+              const pEl = previewRef.current
+              if (!pEl) return
+              const target = findLineInPreview(pEl, lineNumber)
+              if (target) {
+                syncingRef.current = true
+                target.scrollIntoView({ block: 'start', behavior: 'instant' })
+                // 保持锁 100ms 让所有级联滚动事件安定
+                setTimeout(() => { syncingRef.current = false }, 100)
+              }
+            }
+          : undefined,
+    })
 
   const handleOpenDialog = useCallback(
     (req: DialogRequest) => {
@@ -77,36 +106,15 @@ export default function Editor({
       }
       closeDialog()
     },
-    [closeDialog],
+    [closeDialog, viewRef],
   )
 
-  // 4. CodeMirror Hook
-  const { viewRef, extensions, replaceSelection, scrollToLine, onCreateEditor } =
-    useCodeMirror({
-      value,
-      onChange,
-      onSubmit,
-      onEditorScroll:
-        toggleState.scrollSyncEnabled && !toggleState.previewHidden
-          ? (lineNumber: number) => {
-              if (syncingRef.current) return
-              const st = toggleRef.current
-              if (!st.scrollSyncEnabled || st.previewHidden) return
-              const pEl = previewRef.current
-              if (!pEl) return
-              const target = findLineInPreview(pEl, lineNumber)
-              if (target) {
-                syncingRef.current = true
-                target.scrollIntoView({ block: 'start', behavior: 'instant' })
-                // 保持锁 100ms 让所有级联滚动事件安定
-                setTimeout(() => { syncingRef.current = false }, 100)
-              }
-            }
-          : undefined,
-    })
-
   const scrollToLineRef = useRef(scrollToLine)
-  scrollToLineRef.current = scrollToLine
+
+  // 保持 ref 指向最新 scrollToLine（scroll 事件处理器读取时拿到当前值）
+  useEffect(() => {
+    scrollToLineRef.current = scrollToLine
+  })
 
   // 5. Preview Hook
   const { previewRef, previewHtml } = usePreview({

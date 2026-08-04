@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState, useMemo } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import FaIcon from '@/components/FaIcon'
@@ -213,8 +213,8 @@ export default function WikiCreatePage() {
       await submitPageRequest(slug.trim(), title.trim(), content.trim())
       showWarningToast('新建页面请求已提交审核 ✅')
       setSuccess(true)
-    } catch (e: any) {
-      setError(e?.message || '提交失败')
+    } catch (e) {
+      setError((e as { message?: string })?.message || '提交失败')
     } finally {
       setSubmitting(false)
     }

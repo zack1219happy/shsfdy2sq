@@ -22,10 +22,6 @@ import { resolveText } from '@/lib/people'
 import { registry as personRegistry } from '@/data/person-registry'
 import styles from '@/styles/filepad.module.css'
 
-interface Props {
-  tree?: NavNode[]
-}
-
 /** 去掉尾斜杠，用于路径比较 */
 const norm = (p: string) => p.replace(/\/+$/, '') || '/'
 
@@ -125,7 +121,7 @@ function buildNavTree(pages: { slug: string; title: string; frontmatter: Record<
   }
 
   // 挂载 children
-  for (const [key, node] of rootMap) {
+  for (const [, node] of rootMap) {
     const kids = childrenMap.get(node.pathKey ?? '') || []
     if (kids.length > 0) {
       node.children = kids
@@ -151,7 +147,7 @@ function buildNavTree(pages: { slug: string; title: string; frontmatter: Record<
   return rootList
 }
 
-export default function WikiFilePad(_props: Props) {
+export default function WikiFilePad() {
   const rawPathname = usePathname()
   const pathname = norm(rawPathname)
   const [expanded, setExpanded] = useState<Set<string>>(new Set())

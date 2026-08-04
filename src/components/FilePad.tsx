@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
 import { usePathname } from 'next/navigation'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faChevronRight, faBars } from '@fortawesome/free-solid-svg-icons'
@@ -21,38 +21,44 @@ interface Props {
 
 const COLLAPSE_KEY = 'filepad-collapsed'
 
-export default function FilePad({ tree }: Props) {
+/** 空订阅：仅用于 SSR/hydration 阶段区分客户端挂载状态 */
+const emptySubscribe = () => () => {}
+
+export default function FilePad({}: Props) {
   const pathname = usePathname()
   const visible = pathname !== '/'
 
-  const [collapsed, setCollapsed] = useState(false)
-  const [ready, setReady] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
+  // 折叠状态仅客户端读取 localStorage，SSR 阶段保持 false 以避免 hydration mismatch
+  const [collapsed, setCollapsed] = useState(() =>
+    typeof window !== 'undefined' ? localStorage.getItem(COLLAPSE_KEY) === '1' : false,
+  )
+  // SSR/hydration 阶段返回 false（渲染完整侧栏），挂载后返回 true
+  const ready = useSyncExternalStore(emptySubscribe, () => true, () => false)
   const [drawerOpen, setDrawerOpen] = useState(false)
 
-  // 判断移动端
-  useEffect(() => {
+  // 响应式移动端判断（订阅媒体查询，服务端快照为 false）
+  const subscribeMobile = useCallback((onChange: () => void) => {
     const mq = window.matchMedia('(max-width: 768px)')
-    setIsMobile(mq.matches)
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches)
-    mq.addEventListener('change', handler)
-    return () => mq.removeEventListener('change', handler)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
   }, [])
+  const isMobile = useSyncExternalStore(
+    subscribeMobile,
+    () => window.matchMedia('(max-width: 768px)').matches,
+    () => false,
+  )
 
-  // 从 localStorage 读取折叠状态（仅客户端）
-  useEffect(() => {
-    setCollapsed(localStorage.getItem(COLLAPSE_KEY) === '1')
-    setReady(true)
-  }, [])
-
+  // 持久化折叠状态
   useEffect(() => {
     localStorage.setItem(COLLAPSE_KEY, collapsed ? '1' : '0')
   }, [collapsed])
 
-  // 路由变化时关闭抽屉
-  useEffect(() => {
+  // 路由变化时关闭抽屉（渲染期调整，替代 effect 内 setState）
+  const [prevPathname, setPrevPathname] = useState(pathname)
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname)
     setDrawerOpen(false)
-  }, [pathname])
+  }
 
   // 抽屉打开时锁定 body 滚动
   useEffect(() => {
@@ -92,7 +98,7 @@ export default function FilePad({ tree }: Props) {
 
         {/* 抽屉 */}
         <aside className={`${styles.filepad}${drawerOpen ? ' ' + styles.filepadOpen : ''}`}>
-          <FilePadContent pathname={pathname} tree={tree} />
+          <FilePadContent pathname={pathname} />
         </aside>
       </>
     )
@@ -102,7 +108,7 @@ export default function FilePad({ tree }: Props) {
   if (!ready) {
     return (
       <aside className={styles.filepad}>
-        <FilePadContent pathname={pathname} tree={tree} />
+        <FilePadContent pathname={pathname} />
       </aside>
     )
   }
@@ -123,12 +129,12 @@ export default function FilePad({ tree }: Props) {
       <button className={styles.collapseBtn} onClick={collapse} title="折叠侧栏">
         <FontAwesomeIcon icon={faChevronLeft} />
       </button>
-      <FilePadContent pathname={pathname} tree={tree} />
+      <FilePadContent pathname={pathname} />
     </aside>
   )
 }
 
-function FilePadContent({ pathname, tree }: { pathname: string; tree: NavNode[] }) {
+function FilePadContent({ pathname }: { pathname: string }) {
   const mode =
     pathname.startsWith('/wiki') || pathname.startsWith('/admin') ? 'wiki' :
     pathname.startsWith('/forum') ? 'forum' :
@@ -141,7 +147,7 @@ function FilePadContent({ pathname, tree }: { pathname: string; tree: NavNode[] 
 
   return (
     <>
-      {mode === 'wiki' && <WikiFilePad tree={tree} />}
+      {mode === 'wiki' && <WikiFilePad />}
       {mode === 'forum' && <ForumFilePad />}
       {mode === 'notice' && <NoticeFilePad />}
       {mode === 'agreement' && <AgreementFilePad />}

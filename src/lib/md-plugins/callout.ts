@@ -32,7 +32,7 @@ export function calloutPlugin(md: MarkdownIt): void {
             /^\[!(\w+)]([-+]?)(?:[ \t]+([^\n]*))?(?:\n|$)/,
           )
           if (m) {
-            ;(tokens[i] as any).meta = {
+            tokens[i].meta = {
               calloutType: m[1].toLowerCase(),
               folding: m[2],
               title: (m[3] ?? '').trim(),
@@ -51,7 +51,7 @@ export function calloutPlugin(md: MarkdownIt): void {
   const calloutStack: boolean[] = []
 
   md.renderer.rules.blockquote_open = (tokens, idx, opts, env, self) => {
-    const meta = (tokens[idx] as any).meta as CalloutMeta | undefined
+    const meta = tokens[idx].meta as CalloutMeta | undefined
     if (meta?.calloutType) {
       const type = md.utils.escapeHtml(meta.calloutType)
       const folding = meta.folding

@@ -64,6 +64,18 @@ export interface LoginResult {
   bannedUntil?: string | null; // ISO 时间戳，非空 = 被封禁
 }
 
+/** login RPC 返回的用户行 */
+interface LoginUserRow {
+  id: string;
+  username: string;
+  username_out?: string;
+  student_id: string;
+  name: string;
+  role: string;
+  has_password: boolean;
+  banned_until?: string;
+}
+
 export async function login(
   nameOrUsername: string,
   credential: string,
@@ -78,13 +90,13 @@ export async function login(
     clientIp = data.ip;
   } catch { /* 获取 IP 失败不阻塞登录 */ }
 
-  const { data, error } = await supabase.rpc("login", {
+  const { data } = await supabase.rpc("login", {
     p_name_or_username: trimmed,
     p_password: credential,
     p_client_ip: clientIp || null,
   });
 
-  const user = (data as any[])?.[0];
+  const user = (data as LoginUserRow[])?.[0];
   if (!user) {
     return { success: false, message: "姓名/用户名或密码错误，请检查后重试" };
   }
@@ -146,7 +158,7 @@ export async function tryRestoreSessionFromAuth(): Promise<void> {
   if (!meta?.username) return;
 
   // 从数据库获取最新姓名（Supabase Auth user_metadata 可能乱码）
-  let role = meta.role || "user";
+  const role = meta.role || "user";
   let name = meta.name || "";
   try {
     // 使用 SECURITY DEFINER RPC（绕过 RLS）从数据库获取正确的姓名

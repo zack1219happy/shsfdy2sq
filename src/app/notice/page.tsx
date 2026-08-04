@@ -18,6 +18,8 @@ export default function NoticePage() {
   const [notifs, setNotifs] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  // 加载完成时生成一次缓存戳（用于跳转 URL 破缓存），避免在渲染期间调用 Date.now()
+  const [cacheBust, setCacheBust] = useState(0)
   const loadedRef = useRef(false)
 
   const typeTitle = typeFilter
@@ -43,7 +45,10 @@ export default function NoticePage() {
     loadedRef.current = true
     setLoading(true)
     fetchNotifications()
-      .then((data) => setNotifs(data))
+      .then((data) => {
+        setNotifs(data)
+        setCacheBust(Date.now())
+      })
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false))
   }, [router])
@@ -109,15 +114,15 @@ export default function NoticePage() {
             // wiki 审核通知的 page 带 'wiki/' 前缀，跳转前去掉
             const wikiSlug = pageKey.startsWith('wiki/') ? pageKey.slice('wiki/'.length) : pageKey
             const href = isUser
-              ? `${basePath}/user/mypage?user=${encodeURIComponent(pageKey.replace('user/', '') || '')}${n.comment_id ? '&comment=' + n.comment_id : ''}&_=${Date.now()}`
+              ? `${basePath}/user/mypage?user=${encodeURIComponent(pageKey.replace('user/', '') || '')}${n.comment_id ? '&comment=' + n.comment_id : ''}&_=${cacheBust}`
               : isForum
-                ? `${basePath}/forum/post?id=${pageKey.replace('forum/', '') || ''}${n.comment_id ? '&comment=' + n.comment_id : ''}&_=${Date.now()}`
+                ? `${basePath}/forum/post?id=${pageKey.replace('forum/', '') || ''}${n.comment_id ? '&comment=' + n.comment_id : ''}&_=${cacheBust}`
                 : isPlaza
-                  ? `${basePath}/plaza/post?slug=${encodeURIComponent(pageKey.replace('plaza/', '') || '')}${n.comment_id ? '&comment=' + n.comment_id : ''}&_=${Date.now()}`
+                  ? `${basePath}/plaza/post?slug=${encodeURIComponent(pageKey.replace('plaza/', '') || '')}${n.comment_id ? '&comment=' + n.comment_id : ''}&_=${cacheBust}`
                   : isWish
-                    ? `${basePath}/wishes/post?id=${pageKey.replace('wishes/', '') || ''}${n.comment_id ? '&comment=' + n.comment_id : ''}&_=${Date.now()}`
+                    ? `${basePath}/wishes/post?id=${pageKey.replace('wishes/', '') || ''}${n.comment_id ? '&comment=' + n.comment_id : ''}&_=${cacheBust}`
                     : wikiSlug
-                      ? `${basePath}/wiki/page?slug=${wikiSlug}${n.comment_id ? '&comment=' + n.comment_id : ''}&_=${Date.now()}`
+                      ? `${basePath}/wiki/page?slug=${wikiSlug}${n.comment_id ? '&comment=' + n.comment_id : ''}&_=${cacheBust}`
                       : undefined
 
             let label = '评论'

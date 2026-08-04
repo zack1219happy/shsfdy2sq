@@ -15,7 +15,6 @@ import {
   leaveConversation,
   fetchAllUsers,
   type DmMessage,
-  type Conversation,
 } from '@/lib/gist-api'
 import type { UserInfo } from '@/types/gist'
 import { renderClientWithRegistry, replaceWikiLinks } from '@/lib/render-client'
@@ -52,20 +51,20 @@ export default function DmPageInner() {
   const convId = params.get('conv')
   const userId = params.get('user')
 
-  if (!session) {
-    return null
-  }
-
   useEffect(() => {
     if (!session) router.push('/')
   }, [session, router])
+
+  if (!session) {
+    return null
+  }
 
   return (
     <div className={styles.page}>
       {convId ? (
         <DmChatView key={convId} conversationId={convId} currentUserId={session.userId} />
       ) : userId ? (
-        <NewChatView key={userId} otherUserId={userId} currentUserId={session.userId} />
+        <NewChatView key={userId} otherUserId={userId} />
       ) : (
         <DmEmptyState />
       )}
@@ -93,10 +92,8 @@ function DmEmptyState() {
 
 function NewChatView({
   otherUserId,
-  currentUserId,
 }: {
   otherUserId: string
-  currentUserId: string
 }) {
   const router = useRouter()
   const [otherUser, setOtherUser] = useState<UserInfo | null>(null)
@@ -124,8 +121,8 @@ function NewChatView({
       } else {
         router.replace('/dm')
       }
-    } catch (e: any) {
-      setErrorMsg(e?.message || '发送失败')
+    } catch (e: unknown) {
+      setErrorMsg((e as { message?: string } | null)?.message || '发送失败')
     } finally {
       setSending(false)
     }
@@ -206,12 +203,7 @@ function DmChatView({
     if (!conversationId) return
 
     let active = true
-    setLoading(true)
-    setMessages([])
-    setInput('')
-    setOtherUser(null)
     otherUserNameRef.current = ''
-    setContextMenu(null)
 
     const loadConversation = async () => {
       try {
@@ -262,8 +254,14 @@ function DmChatView({
           table: 'private_messages',
           filter: `conversation_id=eq.${conversationId}`,
         },
-        (payload: any) => {
-          const msg = payload.new
+        (payload) => {
+          const msg = payload.new as {
+            id: string
+            sender_id: string
+            content: string
+            created_at: string
+            recalled_at: string | null
+          }
           if (msg.sender_id === currentUserId) return
           setMessages((prev) => [
             ...prev,
@@ -289,8 +287,14 @@ function DmChatView({
           table: 'private_messages',
           filter: `conversation_id=eq.${conversationId}`,
         },
-        (payload: any) => {
-          const msg = payload.new
+        (payload) => {
+          const msg = payload.new as {
+            id: string
+            sender_id: string
+            content: string
+            created_at: string
+            recalled_at: string | null
+          }
           // 消息被撤回 → 更新气泡内容
           if (msg.recalled_at) {
             setMessages((prev) =>
@@ -386,9 +390,9 @@ function DmChatView({
       // 成功后补发事件，确保侧栏读到最新数据
       window.dispatchEvent(new CustomEvent('dm-new-message'))
       window.dispatchEvent(new CustomEvent('new-dm'))
-    } catch (e: any) {
+    } catch (e: unknown) {
       setFailedIds((prev) => [...prev, tempId])
-      setSendError(e?.message || '发送失败')
+      setSendError((e as { message?: string } | null)?.message || '发送失败')
     } finally {
       sendingRef.current = false
     }
@@ -404,8 +408,8 @@ function DmChatView({
         ),
       )
       window.dispatchEvent(new CustomEvent('dm-new-message'))
-    } catch (e: any) {
-      alert(e?.message || '撤回失败')
+    } catch (e: unknown) {
+      alert((e as { message?: string } | null)?.message || '撤回失败')
     }
     setContextMenu(null)
   }, [])

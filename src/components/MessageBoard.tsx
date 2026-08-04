@@ -39,14 +39,15 @@ export default function MessageBoard({
         createdAt: m.created_at,
         deleted: m.deleted,
       })))
-    } catch (e: any) {
-      setError(e?.message ?? '加载留言失败')
+    } catch (e: unknown) {
+      setError((e as { message?: string } | null)?.message ?? '加载留言失败')
     } finally {
       if (!silent) setLoading(false)
     }
   }, [targetUserId])
 
-  useEffect(() => { load() }, [load])
+  // 初始/换人加载：通过微任务触发，避免在 effect 内同步调用含 setState 的函数
+  useEffect(() => { Promise.resolve().then(() => load()) }, [load])
 
   const handleSubmit = useCallback(async (content: string, parentId?: string) => {
     await addUserMessage(targetUserId, content, parentId)

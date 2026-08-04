@@ -45,7 +45,7 @@ export function useBrowserNotifications(userId: string | null) {
           table: 'notifications',
           filter: `user_id=eq.${userId}`,
         },
-        (payload: any) => {
+        (payload) => {
           const n = payload.new as {
             type: string
             excerpt: string | null
@@ -68,7 +68,7 @@ export function useBrowserNotifications(userId: string | null) {
           table: 'private_messages',
           // 不传 filter — RLS 自动过滤，仅投递用户有权限的消息
         },
-        (payload: any) => {
+        (payload) => {
           const msg = payload.new as {
             sender_id: string
             content: string

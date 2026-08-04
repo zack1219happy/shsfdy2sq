@@ -33,7 +33,6 @@ export default function HomePage() {
   const [randomPages, setRandomPages] = useState<{ title: string; slug: string }[]>([])
 
   useEffect(() => {
-    const base = BASE_PATH
     Promise.all([
       fetchForumPosts().then((data) => {
         // 按创建时间倒序排（不区分置顶），取最新 5 条
@@ -45,11 +44,13 @@ export default function HomePage() {
 
     // 随机选取 3 个 wiki 页面
     const entries = Object.entries(titleSlugMap).filter(
-      ([title, slug]) => slug !== 'people',
+      ([, slug]) => slug !== 'people',
     )
-    setRandomPages(
-      pickRandom(entries, 3).map(([title, slug]) => ({ title, slug })),
-    )
+    void (async () => {
+      setRandomPages(
+        pickRandom(entries, 3).map(([title, slug]) => ({ title, slug })),
+      )
+    })()
   }, [])
 
   return (
@@ -57,6 +58,7 @@ export default function HomePage() {
       {/* ═══ 第一行：Logo + 标题 ═══ */}
       <header className={styles.hero}>
         <h1 className={styles.heroTitle}>
+          {/* eslint-disable-next-line @next/next/no-img-element -- 全站统一原生 <img>（SSG 导出 + images.unoptimized），next/image 会引入额外包装元素影响布局 */}
           <img
             src={`${BASE_PATH}/logo.webp`}
             alt="Logo"

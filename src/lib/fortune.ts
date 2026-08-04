@@ -51,6 +51,13 @@ interface FortuneDateEntry {
   end?: string
 }
 
+/** get_fortune_dates RPC 返回的原始行 */
+interface FortuneDateRow {
+  date_type: string
+  start_date?: string | null
+  end_date?: string | null
+}
+
 let fortuneDates: FortuneDateEntry[] = []
 
 let dbLoaded = false
@@ -67,7 +74,7 @@ export async function loadFortuneDatesFromDB(): Promise<void> {
       console.warn('加载考试/假日日期失败:', error.message)
       return
     }
-    fortuneDates = (data ?? []).map((r: any) => ({
+    fortuneDates = (data ?? []).map((r: FortuneDateRow) => ({
       type: r.date_type as 'exam' | 'holiday',
       start: r.start_date ? String(r.start_date).slice(5) : '',
       end: r.end_date ? String(r.end_date).slice(5) : undefined,
@@ -127,7 +134,6 @@ export interface FortuneResult {
 export function drawFortune(studentId: string): FortuneResult {
   const dateKey = todayStr()
   const seed = hashStr(dateKey + studentId)
-  const rng = createSeededRandom(seed)
 
   // 卦象
   const hexIndex = (seed % 64) + 1

@@ -41,7 +41,7 @@ export default function AgreementEditPage() {
   }, [])
 
   useEffect(() => {
-    if (!slug || !isAdmin) { setLoading(false); return }
+    if (!slug || !isAdmin) return
     ;(async () => {
       try {
         const page = await fetchAgreementPage(slug)
@@ -51,8 +51,8 @@ export default function AgreementEditPage() {
         } else {
           setError('页面不存在')
         }
-      } catch (e: any) {
-        setError(e?.message || '加载失败')
+      } catch (e) {
+        setError((e as { message?: string })?.message || '加载失败')
       } finally {
         setLoading(false)
       }
@@ -67,8 +67,8 @@ export default function AgreementEditPage() {
       await updateAgreementPage(slug, title.trim(), content.trim())
       showWarningToast('已保存 ✅')
       router.push(`/agreement/${slug}`)
-    } catch (e: any) {
-      setError(e?.message || '保存失败')
+    } catch (e) {
+      setError((e as { message?: string })?.message || '保存失败')
     } finally {
       setSubmitting(false)
     }

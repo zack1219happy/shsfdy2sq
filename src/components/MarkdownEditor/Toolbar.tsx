@@ -10,6 +10,8 @@ import { defaultBtns, simpleBtns } from './config'
 import type { ToolbarBtn as ToolbarBtnType, ToggleState } from './types'
 import styles from '@/styles/markdown-editor.module.css'
 
+const BIG_SCREEN_QUERY = '(min-width: 768px)'
+
 interface ToolbarProps {
   onAction: (btn: ToolbarBtnType) => void
   toggleState: ToggleState
@@ -22,11 +24,14 @@ interface ToolbarProps {
  * - 小屏（≤768px）：精简按钮组
  */
 export default function Toolbar({ onAction, toggleState }: ToolbarProps) {
-  const [isBigScreen, setIsBigScreen] = useState(true)
+  // 惰性初始化读取初始匹配状态（组件由 ssr:false 动态加载，仅客户端渲染）
+  const [isBigScreen, setIsBigScreen] = useState(() => {
+    if (typeof window === 'undefined') return true
+    return window.matchMedia(BIG_SCREEN_QUERY).matches
+  })
 
   useEffect(() => {
-    const mq = window.matchMedia('(min-width: 768px)')
-    setIsBigScreen(mq.matches)
+    const mq = window.matchMedia(BIG_SCREEN_QUERY)
     const handler = (e: MediaQueryListEvent) => setIsBigScreen(e.matches)
     mq.addEventListener('change', handler)
     return () => mq.removeEventListener('change', handler)

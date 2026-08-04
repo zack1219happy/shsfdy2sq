@@ -166,8 +166,8 @@ export default function ImageUploadDialog({ onFinish, onClose }: Props) {
         .getPublicUrl(filePath)
 
       setUploadedUrl(urlData.publicUrl)
-    } catch (e: any) {
-      setError(e?.message || '上传失败，请重试')
+    } catch (e) {
+      setError((e as { message?: string })?.message || '上传失败，请重试')
     } finally {
       setUploading(false)
     }
@@ -275,6 +275,8 @@ export default function ImageUploadDialog({ onFinish, onClose }: Props) {
           </div>
         ) : effectiveUrl ? (
           <div className={styles.uploadZoneContent}>
+            {/* 预览图是用户上传的 WebP 或任意外部链接，next/image 需预先配置远程域名且无法确定尺寸 */}
+            {/* eslint-disable-next-line @next/next/no-img-element -- 任意来源图片预览，不适合 next/image */}
             <img
               src={effectiveUrl}
               alt="预览"

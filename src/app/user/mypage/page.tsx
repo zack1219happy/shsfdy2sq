@@ -101,6 +101,11 @@ interface UserProfile {
   privacy_follows: PrivacyLevel
 }
 
+interface ConversationSummary {
+  conversation_id: string
+  other_user_id: string
+}
+
 /* ==============================================================
    工具
    ============================================================== */
@@ -139,7 +144,7 @@ export default function UserMypagePage() {
 
 function UserMypage() {
   const router = useRouter()
-  const [session, setSession] = useState<UserSession | null>(null)
+  const [session] = useState<UserSession | null>(getSession())
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -191,34 +196,9 @@ function UserMypage() {
 
   // 初始化 session
   useEffect(() => {
-    const s = getSession()
-    if (!s) { router.push('/'); return }
-    setSession(s)
+    if (!session) { router.push('/'); return }
     loadPinyinInitialsFromDB()
-  }, [router])
-
-  // URL 或 session 变化 → 加载数据
-  useEffect(() => {
-    if (!session) return
-    const username = urlUser || session.username
-    if (!username) return
-    if (loadedUserRef.current === username) return
-    loadedUserRef.current = username
-
-    setProfile(null)
-    setStats(null)
-    setDailyPoints([])
-    setFollowState('none')
-    setPosts([])
-    setArticles([])
-    setFollowers([])
-    setFollowing([])
-    setActiveTab('home')
-    setLoading(true)
-    setError('')
-
-    loadProfileData(username)
-  }, [urlUser, session])
+  }, [router, session])
 
   const loadProfileData = useCallback(async (username: string) => {
     setLoading(true)
@@ -231,7 +211,7 @@ function UserMypage() {
     try {
       // 1. 拉取基本信息（UUID → 按 ID 定位；否则按用户名，兼容旧链接）
       const isUuid = UUID_RE.test(username)
-      const [profileRes, pinyinMap] = await Promise.all([
+      const [profileRes] = await Promise.all([
         isUuid
           ? supabase.rpc('get_user_profile_by_id', { p_user_id: username })
           : supabase.rpc('get_user_profile', { p_username: username }),
@@ -252,7 +232,7 @@ function UserMypage() {
 
       // 2. 拉取统计数据 + 积分 + 关注状态
       const uid = p.id
-      const [statsRes2, pointsRes2, followRes2] = await Promise.all([
+      const [statsRes2, , followRes2] = await Promise.all([
         supabase.rpc('get_user_stats', { p_user_id: uid }),
         supabase.rpc('get_user_daily_points_from_tx', { p_user_id: uid, p_days: 14 }),
         supabase.rpc('get_follow_state', { p_target_username: p.username }),
@@ -279,6 +259,29 @@ function UserMypage() {
     }
     setLoading(false)
   }, [])
+
+  // URL 或 session 变化 → 加载数据
+  useEffect(() => {
+    if (!session) return
+    const username = urlUser || session.username
+    if (!username) return
+    if (loadedUserRef.current === username) return
+    loadedUserRef.current = username
+
+    setProfile(null)
+    setStats(null)
+    setDailyPoints([])
+    setFollowState('none')
+    setPosts([])
+    setArticles([])
+    setFollowers([])
+    setFollowing([])
+    setActiveTab('home')
+    setLoading(true)
+    setError('')
+
+    loadProfileData(username)
+  }, [urlUser, session, loadProfileData])
 
   const loadPosts = useCallback(async (username: string) => {
     const { data } = await supabase.rpc('get_user_forum_posts', { p_username: username, p_limit: 50, p_offset: 0 })
@@ -362,7 +365,6 @@ function UserMypage() {
       ) : profile ? (
         <>
           <HeaderBar
-            session={session}
             profile={profile}
             initials={initials}
             isSelf={isSelf}
@@ -408,8 +410,6 @@ function UserMypage() {
               isSelf={isSelf}
               visibility={privacy.posts}
               onToggleVisibility={isSelf ? () => togglePrivacy('posts') : undefined}
-              profile={profile}
-              session={session}
             />
           )}
           {activeTab === 'articles' && (
@@ -419,8 +419,6 @@ function UserMypage() {
               isSelf={isSelf}
               visibility={privacy.articles}
               onToggleVisibility={isSelf ? () => togglePrivacy('articles') : undefined}
-              profile={profile}
-              session={session}
             />
           )}
           {activeTab === 'follows' && (
@@ -463,9 +461,8 @@ function TabBtn({ tab, label, activeTab, onSelect }: {
    ============================================================== */
 
 function HeaderBar({
-  session, profile, initials, isSelf, followState, onFollowToggle,
+  profile, initials, isSelf, followState, onFollowToggle,
 }: {
-  session: UserSession
   profile: UserProfile
   initials: string
   isSelf: boolean
@@ -475,14 +472,16 @@ function HeaderBar({
   const [motto, setMotto] = useState(profile.motto)
   const [editingMotto, setEditingMotto] = useState(false)
   const [mottoDraft, setMottoDraft] = useState(profile.motto)
+  const [prevMotto, setPrevMotto] = useState(profile.motto)
   const inputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
-  // sync from profile
-  useEffect(() => {
+  // sync from profile（渲染期调整，避免在 effect 中同步 setState）
+  if (prevMotto !== profile.motto) {
+    setPrevMotto(profile.motto)
     setMotto(profile.motto)
     setMottoDraft(profile.motto)
-  }, [profile.motto])
+  }
 
   const handleStartEdit = useCallback(() => {
     setMottoDraft(motto)
@@ -497,7 +496,7 @@ function HeaderBar({
       await supabase.rpc('update_motto', { p_motto: trimmed })
     }
     setEditingMotto(false)
-  }, [mottoDraft, motto])
+  }, [mottoDraft])
 
   const handleCancelMotto = useCallback(() => {
     setMottoDraft(motto)
@@ -594,7 +593,7 @@ function DmButton({ targetUserId, router }: { targetUserId: string; router: Retu
     setBusy(true)
     try {
       const { data: convs } = await supabase.rpc('get_conversations')
-      const conv = (convs as any[])?.find(c => c.other_user_id === targetUserId)
+      const conv = (convs as ConversationSummary[] | null)?.find(c => c.other_user_id === targetUserId)
       if (conv) {
         router.push(`/dm?conv=${conv.conversation_id}`)
       } else {
@@ -764,8 +763,14 @@ function BioSection({ isSelf, bio: initialBio }: { isSelf: boolean; bio: string 
   const [bio, setBio] = useState(initialBio)
   const [editing, setEditing] = useState(false)
   const [draftBio, setDraftBio] = useState(initialBio)
+  const [prevBio, setPrevBio] = useState(initialBio)
 
-  useEffect(() => { setBio(initialBio); setDraftBio(initialBio) }, [initialBio])
+  // 渲染期调整，避免在 effect 中同步 setState
+  if (prevBio !== initialBio) {
+    setPrevBio(initialBio)
+    setBio(initialBio)
+    setDraftBio(initialBio)
+  }
 
   const handleStartEdit = useCallback(() => {
     setDraftBio(bio)
@@ -840,15 +845,13 @@ function BioSection({ isSelf, bio: initialBio }: { isSelf: boolean; bio: string 
    ============================================================== */
 
 function PostsTab({
-  posts, loading, isSelf, visibility, onToggleVisibility, profile, session,
+  posts, loading, isSelf, visibility, onToggleVisibility,
 }: {
   posts: ForumPostItem[]
   loading?: boolean
   isSelf: boolean
   visibility: PrivacyLevel
   onToggleVisibility?: () => void
-  profile: UserProfile
-  session: UserSession
 }) {
   // 非自己且非公开 → 检查互关
   const canView = isSelf || visibility === 'public'
@@ -920,15 +923,13 @@ function PostsTab({
    ============================================================== */
 
 function ArticlesTab({
-  articles, loading, isSelf, visibility, onToggleVisibility, profile, session,
+  articles, loading, isSelf, visibility, onToggleVisibility,
 }: {
   articles: PlazaArticleItem[]
   loading?: boolean
   isSelf: boolean
   visibility: PrivacyLevel
   onToggleVisibility?: () => void
-  profile: UserProfile
-  session: UserSession
 }) {
   // 非本人仅显示公开文章
   const visibleArticles = isSelf ? articles : articles.filter(a => a.is_public)

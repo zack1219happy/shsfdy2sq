@@ -7,7 +7,6 @@ import {
   faItalic,
   faStrikethrough,
   faMinus,
-  faHeading,
   faListUl,
   faListOl,
   faImage,
@@ -15,11 +14,8 @@ import {
   faCode,
   faTable,
   faEye,
-  faEyeSlash,
   faExpandArrowsAlt,
-  faCompressArrowsAlt,
   faLock,
-  faLockOpen,
 } from '@fortawesome/free-solid-svg-icons'
 
 import React from 'react'
@@ -28,7 +24,6 @@ import type {
   ToolbarBtn,
   DialogRequest,
   MarkdownEditorConfig,
-  ToggleState,
 } from './types'
 
 // ============================================================

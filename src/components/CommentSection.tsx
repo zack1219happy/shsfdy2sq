@@ -71,28 +71,60 @@ export default function CommentSection({
   // ---- 自取模式 vs 受控模式 ----
   const isSelfManaged = !!pageSlug
   const [localComments, setLocalComments] = useState<UnifiedComment[]>([])
-  const [loading, setLoading] = useState(false)
+  // 自取模式初始即为加载中（避免挂载后闪"暂无评论"再切"加载中"）
+  const [loading, setLoading] = useState(isSelfManaged)
   const [error, setError] = useState<string | null>(null)
   const [replyTarget, setReplyTarget] = useState<{ id: string; author: string; authorId?: string } | null>(null)
 
-  const comments = isSelfManaged ? localComments : (externalComments ?? [])
+  // 自取模式：pageSlug/isSelfManaged 变化时重置加载状态（渲染期调整，替代 effect 内同步 setState）
+  const [loadSyncPrev, setLoadSyncPrev] = useState<{
+    pageSlug?: string
+    isSelfManaged: boolean
+  }>({ pageSlug, isSelfManaged })
+  if (
+    loadSyncPrev.pageSlug !== pageSlug ||
+    loadSyncPrev.isSelfManaged !== isSelfManaged
+  ) {
+    setLoadSyncPrev({ pageSlug, isSelfManaged })
+    if (isSelfManaged) {
+      setLoading(true)
+      setError(null)
+      setReplyTarget(null)
+    }
+  }
+
+  const comments = useMemo(
+    () => (isSelfManaged ? localComments : (externalComments ?? [])),
+    [isSelfManaged, localComments, externalComments],
+  )
   const session = getSession()
 
   // 锚点：自取模式从 URL 解析，受控模式从 props 读取
   const [urlCommentId, setUrlCommentId] = useState<string | null>(null)
   const [urlNonce, setUrlNonce] = useState(0)
 
-  useEffect(() => {
-    if (!isSelfManaged) return
-    const params = new URLSearchParams(window.location.search)
-    const commentId = params.get('comment')
-    if (commentId) {
-      setUrlCommentId(commentId)
-      setUrlNonce((n) => n + 1)
-    } else {
-      setUrlCommentId(null)
+  // URL 参数 → 状态同步（渲染期调整：首帧及 pageSlug/isSelfManaged 变化时执行）
+  const [urlSyncPrev, setUrlSyncPrev] = useState<{
+    pageSlug?: string
+    isSelfManaged: boolean
+  } | null>(null)
+  if (
+    urlSyncPrev === null ||
+    urlSyncPrev.pageSlug !== pageSlug ||
+    urlSyncPrev.isSelfManaged !== isSelfManaged
+  ) {
+    setUrlSyncPrev({ pageSlug, isSelfManaged })
+    if (isSelfManaged && typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const commentId = params.get('comment')
+      if (commentId) {
+        setUrlCommentId(commentId)
+        setUrlNonce((n) => n + 1)
+      } else {
+        setUrlCommentId(null)
+      }
     }
-  }, [pageSlug, isSelfManaged])
+  }
 
   const effectiveTargetId = isSelfManaged ? urlCommentId : externalTargetId
   const effectiveScrollKey = isSelfManaged ? urlNonce : (externalScrollKey ?? 0)
@@ -102,9 +134,6 @@ export default function CommentSection({
   useEffect(() => {
     if (!isSelfManaged) return
     let cancelled = false
-    setLoading(true)
-    setError(null)
-    setReplyTarget(null)
 
     import('@/lib/gist-api').then(({ fetchPageComments }) =>
       fetchPageComments(pageSlug!)
@@ -362,8 +391,8 @@ function CommentForm({
     try {
       await onSubmit(content.trim(), replyTarget?.id)
       setContent('')
-    } catch (e: any) {
-      alert(e?.message || '提交失败，请稍后重试')
+    } catch (e: unknown) {
+      alert((e as { message?: string } | null)?.message || '提交失败，请稍后重试')
     } finally {
       setSubmitting(false)
     }

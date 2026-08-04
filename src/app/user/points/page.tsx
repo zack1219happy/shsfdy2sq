@@ -14,7 +14,7 @@ const PAGE_SIZE = 20
 
 export default function PointsPage() {
   const router = useRouter()
-  const [session, setSession] = useState<ReturnType<typeof getSession>>(null)
+  const [session] = useState<ReturnType<typeof getSession>>(getSession())
   const [progress, setProgress] = useState<TodayProgress | null>(null)
   const [history, setHistory] = useState<PointsTransaction[]>([])
   const [loading, setLoading] = useState(true)
@@ -22,50 +22,51 @@ export default function PointsPage() {
   const [offset, setOffset] = useState(0)
   const [hasMore, setHasMore] = useState(true)
 
-  useEffect(() => {
-    const s = getSession()
-    if (!s) { router.push('/'); return }
-    setSession(s)
-  }, [router])
+  // session 出现时重置为加载态（避免在 effect 中同步 setState）
+  const [prevSession, setPrevSession] = useState(session)
+  if (prevSession !== session) {
+    setPrevSession(session)
+    setLoading(true)
+    setError(null)
+    setHistory([])
+    setHasMore(true)
+  }
 
   // 加载今日进度
   const loadProgress = useCallback(async () => {
-    try {
-      const p = await fetchTodayProgress()
-      setProgress(p)
-    } catch {
-      // 静默处理
-    }
+    await fetchTodayProgress().then(setProgress).catch(() => { /* 静默处理 */ })
   }, [])
 
   // 加载积分历史
   const loadHistory = useCallback(async (pageOffset: number) => {
-    setLoading(true)
-    setError(null)
-    try {
-      const data = await fetchPointsHistory(PAGE_SIZE, pageOffset)
-      if (pageOffset === 0) {
-        setHistory(data)
-      } else {
-        setHistory((prev) => [...prev, ...data])
-      }
-      setHasMore(data.length === PAGE_SIZE)
-    } catch (e: any) {
-      setError(e.message ?? '加载失败')
-    } finally {
-      setLoading(false)
-    }
+    await fetchPointsHistory(PAGE_SIZE, pageOffset)
+      .then((data) => {
+        if (pageOffset === 0) {
+          setHistory(data)
+        } else {
+          setHistory((prev) => [...prev, ...data])
+        }
+        setHasMore(data.length === PAGE_SIZE)
+      })
+      .catch((e) => {
+        setError((e as { message?: string })?.message ?? '加载失败')
+      })
+      .finally(() => {
+        setLoading(false)
+      })
   }, [])
 
   useEffect(() => {
-    if (!session) return
+    if (!session) { router.push('/'); return }
     loadProgress()
     loadHistory(0)
-  }, [session, loadProgress, loadHistory])
+  }, [session, loadProgress, loadHistory, router])
 
   const loadMore = () => {
     const newOffset = offset + PAGE_SIZE
     setOffset(newOffset)
+    setLoading(true)
+    setError(null)
     loadHistory(newOffset)
   }
 

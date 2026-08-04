@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import FaIcon from '@/components/FaIcon'
 import { getSession } from '@/lib/auth'
+import type { UserSession } from '@/lib/auth'
 import {
   fetchWishById,
   fetchWishComments,
@@ -55,12 +56,15 @@ export default function WishPostPage() {
   const id = searchParams.get('id') || ''
 
   const [wish, setWish] = useState<WishItem | null>(null)
-  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [session, setSession] = useState<any>(null)
+  // 记录最后一次完成加载的 id，用于推导 loading，避免在 effect 中同步 setState
+  const [loadedId, setLoadedId] = useState<string | null>(null)
+  const [session, setSession] = useState<UserSession | null>(null)
   const [comments, setComments] = useState<WishComment[]>([])
   const [refreshCooldown, setRefreshCooldown] = useState(0)
   const [spinning, setSpinning] = useState(false)
+
+  const loading = loadedId !== id
 
   // 状态编辑（仅开发者）
   const [editingStatus, setEditingStatus] = useState(false)
@@ -72,7 +76,6 @@ export default function WishPostPage() {
   useEffect(() => {
     if (!id) return
     let cancelled = false
-    setLoading(true)
     ;(async () => {
       try {
         const [w, s] = await Promise.all([fetchWishById(id), getSession()])
@@ -80,10 +83,12 @@ export default function WishPostPage() {
         setWish(w)
         setSession(s)
         fetchWishComments(w.id).then(setComments).catch(() => {})
-      } catch (e: any) {
-        if (!cancelled) setError(e.message)
+      } catch (e: unknown) {
+        if (!cancelled) {
+          setError((e as { message?: string } | null)?.message ?? null)
+        }
       } finally {
-        if (!cancelled) setLoading(false)
+        if (!cancelled) setLoadedId(id)
       }
     })()
     return () => { cancelled = true }
@@ -102,14 +107,14 @@ export default function WishPostPage() {
     try {
       await addWishComment(wish.id, content, parentId)
       await refreshComments()
-    } catch (e: any) { showWarningToast(e?.message || '评论失败') }
+    } catch (e: unknown) { showWarningToast((e as { message?: string } | null)?.message || '评论失败') }
   }
 
   const handleDeleteComment = async (commentId: string) => {
     try {
       await deleteWishComment(commentId)
       await refreshComments()
-    } catch (e: any) { showWarningToast(e?.message || '删除失败') }
+    } catch (e: unknown) { showWarningToast((e as { message?: string } | null)?.message || '删除失败') }
   }
 
   const handleRefreshComments = useCallback(async () => {
@@ -146,8 +151,8 @@ export default function WishPostPage() {
         estimated_stage: estimatedStage || null,
       } : null)
       setEditingStatus(false)
-    } catch (e: any) {
-      showWarningToast(e?.message || '更新失败')
+    } catch (e: unknown) {
+      showWarningToast((e as { message?: string } | null)?.message || '更新失败')
     } finally {
       setSubmittingStatus(false)
     }

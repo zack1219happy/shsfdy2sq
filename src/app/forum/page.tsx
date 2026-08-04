@@ -2,9 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import dynamic from 'next/dynamic'
 import FaIcon from '@/components/FaIcon'
-import WikiContent from '@/components/WikiContent'
 import { renderClient } from '@/lib/render-client'
 import { getSession } from '@/lib/auth'
 import { fetchForumPosts, fetchLikedPostIds, togglePinForumPost } from '@/lib/gist-api'
@@ -22,16 +20,16 @@ export default function ForumListPage() {
   const searchParams = useSearchParams()
   const [posts, setPosts] = useState<ForumPost[]>([])
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set())
-  const [loading, setLoading] = useState(true)
+  const [loadedTab, setLoadedTab] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
 
   const tab = searchParams.get('my') ? 'my' : searchParams.get('liked') ? 'liked' : 'all'
+  const loading = loadedTab !== tab
 
   const loadPosts = useCallback(() => {
     let cancelled = false
-    setLoading(true)
     Promise.all([
       fetchForumPosts(),
       tab === 'liked' ? fetchLikedPostIds() : Promise.resolve([]),
@@ -42,7 +40,7 @@ export default function ForumListPage() {
         if (liked.length) setLikedIds(new Set(liked))
       })
       .catch((e: Error) => { if (!cancelled) setError(e.message) })
-      .finally(() => { if (!cancelled) setLoading(false) })
+      .finally(() => { if (!cancelled) setLoadedTab(tab) })
     return () => { cancelled = true }
   }, [tab])
 
@@ -216,17 +214,19 @@ function PinnedSection({ posts, goToPost, onRefresh }: {
 
   // 初始化：从 localStorage 恢复，置顶有更新则展开
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(PIN_KEY)
-      if (saved) {
-        const data = JSON.parse(saved)
-        if (data.pinKey === pinKey) {
-          setCollapsed(data.collapsed)
-          return
+    void (async () => {
+      try {
+        const saved = localStorage.getItem(PIN_KEY)
+        if (saved) {
+          const data = JSON.parse(saved)
+          if (data.pinKey === pinKey) {
+            setCollapsed(data.collapsed)
+            return
+          }
         }
-      }
-    } catch {}
-    setCollapsed(false)
+      } catch {}
+      setCollapsed(false)
+    })()
   }, [pinKey])
 
   const handleToggle = useCallback(() => {
@@ -330,7 +330,7 @@ function PostCard({ post, onClick, onRefresh }: { post: ForumPost; onClick: () =
     try {
       await togglePinForumPost(postId)
       onRefresh()
-    } catch (e: any) {
+    } catch {
       // Silently handle error
     }
   }, [onRefresh])

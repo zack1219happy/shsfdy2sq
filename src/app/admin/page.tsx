@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import FaIcon from '@/components/FaIcon'
 import { getSession } from '@/lib/auth'
 import styles from '@/styles/admin.module.css'
 
 export default function AdminPage() {
   const router = useRouter()
-  const [session, setSession] = useState(getSession())
+  const [session] = useState(getSession())
   const isAdmin = session && ['admin', 'super_admin'].includes(session.role)
 
   useEffect(() => {

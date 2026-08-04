@@ -1,9 +1,8 @@
 'use client'
 
 import { supabase } from './supabase'
-import { showWarningToast } from './toast'
 import type { Comment, CommentsData, ForumPost, ForumComment, NotificationType, UserInfo } from '@/types/gist'
-import type { PlazaArticle, PlazaArticleDetail, PlazaArticleListResult, PlazaComment, PlazaCategory, PlazaTipRecord, SendPointsResult } from '@/types/plaza'
+import type { PlazaArticleDetail, PlazaArticleListResult, PlazaComment, PlazaCategory, PlazaTipRecord, SendPointsResult } from '@/types/plaza'
 import type { WishItem, WishComment } from '@/types/wishes'
 
 function mapComment(raw: Record<string, unknown>): Comment {
@@ -97,7 +96,7 @@ export interface Notification {
 export async function fetchNotifications(): Promise<Notification[]> {
   const { data, error } = await supabase.rpc('get_notifications')
   if (error) throw new Error('获取通知失败: ' + error.message)
-  return ((data ?? []) as Notification[]).map((n: any) => ({
+  return ((data ?? []) as Notification[]).map((n: Notification) => ({
     ...n,
     type: n.type ?? 'comment_reply',
   }))
@@ -198,7 +197,7 @@ export async function createForumPost(title: string, content: string, excludedVi
 export async function fetchForumComments(postId: string): Promise<ForumComment[]> {
   const { data, error } = await supabase.rpc('get_forum_comments', { p_post_id: postId })
   if (error) throw new Error('获取评论失败: ' + error.message)
-  return ((data ?? []) as ForumComment[]).map((c: any) => ({ ...c, deleted: !!c.deleted }))
+  return ((data ?? []) as ForumComment[]).map((c: ForumComment) => ({ ...c, deleted: !!c.deleted }))
 }
 
 export async function addForumComment(
@@ -298,7 +297,7 @@ export async function getConversations(): Promise<Conversation[]> {
 }
 
 export async function getMessages(conversationId: string, limit = 50, before?: string): Promise<DmMessage[]> {
-  const params: Record<string, any> = { p_conversation_id: conversationId, p_limit: limit }
+  const params: Record<string, string | number> = { p_conversation_id: conversationId, p_limit: limit }
   if (before) params.p_before = before
   const { data, error } = await supabase.rpc('get_messages', params)
   if (error) throw new Error('获取消息失败: ' + error.message)
@@ -346,6 +345,16 @@ export async function leaveConversation(conversationId: string): Promise<void> {
    - 点赞走 toggle_plaza_like RPC（乐观更新）
    ============================================================= */
 
+/** get_plaza_articles RPC 原始行（含 upvote_count，需映射为 like_count） */
+type PlazaArticleRow = PlazaArticleListResult & {
+  upvote_count?: number | null
+}
+
+/** get_plaza_article RPC 原始行 */
+type PlazaArticleDetailRow = PlazaArticleDetail & {
+  upvote_count?: number | null
+}
+
 /** 获取所有分类（扁平列表，前端自行构建树结构） */
 export async function fetchPlazaCategories(): Promise<PlazaCategory[]> {
   const { data, error } = await supabase.rpc('get_plaza_categories')
@@ -361,14 +370,14 @@ export async function fetchPlazaArticles(
   my?: boolean,
   liked?: boolean,
 ): Promise<PlazaArticleListResult[]> {
-  const params: Record<string, any> = { p_limit: limit, p_offset: offset }
+  const params: Record<string, string | number | boolean> = { p_limit: limit, p_offset: offset }
   if (categoryId) params.p_category_id = categoryId
   if (search) params.p_search = search
   if (my) params.p_my = true
   if (liked) params.p_liked = true
   const { data, error } = await supabase.rpc('get_plaza_articles', params)
   if (error) throw new Error('获取广场文章失败: ' + error.message)
-  return ((data ?? []) as any[]).map((r: any) => ({
+  return ((data ?? []) as PlazaArticleRow[]).map((r: PlazaArticleRow) => ({
     ...r,
     like_count: r.upvote_count ?? r.like_count ?? 0,
     downvote_count: r.downvote_count ?? 0,
@@ -378,7 +387,7 @@ export async function fetchPlazaArticles(
 export async function fetchPlazaArticle(slug: string): Promise<PlazaArticleDetail> {
   const { data, error } = await supabase.rpc('get_plaza_article', { p_slug: slug })
   if (error) throw new Error('获取文章失败: ' + error.message)
-  const row = (data as any[] | null)?.[0]
+  const row = (data as PlazaArticleDetailRow[] | null)?.[0]
   if (!row) throw new Error('文章不存在')
   return {
     ...row,
@@ -465,7 +474,7 @@ export async function fetchLikedPlazaIds(): Promise<string[]> {
 export async function fetchPlazaComments(articleId: string): Promise<PlazaComment[]> {
   const { data, error } = await supabase.rpc('get_plaza_comments', { p_article_id: articleId })
   if (error) throw new Error('获取评论失败: ' + error.message)
-  return ((data ?? []) as PlazaComment[]).map((c: any) => ({ ...c, deleted: !!c.deleted }))
+  return ((data ?? []) as PlazaComment[]).map((c: PlazaComment) => ({ ...c, deleted: !!c.deleted }))
 }
 
 export async function addPlazaComment(
@@ -509,7 +518,7 @@ export async function fetchWishById(id: string): Promise<WishItem> {
 export async function fetchWishComments(wishId: string): Promise<WishComment[]> {
   const { data, error } = await supabase.rpc('get_wish_comments', { p_wish_id: wishId })
   if (error) throw new Error('获取评论失败: ' + error.message)
-  return ((data ?? []) as WishComment[]).map((c: any) => ({ ...c, deleted: !!c.deleted }))
+  return ((data ?? []) as WishComment[]).map((c: WishComment) => ({ ...c, deleted: !!c.deleted }))
 }
 
 export async function addWishComment(
@@ -644,7 +653,7 @@ export async function getPlazaStorage(articleId: string, key: string): Promise<s
 
 /** 写入当前用户在当前文章的持久化存储 */
 export async function setPlazaStorage(articleId: string, key: string, value: string): Promise<boolean> {
-  const { data, error } = await supabase.rpc('set_plaza_storage', {
+  const { error } = await supabase.rpc('set_plaza_storage', {
     p_article_id: articleId,
     p_key: key,
     p_value: value,
@@ -723,7 +732,7 @@ export interface UserMessage {
 export async function fetchUserMessages(targetUserId: string): Promise<UserMessage[]> {
   const { data, error } = await supabase.rpc('get_user_messages', { p_target_user_id: targetUserId })
   if (error) throw new Error('获取留言失败: ' + error.message)
-  return ((data ?? []) as UserMessage[]).map((c: any) => ({ ...c, deleted: !!c.deleted }))
+  return ((data ?? []) as UserMessage[]).map((c: UserMessage) => ({ ...c, deleted: !!c.deleted }))
 }
 
 export async function addUserMessage(

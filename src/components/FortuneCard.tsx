@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useSyncExternalStore } from 'react'
 import { getSession } from '@/lib/auth'
 import { drawFortune, loadFortuneDatesFromDB, todayStr } from '@/lib/fortune'
 import { checkIn } from '@/lib/check-in'
@@ -15,16 +15,35 @@ interface CachedFortune {
   streak: number
 }
 
-export default function FortuneCard() {
-  const [session, setSession] = useState<ReturnType<typeof getSession>>(null)
-  const [result, setResult] = useState<FortuneResult | null>(null)
-  const [hasDrawn, setHasDrawn] = useState(false)
-  const [streak, setStreak] = useState(0)
+/** 空订阅：仅用于 SSR/hydration 阶段区分客户端挂载状态 */
+const emptySubscribe = () => () => {}
 
-  // 初始化 session、缓存和日期数据
+/** 读取今日缓存（服务端返回 null），供初始化状态时复用，避免挂载后闪屏 */
+function readCachedFortune(): CachedFortune | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem(FORTUNE_CACHE_KEY)
+    if (!raw) return null
+    const cached: CachedFortune = JSON.parse(raw)
+    return cached.date === todayStr() ? cached : null
+  } catch {
+    return null
+  }
+}
+
+export default function FortuneCard() {
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false)
+  const [session] = useState<ReturnType<typeof getSession>>(() => getSession())
+
+  // 初始化当日缓存（避免挂载后闪屏），effect 中仍会复核
+  const cached = readCachedFortune()
+  const [result, setResult] = useState<FortuneResult | null>(cached?.result ?? null)
+  const [hasDrawn, setHasDrawn] = useState(!!cached)
+  const [streak, setStreak] = useState(cached?.streak ?? 0)
+
+  // 初始化日期数据、缓存复核和跨午夜检测
   useEffect(() => {
     loadFortuneDatesFromDB()
-    setSession(getSession())
 
     const checkDay = () => {
       const today = todayStr()
@@ -88,8 +107,8 @@ export default function FortuneCard() {
     )
   }
 
-  // ── 未登录 ──
-  if (!session) {
+  // ── 未登录 / 未挂载（hydration 阶段与 SSR 保持一致，避免 mismatch）──
+  if (!mounted || !session) {
     return (
       <div className={`${styles.card} ${styles.idle}`}>
         <div className={styles.inner}>

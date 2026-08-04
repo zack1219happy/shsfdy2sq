@@ -61,6 +61,8 @@ export default function ImageModal() {
       </button>
 
       <div className={styles.imageContainer}>
+        {/* 动态用户图片：尺寸任意，next/image 需固定宽高/fill 会改变布局，故保留原生 img */}
+        {/* eslint-disable-next-line @next/next/no-img-element -- 任意尺寸的本地/DB 图片，无法用 next/image 表达且 images.unoptimized 无优化收益 */}
         <img src={src} alt="" className={styles.image} />
       </div>
     </div>

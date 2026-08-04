@@ -11,15 +11,13 @@ import styles from '@/styles/auth.module.css'
 
 export default function UserSettingsPage() {
   const router = useRouter()
-  const [session, setSession] = useState<UserSession | null>(null)
+  const [session] = useState<UserSession | null>(getSession())
   const [realName, setRealName] = useState<string | null>(null)
   const [nameLoaded, setNameLoaded] = useState(false)
 
   useEffect(() => {
-    const s = getSession()
-    if (!s) router.push('/')
-    setSession(s)
-  }, [router])
+    if (!session) router.push('/')
+  }, [router, session])
 
   // 从数据库获取正确的姓名（通过 SECURITY DEFINER RPC 绕过 RLS）
   useEffect(() => {

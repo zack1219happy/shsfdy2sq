@@ -45,18 +45,21 @@ export default function NewPostPage() {
 
   // 恢复草稿
   useEffect(() => {
-    interface DraftData {
-      title: string
-      content: string
-      excludedUserIds: string[]
-    }
-    const draft = loadDraft<DraftData>('forum_new')
-    if (draft) {
-      if (draft.title) setTitle(draft.title)
-      if (draft.content) setContent(draft.content)
-      if (draft.excludedUserIds) setExcludedUserIds(draft.excludedUserIds)
-    if ('agentVisible' in draft) setAgentVisible((draft as any).agentVisible)
-    }
+    void (async () => {
+      interface DraftData {
+        title: string
+        content: string
+        excludedUserIds: string[]
+        agentVisible?: boolean
+      }
+      const draft = loadDraft<DraftData>('forum_new')
+      if (draft) {
+        if (draft.title) setTitle(draft.title)
+        if (draft.content) setContent(draft.content)
+        if (draft.excludedUserIds) setExcludedUserIds(draft.excludedUserIds)
+        if ('agentVisible' in draft) setAgentVisible(draft.agentVisible ?? false)
+      }
+    })()
   }, [])
 
   // 自动保存草稿
@@ -89,12 +92,12 @@ export default function NewPostPage() {
       const id = await createForumPost(title.trim(), content.trim(), excludedUserIds, agentVisible)
       clearDraft()
       router.push('/forum/post?id=' + id)
-    } catch (e: any) {
-      setError(e?.message || '发帖失败')
+    } catch (e: unknown) {
+      setError(e instanceof Error && e.message ? e.message : '发帖失败')
     } finally {
       setSubmitting(false)
     }
-  }, [title, content, session, router, excludedUserIds])
+  }, [title, content, session, router, excludedUserIds, agentVisible, clearDraft])
 
   /** 在模态框中切换某个用户是否被排除 */
   const toggleExclude = useCallback((userId: string) => {
@@ -113,12 +116,12 @@ export default function NewPostPage() {
       const id = await createForumPost(title.trim(), content.trim(), excludedUserIds, agentVisible)
       clearDraft()
       router.push('/forum/post?id=' + id)
-    } catch (e: any) {
-      setError(e?.message || '发帖失败')
+    } catch (e: unknown) {
+      setError(e instanceof Error && e.message ? e.message : '发帖失败')
     } finally {
       setSubmitting(false)
     }
-  }, [title, content, session, router, excludedUserIds])
+  }, [title, content, session, router, excludedUserIds, agentVisible, clearDraft])
 
   if (!session) {
     return (

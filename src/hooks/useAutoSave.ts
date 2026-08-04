@@ -45,7 +45,11 @@ export function useAutoSave<T>({
 }: UseAutoSaveOptions<T>) {
   const storageKey = DRAFT_PREFIX + key
   const enabledRef = useRef(enabled)
-  enabledRef.current = enabled
+
+  // 保持 ref 指向最新 enabled（事件处理器/卸载回调读取时拿到当前值）
+  useEffect(() => {
+    enabledRef.current = enabled
+  })
 
   const serialized = useMemo(() => {
     if (!enabled) return null

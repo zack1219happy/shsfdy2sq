@@ -109,7 +109,6 @@ function buildTree(entries: FileEntry[]): NavNode[] {
   // 处理所有 .md 文件
   for (const entry of entries) {
     const segments = entry.id.split('/')
-    const isLeaf = segments.length > 0
 
     // 创建或更新叶子节点
     const node: NavNode = {

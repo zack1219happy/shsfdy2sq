@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   getSession,
@@ -29,17 +29,19 @@ import {
    - 已登录 → 渲染 children + 右上角通知铃铛 + 用户入口
    ============================================================== */
 
+/** 空订阅：仅用于 SSR/hydration 阶段区分客户端挂载状态 */
+const emptySubscribe = () => () => {}
+
 interface Props {
   children: React.ReactNode
 }
 
 export default function AuthGate({ children }: Props) {
-  const [session, setSession] = useState<UserSession | null>(null)
-  const [checked, setChecked] = useState(false)
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false)
+  // session 由 localStorage 初始化（getSession 内部已做 SSR 守卫）
+  const [session, setSession] = useState<UserSession | null>(() => getSession())
 
   useEffect(() => {
-    setSession(getSession())
-    setChecked(true)
     tryRestoreSessionFromAuth().then(() => setSession(getSession()))
   }, [])
 
@@ -49,7 +51,7 @@ export default function AuthGate({ children }: Props) {
       const s = getSession()
       if (!s) return
       const { data } = await supabase.rpc('check_ban', { p_user_id: s.userId })
-      const banned = (data as any) ?? (Array.isArray(data) ? data[0] : null)
+      const banned = data ?? (Array.isArray(data) ? data[0] : null)
       if (banned) {
         clearSession()
         setSession(null)
@@ -92,7 +94,7 @@ export default function AuthGate({ children }: Props) {
   // Realtime 订阅 + 浏览器通知（必须在条件 return 之前调用，保障 hooks 顺序）
   useBrowserNotifications(session?.userId ?? null)
 
-  if (!checked) return null
+  if (!mounted) return null
   if (!session) return <LoginScreen onSuccess={handleLoginSuccess} />
 
   return (
@@ -171,6 +173,7 @@ function LoginScreen({
   return (
     <div className={styles.overlay}>
       <div className={styles.card}>
+        {/* eslint-disable-next-line @next/next/no-img-element -- 尺寸由 CSS 控制且 images.unoptimized 已关闭优化，next/image 会引入额外包装元素影响布局 */}
         <img src={`${BASE_PATH}/logo.webp`} alt="" className={styles.cardLogo} />
 
         <h1>上中二旦社区</h1>
@@ -250,14 +253,14 @@ function LoginScreen({
 function DmBadge() {
   const router = useRouter()
   const [unread, setUnread] = useState(0)
-  const [sessionChecked, setSessionChecked] = useState(false)
+  // 会话检查完成标记：初始即为 true（首个 effect 不再需要同步 setState）
+  const [sessionChecked] = useState(true)
 
   useEffect(() => {
     const s = getSession()
     if (s) {
       getUnreadDmCount().then(setUnread).catch(() => {})
     }
-    setSessionChecked(true)
   }, [])
 
   // 15 秒轮询未读数
@@ -274,7 +277,9 @@ function DmBadge() {
   // 新私信事件触发即时刷新
   useEffect(() => {
     const h = () => {
-      getSession() && getUnreadDmCount().then(setUnread).catch(() => {})
+      if (getSession()) {
+        getUnreadDmCount().then(setUnread).catch(() => {})
+      }
     }
     window.addEventListener('new-dm', h)
     return () => window.removeEventListener('new-dm', h)
@@ -298,14 +303,14 @@ function DmBadge() {
 function NotificationBadge() {
   const router = useRouter()
   const [unread, setUnread] = useState(0)
-  const [sessionChecked, setSessionChecked] = useState(false)
+  // 会话检查完成标记：初始即为 true（首个 effect 不再需要同步 setState）
+  const [sessionChecked] = useState(true)
 
   useEffect(() => {
     const s = getSession()
     if (s) {
       getUnreadCount().then(setUnread).catch(() => {})
     }
-    setSessionChecked(true)
   }, [])
 
   // 15 秒轮询未读数
@@ -322,7 +327,9 @@ function NotificationBadge() {
   // 新通知事件触发即时刷新
   useEffect(() => {
     const h = () => {
-      getSession() && getUnreadCount().then(setUnread).catch(() => {})
+      if (getSession()) {
+        getUnreadCount().then(setUnread).catch(() => {})
+      }
     }
     window.addEventListener('new-notification', h)
     return () => window.removeEventListener('new-notification', h)
@@ -343,7 +350,7 @@ function NotificationBadge() {
    UserBtn — 右上角用户入口（点击跳转到 /user）
    ============================================================== */
 
-function UserBtn({ session, onLogout }: { session: UserSession; onLogout: () => void }) {
+function UserBtn({ session }: { session: UserSession; onLogout: () => void }) {
   const router = useRouter()
 
   return (
