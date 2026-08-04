@@ -54,9 +54,9 @@ export default function ForumListPage() {
     let list = posts
 
     if (tab === 'my') {
-      list = list.filter((p) => p.author_username === session?.username)
+      list = list.filter((p) => p.author_id === session?.userId)
     } else if (tab === 'liked') {
-      list = list.filter((p) => likedIds.has(p.id) && p.author_username !== session?.username)
+      list = list.filter((p) => likedIds.has(p.id) && p.author_id !== session?.userId)
     }
 
     if (!searchQuery.trim()) return list
@@ -295,7 +295,7 @@ function PinnedPostCard({ post, onClick, onRefresh }: {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, fontSize: '0.82rem', color: 'var(--color-text-light)' }}>
           <span>{formatDate(post.created_at)}</span>
-          <UserName username={post.author_username} className={styles.postAuthor} />
+          <UserName username={post.author_username} userId={post.author_id} className={styles.postAuthor} />
         </div>
       </div>
       {contextMenu && (
@@ -349,7 +349,7 @@ function PostCard({ post, onClick, onRefresh }: { post: ForumPost; onClick: () =
           <span dangerouslySetInnerHTML={{ __html: renderClient(post.title) }} />
         </div>
         <div className={styles.postMeta}>
-          <UserName username={post.author_username} className={styles.postAuthor} />
+          <UserName username={post.author_username} userId={post.author_id} className={styles.postAuthor} />
           <span>{formatDate(post.created_at)}</span>
           <div className={styles.postStats}>
             <span className={styles.statBadge}>

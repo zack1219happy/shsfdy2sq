@@ -117,7 +117,7 @@ export default function HomePage() {
                   >
                     <span className={styles.itemTitle}>{post.title}</span>
                     <span className={styles.itemMeta}>
-                      <UserName username={post.author_username} /> ·{' '}
+                      <UserName username={post.author_username} userId={post.author_id} /> ·{' '}
                       {formatDate(post.created_at)}
                     </span>
                   </Link>

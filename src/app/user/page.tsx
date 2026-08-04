@@ -28,8 +28,8 @@ export default function UserSettingsPage() {
     supabase.rpc('get_all_users').then(({ data }) => {
       setNameLoaded(true)
       if (!data) return
-      const users = data as Array<{ username: string; name: string }>
-      const me = users.find(u => u.username === s.username)
+      const users = data as Array<{ id: string; username: string; name: string }>
+      const me = users.find(u => u.id === s.userId)
       if (me?.name) setRealName(me.name)
     })
   }, [])
@@ -51,7 +51,7 @@ export default function UserSettingsPage() {
           </div>
           <div className={styles.settingsInfoRow}>
             <span className={styles.settingsLabel}>用户名</span>
-            <span><UserName username={session.username} /></span>
+            <span><UserName username={session.username} userId={session.userId} /></span>
           </div>
           <div className={styles.settingsInfoRow}>
             <span className={styles.settingsLabel}>学号</span>

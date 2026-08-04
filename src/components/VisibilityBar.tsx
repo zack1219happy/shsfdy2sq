@@ -36,7 +36,7 @@ export default function VisibilityBar({
           ) : (
             excludedUsers.map((u) => (
               <span key={u.id} className={styles.visibilityTag}>
-                隐藏: <UserName username={u.username} link={false} />
+                隐藏: <UserName username={u.username} userId={u.id} link={false} />
                 <button
                   type="button"
                   className={styles.visibilityTagRemove}

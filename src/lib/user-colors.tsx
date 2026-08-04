@@ -6,31 +6,43 @@ import { BUILTIN_TAGS, type TagData } from '@/types/gist'
 
 // ---- 用户装饰数据结构 ----
 export interface UserDecoration {
+  /** 当前用户名。改名后通过 get_all_users 拉取的是最新值，显示会跟随。 */
+  username: string | null
   color: string | null
   tags: TagData[]
 }
 
-// ---- 模块级预拉取 — 一导入（应用启动）就开始请求 ----
-let _fetchPromise: Promise<Map<string, UserDecoration> | null> | null = null
+/** 装饰索引：id → 装饰；username → id（当前用户名反向索引） */
+interface DecorationIndex {
+  byId: Map<string, UserDecoration>
+  byUsername: Map<string, string>
+}
 
-async function fetchDecorations(): Promise<Map<string, UserDecoration> | null> {
+// ---- 模块级预拉取 — 一导入（应用启动）就开始请求 ----
+let _fetchPromise: Promise<DecorationIndex | null> | null = null
+
+async function fetchDecorations(): Promise<DecorationIndex | null> {
   if (_fetchPromise) return _fetchPromise
   _fetchPromise = Promise.resolve(
     supabase.rpc('get_all_users').then(
       ({ data }) => {
-        if (!data) return null as unknown as Map<string, UserDecoration> | null
-        const map = new Map<string, UserDecoration>()
-        const users = data as Array<{ username: string; color: string | null; equipped_tags: TagData[] | null }>
+        if (!data) return null as unknown as DecorationIndex | null
+        const byId = new Map<string, UserDecoration>()
+        const byUsername = new Map<string, string>()
+        const users = data as Array<{ id: string; username: string | null; color: string | null; equipped_tags: TagData[] | null }>
         for (const u of users) {
-          const builtin = (BUILTIN_TAGS[u.username] ?? []).map(v => ({ v, c: null }))
-          map.set(u.username, {
+          if (!u.id) continue
+          const builtin = (BUILTIN_TAGS[u.username ?? ''] ?? []).map(v => ({ v, c: null }))
+          byId.set(u.id, {
+            username: u.username ?? null,
             color: u.color ?? null,
             tags: [...builtin, ...(u.equipped_tags ?? [])],
           })
+          if (u.username) byUsername.set(u.username, u.id)
         }
-        return map
+        return { byId, byUsername }
       },
-      () => null as unknown as Map<string, UserDecoration> | null,
+      () => null as unknown as DecorationIndex | null,
     ),
   )
   return _fetchPromise
@@ -40,43 +52,54 @@ async function fetchDecorations(): Promise<Map<string, UserDecoration> | null> {
 fetchDecorations()
 
 // ---- Context ----
-const UserDecorationContext = createContext<Map<string, UserDecoration>>(new Map())
+const UserDecorationContext = createContext<DecorationIndex>({ byId: new Map(), byUsername: new Map() })
 
 /**
  * 挂载时等待模块级预拉取完成，将结果通过 Context 下发。
- * 提供每个用户的颜色和标签信息。
+ * 提供每个用户的颜色和标签信息（按用户 ID 索引，兼有当前用户名反向索引）。
  */
 export function UserColorProvider({ children }: { children: ReactNode }) {
-  const [decorationMap, setDecorationMap] = useState<Map<string, UserDecoration>>(new Map())
+  const [decorationIndex, setDecorationIndex] = useState<DecorationIndex>({ byId: new Map(), byUsername: new Map() })
 
   useEffect(() => {
     let cancelled = false
-    fetchDecorations().then((map) => {
-      if (!cancelled && map) setDecorationMap(map)
+    fetchDecorations().then((idx) => {
+      if (!cancelled && idx) setDecorationIndex(idx)
     })
     return () => { cancelled = true }
   }, [])
 
   return (
-    <UserDecorationContext.Provider value={decorationMap}>
+    <UserDecorationContext.Provider value={decorationIndex}>
       {children}
     </UserDecorationContext.Provider>
   )
 }
 
 /**
- * 获取用户名颜色（向后兼容）
+ * 按用户 ID 获取装饰（核心）。用户改过名后，历史内容作者带 user ID，
+ * 用它来定位，颜色/标签/当前用户名都不会因改名而丢失。
  */
-export function useUserColor(username: string): string | null {
-  const map = useContext(UserDecorationContext)
-  return map.get(username)?.color ?? null
+export function useUserById(userId: string | null | undefined): UserDecoration | null {
+  const { byId } = useContext(UserDecorationContext)
+  if (!userId) return null
+  return byId.get(userId) ?? null
 }
 
 /**
- * 获取用户完整装饰信息（颜色 + 标签列表）
- * 标签列表已包含内置身份 tag（如创始人、工程师）
+ * 获取用户名颜色（向后兼容）
+ */
+export function useUserColor(username: string): string | null {
+  return useUserDecoration(username)?.color ?? null
+}
+
+/**
+ * 获取用户完整装饰信息（颜色 + 标签列表）。按当前用户名反向解析到 ID 再取值。
+ * 历史内容的旧用户名快照解析不到时返回 null，由调用方回退。
  */
 export function useUserDecoration(username: string): UserDecoration | null {
-  const map = useContext(UserDecorationContext)
-  return map.get(username) ?? null
+  const { byId, byUsername } = useContext(UserDecorationContext)
+  const id = byUsername.get(username)
+  if (!id) return null
+  return byId.get(id) ?? null
 }

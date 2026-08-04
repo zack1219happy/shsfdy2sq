@@ -292,7 +292,7 @@ export default function ForumPostPage() {
             </div>
           </div>
           <div className={styles.detailMeta}>
-            <UserName username={post.author_username} className={styles.detailAuthor} />
+            <UserName username={post.author_username} userId={post.author_id} className={styles.detailAuthor} />
             <span>发布于 {formatDate(post.created_at)}</span>
             {post.updated_at !== post.created_at && (
               <span>编辑于 {formatDate(post.updated_at)}</span>

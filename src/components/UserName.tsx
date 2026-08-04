@@ -2,11 +2,12 @@
 
 import type React from 'react'
 import { useRouter } from 'next/navigation'
-import { useUserColor, useUserDecoration } from '@/lib/user-colors'
-import { BASE_PATH } from '@/lib/constants'
+import { useUserById, useUserDecoration, type UserDecoration } from '@/lib/user-colors'
 
 interface Props {
   username: string
+  /** 用户 ID（推荐提供）。提供后按 ID 解析当前用户名与装扮，用户改过名依然正确。 */
+  userId?: string | null
   className?: string
   /** 是否隐藏标签（默认 false = 显示标签） */
   hideTags?: boolean
@@ -17,24 +18,31 @@ interface Props {
 /**
  * 渲染带颜色的用户名，默认显示标签徽章，且为可点击链接跳转用户主页。
  *
- * 颜色从 wiki_users.color 来（通过 UserDecorationContext 查找）。
- * 标签包括内置身份 tag（如创始人、工程师）+ 用户已装备的 tag（最多 3 个）。
- * 没找到颜色或用户不存在时，渲染纯文本不报错。
+ * 颜色/标签/当前用户名从 wiki_users 来（通过 UserDecorationContext 查找）。
+ * 有 userId 时优先按 userId 定位（历史内容快照的旧用户名也能对上当前用户）；
+ * 否则回退到按当前用户名解析。解析不到（匿名、未收录用户）时渲染纯文本不报错。
  *
  * 渲染为 `<span>` + onClick 而非 `<a>`/`<Link>`，避免被嵌套在已有
  * `<a>` 中时产生 Hydration 错误。用 stopPropagation 防止触发外层链接。
  */
-export function UserName({ username, className, hideTags, link = true }: Props) {
+export function UserName({ username, userId, className, hideTags, link = true }: Props) {
   const router = useRouter()
   const showTags = !hideTags
-  const color = useUserColor(username)
 
-  const nameEl = renderName(username, color)
+  // 两个 hook 都必须无条件调用；有 userId 时按 ID 解析，否则回退到当前用户名解析
+  const byIdDeco = useUserById(userId)
+  const byNameDeco = useUserDecoration(username)
+  const decoration = byIdDeco ?? byNameDeco
+  const color = decoration?.color ?? null
+  // 显示的文本：优先用当前用户名（改名后自动跟随），解析不到时用传入的 username
+  const displayName = decoration?.username ?? username
+
+  const nameEl = renderName(displayName, color)
 
   const content = showTags ? (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
       {nameEl}
-      <Tags username={username} />
+      <Tags decoration={decoration} />
     </span>
   ) : (
     nameEl
@@ -45,7 +53,7 @@ export function UserName({ username, className, hideTags, link = true }: Props) 
   }
 
   // router.push 自动处理 basePath，不要加 BASE_PATH 前缀
-  const path = `/user/mypage?user=${encodeURIComponent(username)}`
+  const path = `/user/mypage?user=${encodeURIComponent(userId ?? username)}`
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -100,8 +108,7 @@ function renderName(username: string, color: string | null): React.ReactNode {
 }
 
 /** 渲染用户的标签徽章 */
-function Tags({ username }: { username: string }) {
-  const decoration = useUserDecoration(username)
+function Tags({ decoration }: { decoration: UserDecoration | null }) {
   const tags = decoration?.tags ?? []
   if (tags.length === 0) return null
   return (

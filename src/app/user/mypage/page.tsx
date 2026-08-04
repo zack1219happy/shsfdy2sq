@@ -76,6 +76,7 @@ interface PlazaArticleItem {
 }
 
 interface FollowUser {
+  id: string
   username: string
   name: string
   color: string | null
@@ -99,6 +100,13 @@ interface UserProfile {
   privacy_articles?: PrivacyLevel
   privacy_follows: PrivacyLevel
 }
+
+/* ==============================================================
+   工具
+   ============================================================== */
+
+/** 判断字符串是否为 UUID（用户主页 URL 参数按此区分 ID / 用户名） */
+const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
 
 /* ==============================================================
    热力图等级 (0–5)
@@ -221,9 +229,12 @@ function UserMypage() {
     setFollowers([])
     setFollowing([])
     try {
-      // 1. 拉取基本信息
+      // 1. 拉取基本信息（UUID → 按 ID 定位；否则按用户名，兼容旧链接）
+      const isUuid = UUID_RE.test(username)
       const [profileRes, pinyinMap] = await Promise.all([
-        supabase.rpc('get_user_profile', { p_username: username }),
+        isUuid
+          ? supabase.rpc('get_user_profile_by_id', { p_user_id: username })
+          : supabase.rpc('get_user_profile', { p_username: username }),
         loadPinyinInitialsFromDB(),
       ])
 
@@ -244,7 +255,7 @@ function UserMypage() {
       const [statsRes2, pointsRes2, followRes2] = await Promise.all([
         supabase.rpc('get_user_stats', { p_user_id: uid }),
         supabase.rpc('get_user_daily_points_from_tx', { p_user_id: uid, p_days: 14 }),
-        supabase.rpc('get_follow_state', { p_target_username: username }),
+        supabase.rpc('get_follow_state', { p_target_username: p.username }),
       ])
 
       if (statsRes2.data) {
@@ -334,8 +345,8 @@ function UserMypage() {
   }, [profile, followState])
 
   if (!session) return null
-  const targetUsername = urlUser || session.username
-  const isSelf = session.username === targetUsername
+  const targetKey = urlUser || session.username
+  const isSelf = !!profile && session.userId === profile.id
 
   return (
     <div className={styles.page}>
@@ -346,7 +357,7 @@ function UserMypage() {
       ) : error ? (
         <div className={styles.errorState}>
           <p>{error}</p>
-          <button className={styles.retryBtn} onClick={() => targetUsername && loadProfileData(targetUsername)}>重试</button>
+          <button className={styles.retryBtn} onClick={() => targetKey && loadProfileData(targetKey)}>重试</button>
         </div>
       ) : profile ? (
         <>
@@ -505,7 +516,7 @@ function HeaderBar({
       <div className={styles.headerInner}>
         <div className={styles.headerLeft}>
           <div className={styles.userNameRow}>
-            <UserName username={profile.username} link={false} />
+            <UserName username={profile.username} userId={profile.id} link={false} />
           </div>
           <div className={styles.mottoRow}>
             {editingMotto ? (
@@ -1045,12 +1056,12 @@ function FollowsTab({
       <div className={styles.followsList}>
         {list.map(u => (
           <a
-            key={u.username}
-            href={`${BASE_PATH}/user/mypage?user=${encodeURIComponent(u.username)}`}
+            key={u.id}
+            href={`${BASE_PATH}/user/mypage?user=${encodeURIComponent(u.id)}`}
             className={styles.followUserCard}
           >
             <div className={styles.followUserCardBody}>
-              <UserName username={u.username} link={false} />
+              <UserName username={u.username} userId={u.id} link={false} />
             </div>
             <span className={styles.followDate}>
               {formatDate(u.followed_at)}

@@ -150,7 +150,7 @@ export default function NoticePage() {
                 style={isDeleted ? { pointerEvents: 'none' } : undefined}
               >
                 <span className={styles.notifFrom}>
-                  {n.from_username ? <UserName username={n.from_username} /> : '匿名'}
+                  {n.from_username ? <UserName username={n.from_username} userId={n.from_user_id ?? undefined} /> : '匿名'}
                   <span className={styles.notifType}>{label}</span>
                 </span>
                 <span className={styles.notifText}>{n.excerpt ?? ''}</span>

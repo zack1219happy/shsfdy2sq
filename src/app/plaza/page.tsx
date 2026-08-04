@@ -158,7 +158,7 @@ function ArticleCard({ article, onClick }: { article: PlazaArticleListResult; on
         )}
       </div>
       <div className={styles.postMeta}>
-        <UserName username={article.author_username} className={styles.postAuthor} />
+        <UserName username={article.author_username} userId={article.author_id} className={styles.postAuthor} />
         <span>{formatDate(article.created_at)}</span>
         {!article.is_public && <span style={{ color: '#b35a00', fontSize: '0.78rem' }}>🔒 私密</span>}
         <div className={styles.postStats}>

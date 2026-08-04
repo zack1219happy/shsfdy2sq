@@ -282,7 +282,7 @@ export default function AdminRevisionsPage() {
                     {detail.is_conflict && <span style={{ marginLeft: 10, fontSize: '0.9rem', color: '#c2410c' }}>⚠️ 冲突</span>}
                   </h2>
                   <div className={forumStyles.detailMeta}>
-                    <UserName username={detail.author_username} />
+                    <UserName username={detail.author_username} userId={detail.author_id} />
                     <span>提交于 {formatTime(detail.created_at)}</span>
                     <span>基于 #{detail.base_revision}，当前 #{detail.current_revision}</span>
                   </div>
@@ -373,7 +373,7 @@ export default function AdminRevisionsPage() {
                     {rev.is_conflict && <span className={`${styles.badge} ${styles.badgeConflict}`} style={{ marginLeft: 8 }}>基于旧版本</span>}
                   </div>
                   <div className={styles.revisionMeta}>
-                    <UserName username={rev.author_username} />
+                    <UserName username={rev.author_username} userId={rev.author_id} />
                     <span>在</span>
                     <span className={styles.revisionPage}>{rev.page_title}</span>
                     <span>· {formatTime(rev.created_at)}</span>
@@ -416,7 +416,7 @@ export default function AdminRevisionsPage() {
                     审核新建页面：{prDetail.title}
                   </h2>
                   <div className={forumStyles.detailMeta}>
-                    <UserName username={prDetail.author_username} />
+                    <UserName username={prDetail.author_username} userId={prDetail.author_id} />
                     <span>提交于 {formatTime(prDetail.created_at)}</span>
                     <span style={{ fontFamily: 'monospace', fontSize: '0.82rem', color: 'var(--color-primary)' }}>
                       /wiki/{prDetail.slug}
@@ -497,7 +497,7 @@ export default function AdminRevisionsPage() {
                     {req.title}
                   </div>
                   <div className={styles.revisionMeta}>
-                    <UserName username={req.author_username} />
+                    <UserName username={req.author_username} userId={req.author_id} />
                     <span>新建</span>
                     <span className={styles.revisionPage}>{req.slug}</span>
                     <span>· {formatTime(req.created_at)}</span>

@@ -84,6 +84,7 @@ export async function addComment(
 
 export interface Notification {
   id: string
+  from_user_id: string | null
   from_username: string | null
   page: string
   excerpt: string | null

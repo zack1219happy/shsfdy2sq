@@ -200,7 +200,7 @@ export default function WishPostPage() {
           </div>
           <div className={styles.detailMeta}>
             {wish.author_username ? (
-              <UserName username={wish.author_username} className={styles.detailAuthor} />
+              <UserName username={wish.author_username} userId={wish.user_id} className={styles.detailAuthor} />
             ) : (
               <span className={styles.detailAuthor} style={{ color: 'var(--color-text-light)' }}>匿名</span>
             )}

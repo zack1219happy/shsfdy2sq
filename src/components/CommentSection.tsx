@@ -7,6 +7,7 @@ import type { Comment as WikiComment } from '@/types/gist'
 import { formatDate } from '@/lib/forum'
 import { useCommentAnchor } from '@/hooks/useCommentAnchor'
 import { UserName } from '@/components/UserName'
+import { useUserById } from '@/lib/user-colors'
 import { showWarningToast } from '@/lib/toast'
 import WikiContent from '@/components/WikiContent'
 import commentStyles from '@/styles/comment.module.css'
@@ -72,7 +73,7 @@ export default function CommentSection({
   const [localComments, setLocalComments] = useState<UnifiedComment[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [replyTarget, setReplyTarget] = useState<{ id: string; author: string } | null>(null)
+  const [replyTarget, setReplyTarget] = useState<{ id: string; author: string; authorId?: string } | null>(null)
 
   const comments = isSelfManaged ? localComments : (externalComments ?? [])
   const session = getSession()
@@ -167,8 +168,8 @@ export default function CommentSection({
     [session, extraDeleteUserId],
   )
 
-  const handleReplyClick = useCallback((id: string, author: string) => {
-    setReplyTarget((prev) => (prev?.id === id ? null : { id, author }))
+  const handleReplyClick = useCallback((id: string, author: string, authorId?: string) => {
+    setReplyTarget((prev) => (prev?.id === id ? null : { id, author, authorId }))
   }, [])
 
   // ---- 评论树 ----
@@ -214,6 +215,7 @@ export default function CommentSection({
                         ref={r.comment.id === effectiveTargetId ? anchorRef : undefined}
                         comment={r.comment}
                         parentAuthor={r.parentAuthor}
+                        parentAuthorId={r.parentAuthorId}
                         onReply={handleReplyClick}
                         canDelete={canDelete(r.comment.authorId)}
                         onDelete={handleDelete}
@@ -237,6 +239,7 @@ export default function CommentSection({
 interface ReplyInfo {
   comment: UnifiedComment
   parentAuthor?: string
+  parentAuthorId?: string
 }
 
 interface CommentTree {
@@ -271,6 +274,7 @@ function buildCommentTree(comments: UnifiedComment[]): CommentTree {
     rootMap.get(topId)!.push({
       comment: c,
       parentAuthor: directParent?.author,
+      parentAuthorId: directParent?.authorId,
     })
   }
 
@@ -345,11 +349,12 @@ function CommentForm({
   onClearReply,
 }: {
   onSubmit: (content: string, parentId?: string) => Promise<void>
-  replyTarget: { id: string; author: string } | null
+  replyTarget: { id: string; author: string; authorId?: string } | null
   onClearReply: () => void
 }) {
   const [content, setContent] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const replyName = useUserById(replyTarget?.authorId)?.username ?? replyTarget?.author
 
   const handleSubmit = async () => {
     if (!content.trim()) return
@@ -369,7 +374,7 @@ function CommentForm({
       {replyTarget && (
         <div className={commentStyles.replyTag}>
           <span>
-            回复 <strong>{replyTarget.author}</strong>
+            回复 <strong>{replyName}</strong>
           </span>
           <button type="button" className={commentStyles.replyTagClose} onClick={onClearReply} title="取消回复">
             ✕
@@ -398,7 +403,7 @@ function CommentForm({
 
 const CommentCard = forwardRef<HTMLDivElement, {
   comment: UnifiedComment
-  onReply: (id: string, author: string) => void
+  onReply: (id: string, author: string, authorId?: string) => void
   canDelete: boolean
   onDelete: (id: string) => void
 }>(function CommentCard({ comment, onReply, canDelete, onDelete }, ref) {
@@ -406,7 +411,7 @@ const CommentCard = forwardRef<HTMLDivElement, {
     return (
       <div ref={ref} className={`${commentStyles.comment} ${commentStyles.commentDeleted}`} id={`comment-${comment.id}`}>
         <div className={commentStyles.commentMeta}>
-          <UserName username={comment.author} className={commentStyles.commentAuthor} />
+          <UserName username={comment.author} userId={comment.authorId} className={commentStyles.commentAuthor} />
           <span className={commentStyles.deletedLabel}>该评论已被删除</span>
           <span className={commentStyles.commentDate}>{formatDate(comment.createdAt)}</span>
         </div>
@@ -420,11 +425,11 @@ const CommentCard = forwardRef<HTMLDivElement, {
         className={commentStyles.commentMeta}
         role="button"
         tabIndex={0}
-        onClick={() => onReply(comment.id, comment.author)}
-        onKeyDown={(e) => { if (e.key === 'Enter') onReply(comment.id, comment.author) }}
+        onClick={() => onReply(comment.id, comment.author, comment.authorId)}
+        onKeyDown={(e) => { if (e.key === 'Enter') onReply(comment.id, comment.author, comment.authorId) }}
         style={{ cursor: 'pointer' }}
       >
-        <UserName username={comment.author} className={commentStyles.commentAuthor} />
+        <UserName username={comment.author} userId={comment.authorId} className={commentStyles.commentAuthor} />
         {canDelete && (
           <button
             className={commentStyles.deleteBtn}
@@ -450,17 +455,18 @@ const CommentCard = forwardRef<HTMLDivElement, {
 const UnifiedReply = forwardRef<HTMLDivElement, {
   comment: UnifiedComment
   parentAuthor?: string
-  onReply: (id: string, author: string) => void
+  parentAuthorId?: string
+  onReply: (id: string, author: string, authorId?: string) => void
   canDelete: boolean
   onDelete: (id: string) => void
-}>(function UnifiedReply({ comment, parentAuthor, onReply, canDelete, onDelete }, ref) {
+}>(function UnifiedReply({ comment, parentAuthor, parentAuthorId, onReply, canDelete, onDelete }, ref) {
   if (comment.deleted) {
     return (
       <div ref={ref} className={`${commentStyles.unifiedReply} ${commentStyles.commentDeleted}`} id={`comment-${comment.id}`}>
         <div className={commentStyles.replyMeta}>
-          <UserName username={comment.author} className={commentStyles.replyAuthor} />
+          <UserName username={comment.author} userId={comment.authorId} className={commentStyles.replyAuthor} />
           <span className={commentStyles.replyVerb}> 回复 </span>
-          {parentAuthor ? <UserName username={parentAuthor} className={commentStyles.replyTarget} /> : <span className={commentStyles.replyTarget}>未知</span>}
+          {parentAuthor ? <UserName username={parentAuthor} userId={parentAuthorId} className={commentStyles.replyTarget} /> : <span className={commentStyles.replyTarget}>未知</span>}
           <span className={commentStyles.deletedLabel}>该评论已被删除</span>
           <span className={commentStyles.replyDate}>{formatDate(comment.createdAt)}</span>
         </div>
@@ -474,13 +480,13 @@ const UnifiedReply = forwardRef<HTMLDivElement, {
         className={commentStyles.replyMeta}
         role="button"
         tabIndex={0}
-        onClick={() => onReply(comment.id, comment.author)}
-        onKeyDown={(e) => { if (e.key === 'Enter') onReply(comment.id, comment.author) }}
+        onClick={() => onReply(comment.id, comment.author, comment.authorId)}
+        onKeyDown={(e) => { if (e.key === 'Enter') onReply(comment.id, comment.author, comment.authorId) }}
         style={{ cursor: 'pointer' }}
       >
-        <UserName username={comment.author} className={commentStyles.replyAuthor} />
+        <UserName username={comment.author} userId={comment.authorId} className={commentStyles.replyAuthor} />
         <span className={commentStyles.replyVerb}> 回复 </span>
-        {parentAuthor ? <UserName username={parentAuthor} className={commentStyles.replyTarget} /> : <span className={commentStyles.replyTarget}>未知</span>}
+        {parentAuthor ? <UserName username={parentAuthor} userId={parentAuthorId} className={commentStyles.replyTarget} /> : <span className={commentStyles.replyTarget}>未知</span>}
         {canDelete && (
           <button
             className={commentStyles.deleteBtn}

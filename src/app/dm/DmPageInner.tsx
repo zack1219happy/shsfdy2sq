@@ -135,7 +135,7 @@ function NewChatView({
     <div className={styles.chatView}>
       <div className={styles.chatHeader}>
         <span className={styles.chatHeaderName}>
-          {otherUser ? <UserName username={otherUser.username} /> : '加载中…'}
+          {otherUser ? <UserName username={otherUser.username} userId={otherUser.id} /> : '加载中…'}
         </span>
       </div>
 
@@ -435,7 +435,7 @@ function DmChatView({
       {/* 头部 */}
       <div className={styles.chatHeader}>
         <span className={styles.chatHeaderName}>
-          {otherUser ? <UserName username={otherUser.username} /> : '加载中…'}
+          {otherUser ? <UserName username={otherUser.username} userId={otherUser.id} /> : '加载中…'}
         </span>
       </div>
 
@@ -457,7 +457,7 @@ function DmChatView({
                     onContextMenu={(e) => handleContextMenu(e, msg)}
                   >
                     <span className={styles.messageAuthor}>
-                      <UserName username={msg.sender_username} />
+                      <UserName username={msg.sender_username} userId={msg.sender_id} />
                     </span>
                     <div
                       className={`${styles.bubble} ${msg.is_mine ? styles.bubbleMine : styles.bubbleOther} ${msg.recalled_at ? styles.bubbleRecalled : ''} ${isFailed ? styles.bubbleFailed : ''}`}

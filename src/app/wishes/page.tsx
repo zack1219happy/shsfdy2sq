@@ -127,7 +127,7 @@ function WishCard({ wish, onClick }: { wish: WishItem; onClick: () => void }) {
             </strong>
             {wish.author_username && (
               <span style={{ fontSize: '0.82rem', color: 'var(--color-text-secondary)', fontWeight: 500 }}>
-                <UserName username={wish.author_username} />
+                <UserName username={wish.author_username} userId={wish.user_id} />
               </span>
             )}
             <span style={{ fontSize: '0.78rem', color: tierColors[wish.estimated_tier] || '#888', fontWeight: 600 }}>

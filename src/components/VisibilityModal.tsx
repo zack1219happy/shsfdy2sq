@@ -73,7 +73,7 @@ export default function VisibilityModal({
                   <label key={u.id} className={styles.visibilityModalItem}>
                     <span className={styles.visibilityModalName}>
                       <span className={styles.visibilityModalInitials}>{getPinyinInitials(u.name)}</span>
-                      <span className={styles.visibilityModalUsername}>@<UserName username={u.username} link={false} /></span>
+                      <span className={styles.visibilityModalUsername}>@<UserName username={u.username} userId={u.id} link={false} /></span>
                     </span>
                     <div
                       className={`${styles.toggleSwitch} ${excluded ? styles.toggleOn : ''}`}

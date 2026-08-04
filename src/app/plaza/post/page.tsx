@@ -512,7 +512,7 @@ export default function PlazaArticlePage() {
             </div>
           </div>
           <div className={styles.detailMeta}>
-            <UserName username={article.author_username} className={styles.detailAuthor} />
+            <UserName username={article.author_username} userId={article.author_id} className={styles.detailAuthor} />
             <span>发布于 {formatDate(article.created_at)}</span>
             {article.updated_at !== article.created_at && (
               <span>编辑于 {formatDate(article.updated_at)}</span>
