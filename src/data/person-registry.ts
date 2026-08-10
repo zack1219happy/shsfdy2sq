@@ -506,6 +506,7 @@ export const titleSlugMap: Record<string, string> = {
   "gayji家族": "geng/gayji",
   "好的": "geng/hd",
   "jrq是大佬（jr7sdl）": "geng/jr7sdl",
+  "jw病毒": "geng/jwvirus",
   "梗列表": "geng/list",
   "文化素养": "geng/whsy",
   "周吨颐": "geng/zhoudunyi",
