@@ -1,8 +1,9 @@
 'use client'
 
 import type React from 'react'
+import { useSyncExternalStore } from 'react'
 import { useRouter } from 'next/navigation'
-import { useUserById, useUserDecoration, type UserDecoration } from '@/lib/user-colors'
+import { useUserById, useUserDecoration, useDecorationsLoaded, type UserDecoration } from '@/lib/user-colors'
 
 interface Props {
   username: string
@@ -28,6 +29,8 @@ interface Props {
 export function UserName({ username, userId, className, hideTags, link = true }: Props) {
   const router = useRouter()
   const showTags = !hideTags
+  // 装饰数据是否已预拉取完成（用于「加载中」占位）
+  const loaded = useDecorationsLoaded()
 
   // 两个 hook 都必须无条件调用；有 userId 时按 ID 解析，否则回退到当前用户名解析
   const byIdDeco = useUserById(userId)
@@ -37,12 +40,25 @@ export function UserName({ username, userId, className, hideTags, link = true }:
   // 显示的文本：优先用当前用户名（改名后自动跟随），解析不到时用传入的 username
   const displayName = decoration?.username ?? username
 
-  const nameEl = renderName(displayName, color)
+  // 渐变名字兜底：background-clip:text 不支持的浏览器退回纯色/纯文本，
+  // 避免出现"透明文字 + 渐变块"的方块（useSyncExternalStore：无 effect 的惰性能力检测）
+  const gradientClipSupported = useSyncExternalStore(
+    emptySubscribe,
+    () => supportsTextClip(),
+    () => true,
+  )
+
+  // 装饰数据尚未预拉取完成：此时解析不到不代表用户不存在，显示「加载中」占位
+  const loadingName = !loaded && !decoration
+  const nameEl = loadingName ? <span>加载中</span> : renderName(displayName, color, gradientClipSupported)
 
   const content = showTags ? (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
       {nameEl}
-      <Tags decoration={decoration} />
+      {/* 标签容器带稳定类名，供列表页手机端媒体查询隐藏 */}
+      <span className="userName-tags">
+        <Tags decoration={decoration} />
+      </span>
     </span>
   ) : (
     nameEl
@@ -85,11 +101,17 @@ export function UserName({ username, userId, className, hideTags, link = true }:
 }
 
 /** 渲染带颜色的用户名文本 */
-function renderName(username: string, color: string | null): React.ReactNode {
+function renderName(username: string, color: string | null, gradientClipSupported: boolean): React.ReactNode {
   if (!color) {
     return <span>{username}</span>
   }
   if (color.startsWith('linear-gradient(')) {
+    // 浏览器不支持 background-clip:text 时，若强行渐变 + 透明文字会渲染成渐变方块。
+    // 退回纯色文本（取渐变中第一个 hex/rgb 色，无法解析时用默认文本色）。
+    if (!gradientClipSupported) {
+      const fallback = extractFirstColor(color)
+      return <span style={fallback ? { color: fallback } : undefined}>{username}</span>
+    }
     return (
       <span
         style={{
@@ -105,6 +127,12 @@ function renderName(username: string, color: string | null): React.ReactNode {
     )
   }
   return <span style={{ color }}>{username}</span>
+}
+
+/** 从 linear-gradient 字符串中提取第一个颜色值（#hex 或 rgb()/rgba()） */
+function extractFirstColor(gradient: string): string | null {
+  const m = gradient.match(/#[0-9a-fA-F]{3,8}\b|rgba?\([^)]*\)/)
+  return m ? m[0] : null
 }
 
 /** 渲染用户的标签徽章 */
@@ -172,4 +200,20 @@ function getTagBuiltinStyle(text: string): React.CSSProperties | null {
     }
   }
   return null
+}
+
+// ---- useSyncExternalStore 辅助：渐变 text-clip 能力检测 ----
+
+/** 空订阅（能力检测不变化，无需监听） */
+function emptySubscribe(): () => void {
+  return () => {}
+}
+
+/** 客户端能力检测：是否支持 background-clip:text（含 -webkit- 前缀） */
+function supportsTextClip(): boolean {
+  return (
+    typeof CSS !== 'undefined' &&
+    typeof CSS.supports === 'function' &&
+    (CSS.supports('background-clip', 'text') || CSS.supports('-webkit-background-clip', 'text'))
+  )
 }

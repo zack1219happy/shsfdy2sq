@@ -16,6 +16,7 @@ import {
   faEye,
   faExpandArrowsAlt,
   faLock,
+  faChevronDown,
 } from '@fortawesome/free-solid-svg-icons'
 
 import React from 'react'
@@ -47,6 +48,12 @@ export const labels: Record<string, string> = {
   link: '插入链接',
   code: '插入代码',
   table: '插入表格',
+  collapse: '插入折叠框',
+  dialogCollapseTemplate: '模板',
+  dialogCollapseType: '类型',
+  dialogCollapseTitle: '标题',
+  collapseObsidian: 'Obsidian',
+  collapseLuogu: '洛谷',
   fullScreen: '全屏',
   exitFullScreen: '取消全屏',
   hidePreview: '隐藏预览',
@@ -265,6 +272,68 @@ const codeBtn: ToolbarBtn = {
   action: { type: 'request', dialog: CODE_DIALOG },
 }
 
+/** localStorage key：记住上次选择的折叠框模板 */
+const COLLAPSE_TEMPLATE_KEY = 'md_collapse_template'
+
+const FOLD_TYPES = [
+  { label: 'info', value: 'info' },
+  { label: 'success', value: 'success' },
+  { label: 'warning', value: 'warning' },
+  { label: 'error', value: 'error' },
+]
+
+const collapseBtn: ToolbarBtn = {
+  name: 'collapse',
+  icon: faChevronDown,
+  title: t('collapse'),
+  action: {
+    type: 'function',
+    fn: ({ openDialog }) => {
+      // 读取上次选择，默认 Obsidian
+      let last = 'obsidian'
+      if (typeof window !== 'undefined') {
+        try { last = localStorage.getItem(COLLAPSE_TEMPLATE_KEY) || 'obsidian' } catch {}
+      }
+      openDialog({
+        type: 'form',
+        title: t('collapse'),
+        fields: [
+          {
+            type: 'select',
+            name: 'template',
+            label: t('dialogCollapseTemplate'),
+            defaultValue: last,
+            options: [
+              { label: t('collapseObsidian'), value: 'obsidian' },
+              { label: t('collapseLuogu'), value: 'luogu' },
+            ],
+          },
+          {
+            type: 'select',
+            name: 'ctype',
+            label: t('dialogCollapseType'),
+            defaultValue: 'info',
+            options: FOLD_TYPES,
+          },
+          { type: 'text', name: 'title', label: t('dialogCollapseTitle') },
+        ],
+        fn: (data) => {
+          // 记住本次选择
+          if (typeof window !== 'undefined') {
+            try { localStorage.setItem(COLLAPSE_TEMPLATE_KEY, data.template) } catch {}
+          }
+          const ctype = data.ctype || 'info'
+          const title = data.title?.trim() || (data.template === 'luogu' ? '标题' : '标题')
+          if (data.template === 'luogu') {
+            return '\n::::' + ctype + '[' + title + ']\n内容\n::::\n'
+          }
+          return '\n> [!info]- ' + title + '\n内容\n'
+        },
+      })
+    },
+  },
+}
+
 // --- Legacy toggle buttons ---
 
 const hideBtn: ToolbarBtn = {
@@ -307,7 +376,7 @@ export const defaultBtns: ToolbarBtn[] = [
   divider,
   ulBtn, olBtn,
   divider,
-  imgBtn, linkBtn, codeBtn, tableBtn,
+  imgBtn, linkBtn, codeBtn, tableBtn, collapseBtn,
   divider,
   hideBtn, fullScreenBtn, scrollSyncBtn,
 ]
@@ -318,7 +387,7 @@ export const simpleBtns: ToolbarBtn[] = [
   header1Btn, header2Btn, header3Btn,
   ulBtn, olBtn,
   divider,
-  imgBtn, linkBtn, tableBtn,
+  imgBtn, linkBtn, tableBtn, collapseBtn,
   divider,
   hideBtn, fullScreenBtn,
 ]

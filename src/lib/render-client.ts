@@ -30,7 +30,7 @@ import katex from 'katex'
 import texmath from 'markdown-it-texmath'
 import anchor from 'markdown-it-anchor'
 import DOMPurify from 'dompurify'
-import { calloutPlugin, personPlugin, rawHtmlBlockPlugin, sandboxBlockPlugin } from './md-plugins'
+import { calloutPlugin, personPlugin, rawHtmlBlockPlugin, sandboxBlockPlugin, luoguCollapsePlugin } from './md-plugins'
 import type { PersonRegistry } from './people'
 
 // ============================================================
@@ -136,6 +136,7 @@ export function createClientMd(options?: ClientMdOptions): MarkdownIt {
   calloutPlugin(md)
   rawHtmlBlockPlugin(md)
   sandboxBlockPlugin(md)
+  luoguCollapsePlugin(md)
   if (opts.personRegistry) {
     personPlugin(md, opts.personRegistry)
   }

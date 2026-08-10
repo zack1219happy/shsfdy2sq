@@ -77,6 +77,16 @@
   color: var(--color-primary);
 }
 
+.tagSubPreview {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
 .revisionActions {
   display: flex;
   align-items: center;

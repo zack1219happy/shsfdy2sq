@@ -1251,3 +1251,10 @@ html[data-toc-visible="true"] .detailHeaderInner {
   margin-left: auto;
   margin-right: calc(24px + var(--toc-actual-width, 240px) + 24px);
 }
+
+/* ---- 手机端：置顶帖作者标签太长会挤截断标题，隐藏标签 ---- */
+@media (max-width: 768px) {
+  .postCardPinned .userName-tags {
+    display: none;
+  }
+}

@@ -131,6 +131,15 @@ a:visited {
 .callout-bug .callout-header,
 .callout-bug summary { color: #b10e0e; }
 
+/* 洛谷折叠框类型（与 Obsidian callout 同一套样式） */
+.callout-info { border-left-color: #1a73e8; }
+.callout-info .callout-header,
+.callout-info summary { color: #1a73e8; }
+
+.callout-error { border-left-color: #e74c3c; }
+.callout-error .callout-header,
+.callout-error summary { color: #b10e0e; }
+
 img {
   max-width: 100%;
   height: auto;

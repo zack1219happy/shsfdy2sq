@@ -588,6 +588,23 @@
   color: var(--color-text);
 }
 
+.appearanceSubmitTagBtn {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1.5px dashed var(--color-primary);
+  border-radius: var(--border-radius);
+  background: var(--color-bg);
+  color: var(--color-primary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.appearanceSubmitTagBtn:hover {
+  background: var(--color-active-bg);
+}
+
 .appearanceEmpty {
   text-align: center;
   padding: 32px 16px;

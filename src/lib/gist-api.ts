@@ -568,7 +568,7 @@ export async function updateWishStatus(
    Points API — 积分系统
    ============================================================= */
 
-import type { TodayProgress, PointsTransaction, ShopItem, UserPurchase, UserDecoration, TagData } from '@/types/gist'
+import type { TodayProgress, PointsTransaction, ShopItem, UserPurchase, UserDecoration, TagData, TagSubmission } from '@/types/gist'
 
 export async function fetchTodayProgress(): Promise<TodayProgress> {
   const { data, error } = await supabase.rpc('get_today_progress')
@@ -713,6 +713,42 @@ export async function fetchUserExclusiveTags(): Promise<TagData[]> {
   const { data, error } = await supabase.rpc('get_user_exclusive_tags')
   if (error) return []
   return (data ?? []) as TagData[]
+}
+
+/* ============================================================
+   Tag Submission API — 标签投稿
+   ============================================================ */
+
+/** 提交标签投稿（文字 + 颜色 + 价格） */
+export async function submitTagSubmission(value: string, tagColor: string | null, price: number): Promise<{ success: boolean; message: string }> {
+  const { data, error } = await supabase.rpc('submit_tag_submission', {
+    p_value: value,
+    p_tag_color: tagColor || null,
+    p_price: price,
+  })
+  if (error) return { success: false, message: error.message }
+  return (data ?? { success: false, message: '提交失败' }) as { success: boolean; message: string }
+}
+
+/** 获取所有标签投稿（管理员审核列表） */
+export async function fetchTagSubmissions(): Promise<TagSubmission[]> {
+  const { data, error } = await supabase.rpc('get_tag_submissions')
+  if (error) throw new Error('获取投稿失败: ' + error.message)
+  return (data ?? []) as TagSubmission[]
+}
+
+/** 审核通过投稿（上架商城） */
+export async function approveTagSubmission(id: string): Promise<{ success: boolean; message: string }> {
+  const { data, error } = await supabase.rpc('approve_tag_submission', { p_id: id })
+  if (error) return { success: false, message: error.message }
+  return (data ?? { success: false, message: '操作失败' }) as { success: boolean; message: string }
+}
+
+/** 驳回投稿 */
+export async function rejectTagSubmission(id: string): Promise<{ success: boolean; message: string }> {
+  const { data, error } = await supabase.rpc('reject_tag_submission', { p_id: id })
+  if (error) return { success: false, message: error.message }
+  return (data ?? { success: false, message: '操作失败' }) as { success: boolean; message: string }
 }
 
 /* =============================================================

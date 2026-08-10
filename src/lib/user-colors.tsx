@@ -52,7 +52,16 @@ async function fetchDecorations(): Promise<DecorationIndex | null> {
 fetchDecorations()
 
 // ---- Context ----
-const UserDecorationContext = createContext<DecorationIndex>({ byId: new Map(), byUsername: new Map() })
+interface DecorationContextValue {
+  index: DecorationIndex
+  /** 装饰数据是否已加载完成（false = 仍在前端预拉取中） */
+  loaded: boolean
+}
+
+const UserDecorationContext = createContext<DecorationContextValue>({
+  index: { byId: new Map(), byUsername: new Map() },
+  loaded: false,
+})
 
 /**
  * 挂载时等待模块级预拉取完成，将结果通过 Context 下发。
@@ -60,17 +69,19 @@ const UserDecorationContext = createContext<DecorationIndex>({ byId: new Map(), 
  */
 export function UserColorProvider({ children }: { children: ReactNode }) {
   const [decorationIndex, setDecorationIndex] = useState<DecorationIndex>({ byId: new Map(), byUsername: new Map() })
+  const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
     let cancelled = false
     fetchDecorations().then((idx) => {
       if (!cancelled && idx) setDecorationIndex(idx)
+      if (!cancelled) setLoaded(true)
     })
     return () => { cancelled = true }
   }, [])
 
   return (
-    <UserDecorationContext.Provider value={decorationIndex}>
+    <UserDecorationContext.Provider value={{ index: decorationIndex, loaded }}>
       {children}
     </UserDecorationContext.Provider>
   )
@@ -81,9 +92,9 @@ export function UserColorProvider({ children }: { children: ReactNode }) {
  * 用它来定位，颜色/标签/当前用户名都不会因改名而丢失。
  */
 export function useUserById(userId: string | null | undefined): UserDecoration | null {
-  const { byId } = useContext(UserDecorationContext)
+  const { index } = useContext(UserDecorationContext)
   if (!userId) return null
-  return byId.get(userId) ?? null
+  return index.byId.get(userId) ?? null
 }
 
 /**
@@ -98,8 +109,15 @@ export function useUserColor(username: string): string | null {
  * 历史内容的旧用户名快照解析不到时返回 null，由调用方回退。
  */
 export function useUserDecoration(username: string): UserDecoration | null {
-  const { byId, byUsername } = useContext(UserDecorationContext)
-  const id = byUsername.get(username)
+  const { index } = useContext(UserDecorationContext)
+  const id = index.byUsername.get(username)
   if (!id) return null
-  return byId.get(id) ?? null
+  return index.byId.get(id) ?? null
+}
+
+/**
+ * 装饰数据是否已加载完成（false = 还在预拉取中，此时解析不到不代表用户不存在）。
+ */
+export function useDecorationsLoaded(): boolean {
+  return useContext(UserDecorationContext).loaded
 }

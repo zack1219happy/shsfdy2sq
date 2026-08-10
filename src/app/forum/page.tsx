@@ -352,12 +352,6 @@ function PostCard({ post, onClick, onRefresh }: { post: ForumPost; onClick: () =
           <UserName username={post.author_username} userId={post.author_id} className={styles.postAuthor} />
           <span>{formatDate(post.created_at)}</span>
           <div className={styles.postStats}>
-            <span className={styles.statBadge}>
-              <FaIcon name="thumbs-up" /> {post.upvotes}
-            </span>
-            <span className={styles.statBadge}>
-              <FaIcon name="thumbs-down" /> {post.downvotes}
-            </span>
             <span className={`${styles.statBadge} ${score > 0 ? styles.statBadgeUpvoted : ''}`}>
               ️ {score > 0 ? '+' + score : score}
             </span>

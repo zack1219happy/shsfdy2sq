@@ -143,3 +143,18 @@ export const BUILTIN_TAGS: Record<string, string[]> = {
 
 /** 自定义 tag 的商品 value（用于识别） */
 export const CUSTOM_TAG_VALUE = '__custom__'
+
+/* ========== Tag Submission Types — 标签投稿 ========== */
+
+/** 标签投稿（待审核 / 已通过 / 已驳回） */
+export interface TagSubmission {
+  id: string
+  author_id: string
+  author_name: string | null
+  author_username: string | null
+  value: string
+  tag_color: string | null
+  price: number
+  status: 'pending' | 'approved' | 'rejected'
+  created_at: string
+}

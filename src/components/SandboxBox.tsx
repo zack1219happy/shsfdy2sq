@@ -66,6 +66,17 @@ interface Props {
     noSanitize: boolean
 }
 
+/** HTML 实体反转义：&lt; &gt; &amp; &quot; &#39; → 真实字符 */
+function decodeHtmlEntities(s: string): string {
+    return s
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&#x27;/g, "'")
+        .replace(/&amp;/g, '&')
+}
+
 /**
  * ```sandbox 块渲染组件
  *
@@ -125,8 +136,10 @@ export default function SandboxBox({ content, noSanitize }: Props) {
     }
 
     // 安全模式显示的代码块
+    // 先反转义 HTML 实体（&lt;→<、&gt;→> 等），再做转义显示，
+    // 保证「不管原文写 &lt; 还是 <，阅读原文时都渲染成 <」。
     const escaped = useMemo(() => {
-        return content
+        return decodeHtmlEntities(content)
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')

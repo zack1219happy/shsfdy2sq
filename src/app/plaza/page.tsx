@@ -162,12 +162,6 @@ function ArticleCard({ article, onClick }: { article: PlazaArticleListResult; on
         <span>{formatDate(article.created_at)}</span>
         {!article.is_public && <span style={{ color: '#b35a00', fontSize: '0.78rem' }}>🔒 私密</span>}
         <div className={styles.postStats}>
-          <span className={styles.statBadge}>
-            <FaIcon name="thumbs-up" /> {article.like_count ?? 0}
-          </span>
-          <span className={styles.statBadge}>
-            <FaIcon name="thumbs-down" /> {article.downvote_count ?? 0}
-          </span>
           <span className={`${styles.statBadge} ${score > 0 ? styles.statBadgeUpvoted : ''}`}>
             ️ {score > 0 ? '+' + score : score}
           </span>
