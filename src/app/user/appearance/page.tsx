@@ -8,7 +8,6 @@ import { getSession } from '@/lib/auth'
 import { fetchUserPurchases, equipColor, equipTags, fetchUserEquipped, fetchUserExclusiveTags } from '@/lib/gist-api'
 import type { UserPurchase, TagData } from '@/types/gist'
 import { BUILTIN_TAGS, CUSTOM_TAG_VALUE } from '@/types/gist'
-import TagSubmissionModal from '@/components/TagSubmissionModal'
 import styles from '@/styles/points.module.css'
 
 type PageState = 'loading' | 'ready' | 'error'
@@ -36,9 +35,6 @@ export default function AppearancePage() {
 
   // 操作状态
   const [saving, setSaving] = useState(false)
-
-  // 标签投稿弹窗
-  const [showSubmitModal, setShowSubmitModal] = useState(false)
 
   const loadData = useCallback(async () => {
     await Promise.all([
@@ -386,20 +382,6 @@ export default function AppearancePage() {
           </div>
         )}
       </section>
-
-      {/* 标签投稿入口 */}
-      <section className={styles.appearanceSection}>
-        <button
-          className={styles.appearanceSubmitTagBtn}
-          onClick={() => setShowSubmitModal(true)}
-        >
-          <FaIcon name="lightbulb" /> 没有想要的标签？投稿一个！
-        </button>
-      </section>
-
-      {showSubmitModal && (
-        <TagSubmissionModal onClose={() => setShowSubmitModal(false)} />
-      )}
     </div>
   )
 }

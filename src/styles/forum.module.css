@@ -1252,9 +1252,11 @@ html[data-toc-visible="true"] .detailHeaderInner {
   margin-right: calc(24px + var(--toc-actual-width, 240px) + 24px);
 }
 
-/* ---- 手机端：置顶帖作者标签太长会挤截断标题，隐藏标签 ---- */
+/* ---- 手机端：置顶帖作者标签太长会挤截断标题，隐藏标签 ----
+   userName-tags 是 UserName 组件里的全局类名，必须用 :global()
+   包裹，否则会被 CSS Module hash 化导致选择器匹配不上。 */
 @media (max-width: 768px) {
-  .postCardPinned .userName-tags {
+  .postCardPinned :global(.userName-tags) {
     display: none;
   }
 }

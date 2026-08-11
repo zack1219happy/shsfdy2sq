@@ -327,7 +327,7 @@ const collapseBtn: ToolbarBtn = {
           if (data.template === 'luogu') {
             return '\n::::' + ctype + '[' + title + ']\n内容\n::::\n'
           }
-          return '\n> [!info]- ' + title + '\n内容\n'
+          return '\n> [!info]- ' + title + '\n> 内容\n'
         },
       })
     },

@@ -136,13 +136,11 @@ export default function SandboxBox({ content, noSanitize }: Props) {
     }
 
     // 安全模式显示的代码块
-    // 先反转义 HTML 实体（&lt;→<、&gt;→> 等），再做转义显示，
-    // 保证「不管原文写 &lt; 还是 <，阅读原文时都渲染成 <」。
+    // 只反转义 HTML 实体（&lt;→<、&gt;→> 等），交给 React 渲染时自动转义为文本节点。
+    // 注意：不能再手动转义回实体——否则 React 渲染 {escaped} 时会二次转义，
+    // 把 &lt; 变成 &amp;lt;，浏览器反而显示成字面的 &lt;。
     const escaped = useMemo(() => {
         return decodeHtmlEntities(content)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
     }, [content])
 
     return (

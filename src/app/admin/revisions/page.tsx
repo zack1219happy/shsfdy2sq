@@ -20,12 +20,6 @@ import {
   type PageRequest,
   type PageRequestDetail,
 } from '@/lib/wiki-api'
-import {
-  fetchTagSubmissions,
-  approveTagSubmission,
-  rejectTagSubmission,
-} from '@/lib/gist-api'
-import type { TagSubmission } from '@/types/gist'
 import { lineDiff, type DiffLine } from '@/lib/diff'
 import styles from '@/styles/admin.module.css'
 import forumStyles from '@/styles/forum.module.css'
@@ -66,12 +60,6 @@ export default function AdminRevisionsPage() {
   const [prReviewComment, setPrReviewComment] = useState('')
   const [prSubmitting, setPrSubmitting] = useState(false)
 
-  // ── 标签投稿审核状态 ──
-  const [tagSubs, setTagSubs] = useState<TagSubmission[]>([])
-  const [tagSubsLoading, setTagSubsLoading] = useState(true)
-  const [tagSubsError, setTagSubsError] = useState<string | null>(null)
-  const [tagSubsHandling, setTagSubsHandling] = useState<string | null>(null)
-
   const isAdmin = session && ['admin', 'super_admin'].includes(session.role)
 
   // ── 渲染期重置加载状态（URL 参数变化时切回加载态，避免在 effect 中同步 setState）──
@@ -90,11 +78,6 @@ export default function AdminRevisionsPage() {
   if (prevPrDetailKey !== prDetailKey) {
     setPrevPrDetailKey(prDetailKey)
     setPrDetailLoading(true)
-  }
-  const [prevTagTab, setPrevTagTab] = useState(tab)
-  if (prevTagTab !== tab) {
-    setPrevTagTab(tab)
-    setTagSubsLoading(true)
   }
 
   // ── 编辑审核：加载待审列表 ──
@@ -141,15 +124,6 @@ export default function AdminRevisionsPage() {
       .catch(() => setPrDetail(null))
       .finally(() => setPrDetailLoading(false))
   }, [prSelectedId, isAdmin, tab])
-
-  // ── 标签投稿审核：加载待审列表 ──
-  useEffect(() => {
-    if (!isAdmin || tab !== 'tagsubs') return
-    fetchTagSubmissions()
-      .then(setTagSubs)
-      .catch((e) => setTagSubsError(e.message))
-      .finally(() => setTagSubsLoading(false))
-  }, [isAdmin, tab])
 
   // ── Diff ──
   const diffLines: DiffLine[] = useMemo(() => {
@@ -263,45 +237,9 @@ export default function AdminRevisionsPage() {
   const switchTab = useCallback((t: string) => {
     setDetail(null)
     setPrDetail(null)
-    const suffix = t === 'requests' ? '?tab=requests' : t === 'tagsubs' ? '?tab=tagsubs' : ''
+    const suffix = t === 'requests' ? '?tab=requests' : ''
     router.replace(`/admin/revisions${suffix}`)
   }, [router])
-
-  // ── 标签投稿：同意 ──
-  const handleApproveTagSub = useCallback(async (id: string) => {
-    setTagSubsHandling(id)
-    try {
-      const res = await approveTagSubmission(id)
-      if (!res.success) {
-        window.alert('操作失败: ' + res.message)
-      } else {
-        const updated = await fetchTagSubmissions()
-        setTagSubs(updated)
-      }
-    } catch (e) {
-      window.alert('操作失败: ' + ((e as { message?: string })?.message || '未知错误'))
-    } finally {
-      setTagSubsHandling(null)
-    }
-  }, [])
-
-  // ── 标签投稿：驳回 ──
-  const handleRejectTagSub = useCallback(async (id: string) => {
-    setTagSubsHandling(id)
-    try {
-      const res = await rejectTagSubmission(id)
-      if (!res.success) {
-        window.alert('操作失败: ' + res.message)
-      } else {
-        const updated = await fetchTagSubmissions()
-        setTagSubs(updated)
-      }
-    } catch (e) {
-      window.alert('操作失败: ' + ((e as { message?: string })?.message || '未知错误'))
-    } finally {
-      setTagSubsHandling(null)
-    }
-  }, [])
 
   if (!session) return <div className={styles.page}><p className={styles.error}>请先登录</p></div>
   if (!isAdmin) return <div className={styles.page}><p className={styles.error}>无权限</p></div>
@@ -317,18 +255,15 @@ export default function AdminRevisionsPage() {
 
       {/* ── Tab 导航 ── */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 20, borderBottom: '1px solid var(--color-border)', paddingBottom: 8 }}>
-        <TabButton active={tab !== 'requests' && tab !== 'tagsubs'} onClick={() => switchTab('revisions')}>
+        <TabButton active={tab !== 'requests'} onClick={() => switchTab('revisions')}>
           <FaIcon name="pen" /> 编辑审核
         </TabButton>
         <TabButton active={tab === 'requests'} onClick={() => switchTab('requests')}>
           <FaIcon name="plus" /> 新建页面审核
         </TabButton>
-        <TabButton active={tab === 'tagsubs'} onClick={() => switchTab('tagsubs')}>
-          <FaIcon name="star" /> 标签投稿
-        </TabButton>
       </div>
 
-      {tab === 'requests' ? renderPrPanel() : tab === 'tagsubs' ? renderTagSubsPanel() : renderRevisionPanel()}
+      {tab === 'requests' ? renderPrPanel() : renderRevisionPanel()}
     </div>
   )
 
@@ -590,77 +525,6 @@ export default function AdminRevisionsPage() {
     )
   }
 
-  // ==============================================================
-  //  标签投稿审核面板
-  // ==============================================================
-  function renderTagSubsPanel() {
-    return (
-      <>
-        {tagSubsLoading ? (
-          <p className={styles.loading}>加载中…</p>
-        ) : tagSubsError ? (
-          <p className={styles.error}>❌ {tagSubsError}</p>
-        ) : tagSubs.length === 0 ? (
-          <div className={styles.empty}>
-            <div className={styles.emptyIcon}>📭</div>
-            <div className={styles.emptyText}>没有待审核的标签投稿</div>
-          </div>
-        ) : (
-          <div className={styles.revisionList}>
-            {tagSubs.map((sub) => (
-              <div key={sub.id} className={styles.revisionCard}>
-                <div className={styles.revisionInfo}>
-                  <div className={styles.revisionTitle}>
-                    <span
-                      className={styles.tagSubPreview}
-                      style={
-                        sub.tag_color
-                          ? { color: sub.tag_color, borderColor: sub.tag_color }
-                          : undefined
-                      }
-                    >
-                      {sub.value}
-                    </span>
-                    <span className={`${styles.badge} ${styles.badgePending}`} style={{ marginLeft: 8 }}>
-                      {sub.status === 'pending' ? '待审核' : sub.status === 'approved' ? '已通过' : '已驳回'}
-                    </span>
-                  </div>
-                  <div className={styles.revisionMeta}>
-                    <UserName username={sub.author_username || sub.author_name || '用户'} userId={sub.author_id} />
-                    <span>投稿</span>
-                    <span className={styles.revisionPage}>价格 {sub.price} 积分</span>
-                    <span>· {formatTime(sub.created_at)}</span>
-                  </div>
-                </div>
-                <div className={styles.revisionActions}>
-                  {sub.status === 'pending' ? (
-                    <>
-                      <button
-                        className={`${forumStyles.btn} ${forumStyles.btnOutline}`}
-                        disabled={tagSubsHandling === sub.id}
-                        onClick={(e) => { e.stopPropagation(); handleRejectTagSub(sub.id) }}
-                      >
-                        驳回
-                      </button>
-                      <button
-                        className={`${forumStyles.btn} ${forumStyles.btnPrimary}`}
-                        disabled={tagSubsHandling === sub.id}
-                        onClick={(e) => { e.stopPropagation(); handleApproveTagSub(sub.id) }}
-                      >
-                        {tagSubsHandling === sub.id ? '处理中…' : '同意'}
-                      </button>
-                    </>
-                  ) : (
-                    <span className={styles.chevron} />
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </>
-    )
-  }
 }
 
 // ── Tab 按钮组件 ──
