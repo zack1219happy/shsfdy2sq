@@ -4,6 +4,7 @@
 import { supabase } from "./supabase";
 
 const SESSION_KEY = "wiki_session";
+const RPC_FALLBACK_SESSION_KEY = "wiki_rpc_fallback";
 const SESSION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 const AUTH_STORAGE_KEYS = [
   "sb-iiiyoafpzfqxpaqheojg-auth-token",
@@ -57,6 +58,11 @@ export function clearSession(): void {
   void supabase.auth.signOut().catch(() => {});
 }
 
+export function isRpcFallbackSession(): boolean {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem(RPC_FALLBACK_SESSION_KEY) === "1";
+}
+
 /**
  * 判断当前用户是否有权限删除指定用户的评论
  */
@@ -103,7 +109,18 @@ interface CurrentUserRow {
 export function clearStoredSession(): void {
   if (typeof window === "undefined") return;
   localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(RPC_FALLBACK_SESSION_KEY);
   for (const key of AUTH_STORAGE_KEYS) localStorage.removeItem(key);
+}
+
+function clearAuthStorage(): void {
+  if (typeof window === "undefined") return;
+  for (const key of AUTH_STORAGE_KEYS) localStorage.removeItem(key);
+}
+
+function clearAuthOnlySession(): void {
+  clearAuthStorage();
+  void supabase.auth.signOut({ scope: 'local' }).catch(() => {});
 }
 
 function clearLocalAuthSession(): void {
@@ -175,19 +192,23 @@ export async function login(
   // Try to establish Auth session
   const email = user.student_id + "@wiki.local";
   const signIn = async (password: string) => {
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (
-      authError ||
-      !authData.session ||
-      !authData.user ||
-      authData.user.id !== user.id
-    ) {
+    try {
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (
+        authError ||
+        !authData.session ||
+        !authData.user ||
+        authData.user.id !== user.id
+      ) {
+        return null;
+      }
+      return authData.session;
+    } catch {
       return null;
     }
-    return authData.session;
   };
 
   let authSession = await signIn(credential);
@@ -207,8 +228,10 @@ export async function login(
   }
 
   if (!authSession) {
-    clearLocalAuthSession();
-    return { success: false, message: "认证会话建立失败，请稍后重试" };
+    localStorage.setItem(RPC_FALLBACK_SESSION_KEY, "1");
+    clearAuthOnlySession();
+  } else {
+    localStorage.removeItem(RPC_FALLBACK_SESSION_KEY);
   }
 
   const session: UserSession = {
@@ -224,6 +247,11 @@ export async function login(
 }
 
 export async function tryRestoreSessionFromAuth(): Promise<void> {
+  if (isRpcFallbackSession()) {
+    getSession();
+    return;
+  }
+
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) {
     clearLocalAuthSession();

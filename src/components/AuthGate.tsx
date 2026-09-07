@@ -7,6 +7,7 @@ import {
   login,
   clearSession,
   clearStoredSession,
+  isRpcFallbackSession,
   tryRestoreSessionFromAuth,
   type UserSession,
 } from '@/lib/auth'
@@ -64,7 +65,7 @@ export default function AuthGate({ children }: Props) {
   // Supabase 会话在其他标签页退出或刷新失败时，立即同步页面状态。
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, authSession) => {
-      if (event === 'SIGNED_OUT' || !authSession) {
+      if ((event === 'SIGNED_OUT' || !authSession) && !isRpcFallbackSession()) {
         clearStoredSession()
         setSession(null)
         window.dispatchEvent(new CustomEvent('user-session-changed'))
