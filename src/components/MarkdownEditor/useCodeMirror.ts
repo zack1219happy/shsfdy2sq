@@ -10,6 +10,7 @@ import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
 import { languages } from '@codemirror/language-data'
 import { EditorView } from '@codemirror/view'
 import type { Extension } from '@codemirror/state'
+import { editorCompletionExtensions, type EditorCompletionOptions } from './completions'
 
 /** useCodeMirror 返回值 */
 export interface CodeMirrorAPI {
@@ -25,6 +26,8 @@ export interface CodeMirrorAPI {
 
 interface UseCodeMirrorOptions {
   value: string
+  /** 自动补全选项（wiki / 公告关掉表情补全） */
+  completion?: EditorCompletionOptions
   onChange?: (value: string) => void
   onEditorScroll?: (lineNumber: number) => void
   /** 按 Ctrl+Enter 时触发 */
@@ -40,6 +43,7 @@ interface UseCodeMirrorOptions {
 export function useCodeMirror({
   onEditorScroll,
   onSubmit,
+  completion,
 }: UseCodeMirrorOptions): CodeMirrorAPI {
   const viewRef = useRef<ReactCodeMirrorRef | null>(null)
   const [editorView, setEditorView] = useState<EditorView | null>(null)
@@ -103,7 +107,8 @@ export function useCodeMirror({
     return () => editorView.dom.removeEventListener('keydown', handler)
   }, [onSubmit, editorView])
 
-  // markdown 语法扩展
+  // markdown 语法扩展 + @ 提及 / 表情补全
+  const disableEmoji = completion?.disableEmoji ?? false
   const extensions = useMemo<Extension[]>(
     () => [
       markdown({
@@ -111,8 +116,9 @@ export function useCodeMirror({
         codeLanguages: languages,
       }),
       EditorView.lineWrapping,
+      editorCompletionExtensions({ disableEmoji }),
     ],
-    [],
+    [disableEmoji],
   )
 
   // ---- 文本操作 API ----

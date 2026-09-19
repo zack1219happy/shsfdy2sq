@@ -232,7 +232,7 @@ export default function ForumPostPage() {
                 ) : (
                     <div className={pd.detail}>
                         <div className={pd.detailBody}>
-                            <WikiContent content={post.content} className="wiki-body" />
+                            <WikiContent content={post.content} className="wiki-body" contextUserId={post.author_id} />
                         </div>
 
                         <VoteBar

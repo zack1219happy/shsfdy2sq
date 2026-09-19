@@ -4,6 +4,7 @@ import Sidebar from '@/components/Sidebar'
 import FilePad from '@/components/FilePad'
 import AuthGate from '@/components/AuthGate'
 import ImageModal from '@/components/ImageModal'
+import { EmojiDialogHost } from '@/components/EmojiDialogHost'
 import ToastProvider from '@/components/ToastProvider'
 import { UserColorProvider } from '@/lib/user-colors'
 import ExternalLinkHandler from '@/components/ExternalLinkHandler'
@@ -43,6 +44,7 @@ export default async function RootLayout({
           </UserColorProvider>
 
           <ImageModal />
+          <EmojiDialogHost />
 
           <AuthGate>
           <div

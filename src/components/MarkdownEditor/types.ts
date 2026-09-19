@@ -126,4 +126,9 @@ export interface EditorProps {
   onSubmit?: () => void
   /** 预览时跳过 DOMPurify 净化（用于已启用 JS 的文章） */
   noSanitizePreview?: boolean
+  /**
+   * 表情身份。默认用当前登录者（写自己的内容）。
+   * wiki / 公告这类无主内容传 null：预览不解析表情、{ 补全也关掉。
+   */
+  contextUserId?: string | null
 }

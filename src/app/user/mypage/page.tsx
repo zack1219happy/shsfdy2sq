@@ -11,6 +11,7 @@ import { HeaderBar } from './_components/HeaderBar'
 import { StatsStrip } from './_components/StatsStrip'
 import { HomeTab } from './_components/HomeTab'
 import { PostsTab, ArticlesTab, FollowsTab } from './_components/ListTabs'
+import { PacksTab } from './_components/PacksTab'
 import type {
     Tab, FollowState, PrivacyLevel, PrivacySettings,
     DailyPoints, UserStats, ForumPostItem, PlazaArticleItem, FollowUser, UserProfile,
@@ -262,6 +263,7 @@ function UserMypage() {
                             <TabBtn tab="posts"   label="帖子"     activeTab={activeTab} onSelect={handleTabSelect} />
                             <TabBtn tab="articles" label="文章"   activeTab={activeTab} onSelect={handleTabSelect} />
                             <TabBtn tab="follows" label="关注"    activeTab={activeTab} onSelect={handleTabSelect} />
+                            <TabBtn tab="packs" label="表情包"  activeTab={activeTab} onSelect={handleTabSelect} />
                         </div>
                         {stats && (
                             <div className={styles.barStatsWrap}>
@@ -303,6 +305,9 @@ function UserMypage() {
                             visibility={privacy.articles}
                             onToggleVisibility={isSelf ? () => togglePrivacy('articles') : undefined}
                         />
+                    )}
+                    {activeTab === 'packs' && (
+                        <PacksTab username={profile.username} isSelf={isSelf} />
                     )}
                     {activeTab === 'follows' && (
                         <FollowsTab

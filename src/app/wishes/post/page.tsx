@@ -226,7 +226,7 @@ export default function WishPostPage() {
 
           {/* 描述 */}
           <div className={pd.detailBody} style={{ marginTop: 12 }}>
-            <WikiContent content={wish.description} className="wiki-body" />
+            <WikiContent content={wish.description} className="wiki-body" contextUserId={wish.user_id} />
           </div>
 
           {/* 管理员状态编辑 */}

@@ -6,6 +6,7 @@ import { DmMessage, getConversations, getMessages, markConversationRead, recallM
 import { getSession } from '@/lib/auth'
 import { useCodeCopy } from '@/lib/useCodeCopy'
 import MessageBubble from './MessageBubble'
+import { useEmojiContextMenu } from '@/lib/emoji/use-emoji-context-menu'
 import DmComposer from './DmComposer'
 import { useDmChannel } from './useDmChannel'
 import styles from '@/styles/dm.module.css'
@@ -36,6 +37,8 @@ export default function DmChatView({
     const [sendError, setSendError] = useState<string | null>(null)
     const [editorKey, setEditorKey] = useState(0)
     const listRef = useRef<HTMLDivElement | null>(null)
+    // 右键表情：加入我的表情 / 添加整包 / 管理员解禁
+    const emojiMenu = useEmojiContextMenu(listRef)
     const sendingRef = useRef(false)
 
     // 加载消息与会话信息
@@ -238,6 +241,7 @@ export default function DmChatView({
 
             {/* 输入区 */}
             <DmComposer value={input} onChange={setInput} onSubmit={handleSend} resetKey={editorKey} />
+            {emojiMenu}
 
             {/* 右键菜单 */}
             {contextMenu && (

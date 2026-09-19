@@ -20,6 +20,8 @@ interface UsePreviewOptions {
   assetsMap?: Record<string, string>
   /** 跳过 DOMPurify 净化（用于已启用 JS 的文章预览） */
   noSanitize?: boolean
+  /** 表情身份：编辑者自己的 user id（wiki / 公告传 null 则不解析表情） */
+  contextUserId?: string | null
 }
 
 interface UsePreviewReturn {
@@ -42,6 +44,7 @@ export function usePreview({
   titleSlugMap: propMap,
   assetsMap,
   noSanitize,
+  contextUserId,
 }: UsePreviewOptions): UsePreviewReturn {
   const previewRef = useRef<HTMLDivElement | null>(null)
   const basePath = BASE_PATH
@@ -53,7 +56,7 @@ export function usePreview({
 
   // 通过 render-client 统一渲染（开启 highlight + texmath + injectLn）
   const previewHtml = useMemo(() => {
-    const raw = renderMarkdownWithRegistry(content, registry, { highlight: true, texmath: true, injectLn: true }, !noSanitize)
+    const raw = renderMarkdownWithRegistry(content, registry, { highlight: true, texmath: true, injectLn: true, emojiContextUserId: contextUserId ?? null }, !noSanitize)
     // 渲染 [[Wiki 链接]]
     const withLinks = replaceWikiLinks(raw, effectiveMap, basePath)
     // 处理 ```sandbox 块
@@ -83,7 +86,7 @@ export function usePreview({
       })
     }
     return withAssets
-  }, [content, effectiveMap, basePath, noSanitize, assetsMap])
+  }, [content, effectiveMap, basePath, noSanitize, assetsMap, contextUserId])
 
   // 滚动事件监听（scroll sync）
   useEffect(() => {

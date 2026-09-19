@@ -1,6 +1,6 @@
 /** 用户主页共享类型与工具 */
 
-export type Tab = 'home' | 'posts' | 'articles' | 'follows'
+export type Tab = 'home' | 'posts' | 'articles' | 'follows' | 'packs'
 export type FollowState = 'none' | 'following' | 'mutual'
 export type PrivacyLevel = 'public' | 'friends' | 'private'
 

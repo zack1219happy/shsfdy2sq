@@ -7,6 +7,9 @@ import { registry, titleSlugMap as defaultTitleSlugMap } from '@/data/person-reg
 import { BASE_PATH } from '@/lib/constants'
 import { fetchPageAssets } from '@/lib/wiki-api'
 import { useCodeCopy } from '@/lib/useCodeCopy'
+import { useMentionHydration } from '@/components/MentionHydrator'
+import { useEmojiLibrary, useContentContextVersion } from '@/lib/emoji/use-emoji-context'
+import { useEmojiContextMenu } from '@/lib/emoji/use-emoji-context-menu'
 import SandboxBox from './SandboxBox'
 
 interface Props {
@@ -21,6 +24,11 @@ interface Props {
     slug?: string
     /** 跳过 DOMPurify 净化（用于启用了 JS 的页面） */
     noSanitize?: boolean
+    /**
+     * 表情身份：谁的正文就传谁的 user id。
+     * 不传（wiki 页面等无主内容）则不解析表情语法。
+     */
+    contextUserId?: string | null
 }
 
 /** 分割后的内容片段 */
@@ -39,8 +47,12 @@ type Segment = HtmlSegment | SandboxSegment
  * - 代码块复制按钮
  * - ```sandbox 块：安全模式→代码块，JS 模式→<iframe srcdoc>（组件级隔离，不参与 innerHTML）
  */
-export default function WikiContent({ content, format = 'markdown', className, titleSlugMap: propMap, slug, noSanitize }: Props) {
+export default function WikiContent({ content, format = 'markdown', className, titleSlugMap: propMap, slug, noSanitize, contextUserId }: Props) {
     const ref = useRef<HTMLDivElement>(null)
+    // 表情库 / 用户名白名单就绪后重渲染
+    const ctxVersion = useContentContextVersion()
+    useEmojiLibrary(contextUserId)
+    const emojiMenu = useEmojiContextMenu(ref)
     const basePath = BASE_PATH
     const [assetMap, setAssetMap] = useState<Map<string, string> | null>(null)
 
@@ -78,7 +90,7 @@ export default function WikiContent({ content, format = 'markdown', className, t
         const shouldSanitize = !noSanitize
         const rawHtml =
             format === 'markdown' || (format !== 'html' && !looksLikeHtml(content))
-                ? renderMarkdownWithRegistry(content, registry, { highlight: true, texmath: true, anchor: true }, shouldSanitize)
+                ? renderMarkdownWithRegistry(content, registry, { highlight: true, texmath: true, anchor: true, emojiContextUserId: contextUserId ?? null }, shouldSanitize)
                 : (typeof window !== 'undefined' && shouldSanitize ? DOMPurify.sanitize(content) : content)
 
         // 替换 Wiki 链接
@@ -86,7 +98,9 @@ export default function WikiContent({ content, format = 'markdown', className, t
         // 替换 _assets/ 图片为 DB base64 data URL
         const withAssets = replaceAssetSrcs(withLinks, assetMap)
         return withAssets
-    }, [content, format, effectiveMap, basePath, assetMap, noSanitize])
+    // ctxVersion：表情库或用户名白名单到位后需要重渲染
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [content, format, effectiveMap, basePath, assetMap, noSanitize, contextUserId, ctxVersion])
 
     // 分割 HTML，将 .js-sandbox 占位分离为独立片段
     const segments: Segment[] = useMemo(() => splitHtml(html), [html])
@@ -132,15 +146,20 @@ export default function WikiContent({ content, format = 'markdown', className, t
 
     // 代码块复制按钮
     useCodeCopy(ref)
+    const mentionPortals = useMentionHydration(ref, html)
 
     return (
-        <div ref={ref} className={className}>
-            {segments.map((seg) =>
-                seg.type === 'sandbox'
-                    ? <SandboxBox key={seg.id} content={seg.payload} noSanitize={!!noSanitize} />
-                    : <div key={seg.id} dangerouslySetInnerHTML={{ __html: seg.content }} />
-            )}
-        </div>
+        <>
+            <div ref={ref} className={className}>
+                {segments.map((seg) =>
+                    seg.type === 'sandbox'
+                        ? <SandboxBox key={seg.id} content={seg.payload} noSanitize={!!noSanitize} />
+                        : <div key={seg.id} dangerouslySetInnerHTML={{ __html: seg.content }} />
+                )}
+            </div>
+            {emojiMenu}
+            {mentionPortals}
+        </>
     )
 }
 

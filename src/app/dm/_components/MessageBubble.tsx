@@ -1,9 +1,11 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 import { UserName } from '@/components/UserName'
+import { useMentionHydration } from '@/components/MentionHydrator'
 import type { DmMessage } from '@/lib/api/dm'
 import { renderMarkdownWithRegistry, replaceWikiLinks } from '@/lib/markdown'
+import { useContentContextVersion, useEmojiLibrary } from '@/lib/emoji/use-emoji-context'
 import { registry, titleSlugMap } from '@/data/person-registry'
 import { BASE_PATH } from '@/lib/constants'
 import styles from '@/styles/dm.module.css'
@@ -24,6 +26,23 @@ export default function MessageBubble({ msg, failed, onContextMenu }: {
     failed: boolean
     onContextMenu?: (e: React.MouseEvent, msg: DmMessage) => void
 }) {
+    const contentRef = useRef<HTMLDivElement | null>(null)
+    // 私信有作者身份 → 表情按发送者的库解析
+    useEmojiLibrary(msg.sender_id)
+    const ctxVersion = useContentContextVersion()
+    // ctxVersion 参与计算：表情库 / 用户名白名单就绪后重新渲染
+    const html = useMemo(
+        () => {
+            void ctxVersion
+            return replaceWikiLinks(
+                renderMarkdownWithRegistry(msg.content, registry, { emojiContextUserId: msg.sender_id }),
+                titleSlugMap, BASE_PATH,
+            ).replace(/\n+$/, '')
+        },
+        [msg.content, msg.sender_id, ctxVersion],
+    )
+    const mentionPortals = useMentionHydration(contentRef, html)
+
     const handleContext = useCallback(
         (e: React.MouseEvent) => onContextMenu?.(e, msg),
         [onContextMenu, msg],
@@ -43,14 +62,15 @@ export default function MessageBubble({ msg, failed, onContextMenu }: {
                 {msg.recalled_at ? (
                     <span className={styles.recalledText}>消息已撤回</span>
                 ) : (
-                    <div className={styles.bubbleContent} dangerouslySetInnerHTML={{ __html: replaceWikiLinks(renderMarkdownWithRegistry(msg.content, registry), titleSlugMap, BASE_PATH).replace(/\n+$/, '') }} />
+                    <div ref={contentRef} className={styles.bubbleContent} dangerouslySetInnerHTML={{ __html: html }} />
                 )}
             </div>
             <span className={styles.messageTime}>
                 {formatMsgTime(msg.created_at)}
                 {msg.is_mine && msg.recalled_at && ' (已撤回)'}
-                {failed && ' · 发送失败'}
+            {failed && ' · 发送失败'}
             </span>
+            {mentionPortals}
         </div>
     )
 }

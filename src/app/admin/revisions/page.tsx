@@ -203,7 +203,7 @@ export default function AdminRevisionsPage() {
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
                         <div className={styles.editorDiffLayout}>
                             <div className={styles.editorPane}>
-                                <MarkdownEditor value={revDraft.content} onChange={(v) => setRevDraft({ ...revDraft, content: v })} className={styles.editorInner} assetsMap={assetsMap} />
+                                <MarkdownEditor value={revDraft.content} onChange={(v) => setRevDraft({ ...revDraft, content: v })} className={styles.editorInner} assetsMap={assetsMap} contextUserId={null} />
                             </div>
                             <div className={styles.diffPane}>
                                 <div className={styles.diffPaneHead}>
@@ -345,6 +345,7 @@ export default function AdminRevisionsPage() {
                                 onChange={(v) => setPrDraft({ ...prDraft, content: v })}
                                 className={forumStyles.editorNoBorder}
                                 assetsMap={assetsMap}
+                                contextUserId={null}
                             />
                         </div>
                     </div>

@@ -411,7 +411,7 @@ const CommentCard = forwardRef<HTMLDivElement, {
         <span className={commentStyles.commentDate}>{formatDate(comment.createdAt)}</span>
       </div>
       <div className={commentStyles.commentBody}>
-        <WikiContent content={comment.content} />
+        <WikiContent content={comment.content} contextUserId={comment.authorId ?? null} />
       </div>
     </div>
   )
@@ -468,7 +468,7 @@ const UnifiedReply = forwardRef<HTMLDivElement, {
         <span className={commentStyles.replyDate}>{formatDate(comment.createdAt)}</span>
       </div>
       <div className={commentStyles.replyContent}>
-        <WikiContent content={comment.content} />
+        <WikiContent content={comment.content} contextUserId={comment.authorId ?? null} />
       </div>
     </div>
   )

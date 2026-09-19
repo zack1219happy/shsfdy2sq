@@ -468,7 +468,7 @@ export default function PlazaArticlePage() {
                     ) : (
                         <div className={pd.detail}>
                             <div className={pd.detailBody}>
-                                <WikiContent content={article.content} className="wiki-body" noSanitize={jsMode === 'js'} format="markdown" />
+                                <WikiContent content={article.content} className="wiki-body" noSanitize={jsMode === 'js'} format="markdown" contextUserId={article.author_id} />
                             </div>
 
                             {navigation && (

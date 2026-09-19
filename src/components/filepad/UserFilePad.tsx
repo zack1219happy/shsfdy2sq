@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faUser, faHome, faCoins, faGift, faPalette, faCog } from '@fortawesome/free-solid-svg-icons'
+import { faUser, faHome, faCoins, faGift, faPalette, faLaughBeam, faCog } from '@fortawesome/free-solid-svg-icons'
 import styles from '@/styles/filepad.module.css'
 
 export default function UserFilePad() {
@@ -32,6 +32,11 @@ export default function UserFilePad() {
           <span className={styles.chevronSlot} />
           <FontAwesomeIcon icon={faPalette} className={styles.treeIcon} />
           <span className={styles.treeLabel}>名称装扮</span>
+        </Link>
+        <Link href="/user/emoji" className={styles.treePage}>
+          <span className={styles.chevronSlot} />
+          <FontAwesomeIcon icon={faLaughBeam} className={styles.treeIcon} />
+          <span className={styles.treeLabel}>表情包管理</span>
         </Link>
         <Link href="/user" className={styles.treePage}>
           <span className={styles.chevronSlot} />

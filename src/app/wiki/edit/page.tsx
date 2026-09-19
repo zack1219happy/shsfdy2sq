@@ -129,7 +129,7 @@ export default function WikiEditPage() {
           autoFocus
         />
         <div className={forumStyles.editorWrapper}>
-          <MarkdownEditor value={content} onChange={setContent} className={forumStyles.editorNoBorder} />
+          <MarkdownEditor value={content} onChange={setContent} className={forumStyles.editorNoBorder} contextUserId={null} />
         </div>
       </div>
     </div>

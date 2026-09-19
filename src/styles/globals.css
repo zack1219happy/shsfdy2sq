@@ -522,3 +522,64 @@ html[data-toc-visible="true"] .page-content {
     margin-left: 1.25rem;
   }
 }
+
+
+/* ============================================================
+   表情 / @ 提及 — 渲染产物（正文、评论、私信共用）
+   行内跟随字号；单独成行时大一号。圆角用 CSS 变量。
+   ============================================================ */
+
+.md-emoji {
+  display: inline-flex;
+  vertical-align: -0.22em;
+  line-height: 1;
+}
+
+.md-emoji-img {
+  height: 1.2em;
+  width: auto;
+  max-width: 3em;
+  object-fit: contain;
+  vertical-align: middle;
+  border-radius: var(--border-radius);
+}
+
+/* 整段只有表情时放大一号 */
+p.md-emoji-line {
+  text-align: center;
+}
+
+p.md-emoji-line .md-emoji-img {
+  height: 4em;
+  max-width: 6em;
+}
+
+/* 管理员禁用的图片指纹：只显示占位，不显示原始语法 */
+.md-emoji-banned {
+  display: inline-block;
+  padding: 0 6px;
+  font-size: 12px;
+  color: #d33;
+  background: #fff2f2;
+  border-radius: var(--border-radius);
+  vertical-align: baseline;
+}
+
+/* 订阅的表情包被作者删除：历史内容里的占位 */
+.md-emoji-gone {
+  display: inline-block;
+  padding: 0 6px;
+  font-size: 12px;
+  color: var(--color-text-light);
+  background: var(--color-attr-bg);
+  border-radius: var(--border-radius);
+  vertical-align: baseline;
+}
+
+.md-mention {
+  color: var(--color-primary);
+}
+
+.md-mention [role="link"]:hover {
+  text-decoration: underline;
+}

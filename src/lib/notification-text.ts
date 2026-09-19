@@ -8,7 +8,7 @@ export interface NotificationSummaryInput {
   target_title: string | null
 }
 
-export type NotificationTargetKind = 'forum' | 'plaza' | 'wish' | 'wiki' | 'user'
+export type NotificationTargetKind = 'forum' | 'plaza' | 'wish' | 'wiki' | 'user' | 'agreement' | 'dm' | 'emoji'
 
 export interface NotificationTarget {
   kind: NotificationTargetKind
@@ -66,6 +66,20 @@ export function getNotificationTarget(page: string | null | undefined): Notifica
     return key ? { kind: 'wiki', key, canonicalPage: `wiki/${key}` } : null
   }
 
+  if (value.startsWith('agreement/')) {
+    const key = decode(value.slice('agreement/'.length))
+    return key ? { kind: 'agreement', key, canonicalPage: `agreement/${key}` } : null
+  }
+
+  if (value.startsWith('dm/')) {
+    const key = decode(value.slice('dm/'.length))
+    return key ? { kind: 'dm', key, canonicalPage: `dm?conv=${key}` } : null
+  }
+
+  if (value === 'emoji') {
+    return { kind: 'emoji', key: '', canonicalPage: 'user/emoji' }
+  }
+
   return null
 }
 
@@ -75,6 +89,9 @@ function targetNoun(target: NotificationTarget | null): string {
   if (target.kind === 'plaza') return '文章'
   if (target.kind === 'wish') return '许愿'
   if (target.kind === 'wiki') return '页面'
+  if (target.kind === 'agreement') return '公告'
+  if (target.kind === 'dm') return '私信'
+  if (target.kind === 'emoji') return '表情包'
   return '主页'
 }
 
@@ -135,6 +152,12 @@ export function formatNotificationSummary(notification: NotificationSummaryInput
       return `${actor}在${titledTarget}下发布了新动态：${message}`
     case 'dm':
       return `${actor}给你发来私信：${message}`
+    case 'mention':
+      return `${actor}在${titledTarget}里提到了你：${message}`
+    case 'mention_edit':
+      return `${actor}编辑了${titledTarget}，再次提到了你：${message}`
+    case 'emoji_pack_deleted':
+      return message
     default:
       return ensureContext(message, actor, target, title)
   }

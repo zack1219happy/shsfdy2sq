@@ -14,6 +14,10 @@ import Dialog from './Dialog'
 import { DEFAULT_CONFIG } from './config'
 import { findLineInPreview } from './scrollSync'
 import { useCodeCopy } from '@/lib/useCodeCopy'
+import { useMentionHydration } from '@/components/MentionHydrator'
+import { useEmojiContextMenu } from '@/lib/emoji/use-emoji-context-menu'
+import { getSession } from '@/lib/auth'
+import { useEmojiLibrary } from '@/lib/emoji/use-emoji-context'
 import styles from '@/styles/markdown-editor.module.css'
 import type { EditorProps, MarkdownEditorConfig, ToggleState, DialogRequest } from './types'
 
@@ -27,6 +31,7 @@ export default function Editor({
   onSubmit,
   noSanitizePreview,
   previewClassName,
+  contextUserId,
 }: EditorProps) {
   // 1. Config
   const merged: MarkdownEditorConfig = useMemo(
@@ -51,6 +56,11 @@ export default function Editor({
   // 防反馈循环：当一个方向正在同步时，另一个方向跳过
   const syncingRef = useRef(false)
 
+  // 表情身份：默认就是「正在写内容的自己」
+  const editorUserId = contextUserId === undefined ? (getSession()?.userId ?? null) : contextUserId
+  // 编辑自己的内容时预热表情库，预览里立刻能看到表情图
+  useEmojiLibrary(editorUserId && editorUserId === getSession()?.userId ? editorUserId : null)
+
   // 3. Dialog
   const { dialog, openDialog, closeDialog } = useDialog()
   const dialogFnRef = useRef<((data: Record<string, string>) => string) | null>(null)
@@ -58,6 +68,7 @@ export default function Editor({
   // 4. CodeMirror Hook
   const { viewRef, extensions, replaceSelection, scrollToLine, onCreateEditor } =
     useCodeMirror({
+      completion: { disableEmoji: !editorUserId },
       value,
       onChange,
       onSubmit,
@@ -133,8 +144,11 @@ export default function Editor({
     titleSlugMap,
     assetsMap,
     noSanitize: noSanitizePreview,
+    contextUserId: editorUserId,
   })
   useCodeCopy(previewRef)
+  const emojiMenu = useEmojiContextMenu(previewRef)
+  const mentionPortals = useMentionHydration(previewRef, previewHtml)
 
   // 6. Toolbar
   const { handleAction } = useToolbar({
@@ -184,7 +198,8 @@ export default function Editor({
               lineNumbers: true,
               highlightActiveLine: true,
               foldGutter: false,
-              autocompletion: false,
+              // @ 提及 / 表情补全需要（候选源由 completions.ts 提供）
+              autocompletion: true,
               bracketMatching: false,
               closeBrackets: false,
               indentOnInput: true,
@@ -222,6 +237,8 @@ export default function Editor({
           onClose={closeDialog}
         />
       )}
+      {emojiMenu}
+      {mentionPortals}
     </div>
   )
 }

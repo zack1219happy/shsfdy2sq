@@ -32,8 +32,11 @@ import katex from 'katex'
 import texmath from 'markdown-it-texmath'
 import anchor from 'markdown-it-anchor'
 import DOMPurify from 'isomorphic-dompurify'
-import { calloutPlugin, personPlugin, rawHtmlBlockPlugin, sandboxBlockPlugin, luoguCollapsePlugin } from './md-plugins'
+import { calloutPlugin, personPlugin, rawHtmlBlockPlugin, sandboxBlockPlugin, luoguCollapsePlugin, emojiPlugin, mentionPlugin } from './md-plugins'
 import type { PersonRegistry } from './people'
+import { createEmojiResolver } from './emoji/resolve'
+import { getLibrarySync } from './emoji/store'
+import { isKnownUser } from './mention/store'
 
 // ============================================================
 // 类型
@@ -56,6 +59,13 @@ export interface MarkdownOptions {
   anchor?: boolean
   /** Person 注册表，传入则启用 person 引用插件 */
   personRegistry?: PersonRegistry
+  /**
+   * 表情身份上下文：谁的正文就用谁的表达式。
+   * null / 不传（wiki、公告等无主内容）则完全不解析表情语法。
+   */
+  emojiContextUserId?: string | null
+  /** 渲染 @ 提及（默认启用，但仅在用户名白名单已就绪时生效） */
+  mention?: boolean
 }
 
 /** 高亮回调：统一输出 code-block-wrapper 结构（带复制按钮） */
@@ -87,6 +97,9 @@ const mdCache = new Map<string, MarkdownIt>()
 
 /**
  * 创建 markdown-it 实例：按需启用插件，相同选项复用缓存。
+ *
+ * 表情 / 提及插件读取的是运行时缓存（表情库、用户名白名单），
+ * 所以实例本身与数据快照无关，可以放心复用。
  */
 export function createMarkdown(options?: MarkdownOptions): MarkdownIt {
   const opts: MarkdownOptions = {
@@ -94,10 +107,11 @@ export function createMarkdown(options?: MarkdownOptions): MarkdownIt {
     texmath: true,
     injectLn: false,
     anchor: false,
+    mention: true,
     ...options,
   }
 
-  const key = JSON.stringify(opts)
+  const key = JSON.stringify(opts) + (opts.emojiContextUserId ? '|e' + opts.emojiContextUserId : '')
   const cached = mdCache.get(key)
   if (cached) return cached
 
@@ -133,9 +147,24 @@ export function createMarkdown(options?: MarkdownOptions): MarkdownIt {
   if (opts.personRegistry) {
     personPlugin(md, opts.personRegistry)
   }
+  if (opts.emojiContextUserId) {
+    // 解析时实时读缓存：库加载完成后重渲染即可正确显示
+    emojiPlugin(md, (name, pack) =>
+      resolveEmojiFor(opts.emojiContextUserId!, name, pack))
+  }
+  if (opts.mention !== false) {
+    mentionPlugin(md, isKnownUser)
+  }
 
   mdCache.set(key, md)
   return md
+}
+
+/** 在「内容作者」的表达式里查找（库未加载时返回 null，即按纯文字显示） */
+function resolveEmojiFor(userId: string, name: string, pack: string | null) {
+  const lib = getLibrarySync(userId)
+  const resolver = createEmojiResolver(lib, userId)
+  return resolver ? resolver(name, pack) : null
 }
 
 // ============================================================
@@ -270,12 +299,23 @@ export function renderAttributesFromFrontmatter(data: Record<string, unknown>): 
 }
 
 /**
+ * 表情语法退化为纯文字：{包:表情} → 表情，{表情} → 表情。
+ * 列表摘要 / 通知文案等不能出图的地方用。
+ */
+export function stripEmojiSyntax(text: string): string {
+  if (!text) return text
+  return text
+    .replace(/\{([^{}\s:]{1,24}):([^{}\s]{1,24})\}/g, '$2')
+    .replace(/\{([^{}\s:]{1,24})\}/g, '$1')
+}
+
+/**
  * 将 markdown 转为纯文本（浏览器 DOM textContent），用于列表卡片预览。
  */
 export function stripMarkdown(mdText: string, maxLen = 120): string {
   if (typeof window === 'undefined') return mdText.slice(0, maxLen)
   const mdInstance = createMarkdown({ highlight: false, texmath: false })
-  const html = mdInstance.render(mdText)
+  const html = mdInstance.render(stripEmojiSyntax(mdText))
   const div = document.createElement('div')
   div.innerHTML = html
   const text = (div.textContent || '').replace(/\s+/g, ' ').trim()

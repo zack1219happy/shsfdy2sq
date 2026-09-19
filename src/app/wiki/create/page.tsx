@@ -378,6 +378,7 @@ export default function WikiCreatePage() {
             value={content}
             onChange={setContent}
             className={forumStyles.editorNoBorder}
+            contextUserId={null}
           />
         </div>
 

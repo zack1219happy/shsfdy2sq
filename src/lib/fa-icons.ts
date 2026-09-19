@@ -28,6 +28,7 @@ import {
   faEye,
   faFileLines,
   faFolder,
+  faFolderPlus,
   faFolderOpen,
   faGavel,
   faGift,
@@ -52,6 +53,8 @@ import {
   faThumbsDown,
   faThumbsUp,
   faTimes,
+  faTrash,
+  faUpload,
   faUser,
   faUsers,
 } from '@fortawesome/free-solid-svg-icons'
@@ -104,6 +107,7 @@ register(faEnvelope)
 register(faEye)
 register(faFileLines)
 register(faFolder)
+register(faFolderPlus)
 register(faFolderOpen)
 register(faGavel)
 register(faGift)
@@ -137,6 +141,8 @@ register(faThumbsDown)
 register(faThumbsUp)
 register(faTimes)
 cssAlias(faTimes, 'times')
+register(faTrash)
+register(faUpload)
 register(faUser)
 register(faUsers)
 

@@ -35,6 +35,9 @@ export default function NoticePage() {
         wish_reply: '工单回复',
         wish_status_update: '工单动态',
         user_message: '主页留言',
+        mention: '提到你',
+        mention_edit: '提到你',
+        emoji_pack_deleted: '表情包',
       } as Record<string, string>)[typeFilter] ?? '通知'
     : '通知'
 
@@ -127,12 +130,21 @@ export default function NoticePage() {
             const isForum = target?.kind === 'forum'
             const isPlaza = target?.kind === 'plaza'
             const isWish = target?.kind === 'wish'
+            const isAgreement = target?.kind === 'agreement'
+            const isDm = target?.kind === 'dm'
+            const isEmoji = target?.kind === 'emoji'
             // wiki 审核通知的 page 带 'wiki/' 前缀，跳转前去掉
             const wikiSlug = target?.kind === 'wiki' ? target.key : pageKey
             const commentQuery = n.comment_id ? '&comment=' + encodeURIComponent(n.comment_id) : ''
             const cacheQuery = `&_=${cacheBust}`
-            const href = isUser && target
-              ? `${basePath}/user/mypage?user=${encodeURIComponent(target.key)}${commentQuery}${cacheQuery}`
+            const href = isEmoji
+              ? `${basePath}/user/emoji${cacheQuery}`
+              : isDm && target
+                ? `${basePath}/dm?conv=${encodeURIComponent(target.key)}${cacheQuery}`
+                : isAgreement && target
+                  ? `${basePath}/agreement/${encodeURIComponent(target.key)}${cacheQuery}`
+                  : isUser && target
+                    ? `${basePath}/user/mypage?user=${encodeURIComponent(target.key)}${commentQuery}${cacheQuery}`
               : isForum && target
                 ? `${basePath}/forum/post?id=${encodeURIComponent(target.key)}${commentQuery}${cacheQuery}`
                 : isPlaza && target
@@ -158,9 +170,18 @@ export default function NoticePage() {
             } else if (isWish) {
               if (n.type === 'wish_reply') label = '工单回复'
               else if (n.type === 'wish_status_update') label = '工单动态'
+            } else if (isAgreement) {
+              label = '公告'
+            } else if (isDm) {
+              label = '私信'
+            } else if (isEmoji) {
+              label = '表情包'
             } else if (isUser) {
               label = '主页留言'
             }
+            // 提及标签统一覆盖，避免落到「文章通知」这类兜底文案
+            if (n.type === 'mention') label = '提到你'
+            else if (n.type === 'mention_edit') label = '编辑后提到你'
 
             const isDeleted = n.excerpt === '评论已删除'
 
