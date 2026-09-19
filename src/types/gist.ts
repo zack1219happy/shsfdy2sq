@@ -139,6 +139,7 @@ export interface UserDecoration {
 export const BUILTIN_TAGS: Record<string, string[]> = {
   'Zack-wz': ['创始人'],
   'Irade-tqy': ['工程师'],
+  'yjy': ['非本土'],
 }
 
 /** 自定义 tag 的商品 value（用于识别） */
