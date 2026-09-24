@@ -135,11 +135,11 @@ export interface UserDecoration {
   tags: TagData[]
 }
 
-/** 内置身份 Tag（不消耗槽位，不可卸装） */
+/** 内置身份 Tag（按稳定用户 ID 匹配，不消耗槽位，不可卸装） */
 export const BUILTIN_TAGS: Record<string, string[]> = {
-  'Zack-wz': ['创始人'],
-  'Irade-tqy': ['工程师'],
-  'yjy': ['非本土'],
+  '3d5cb49d-f1c4-4661-879e-955e7ceebf62': ['创始人'],
+  'e7da1be9-29f3-41d6-a44a-e40b143c75f5': ['工程师'],
+  '41d81730-42a7-404f-9de8-1ae53c38c0f4': ['非本土'],
 }
 
 /** 自定义 tag 的商品 value（用于识别） */

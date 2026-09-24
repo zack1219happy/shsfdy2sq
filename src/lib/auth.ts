@@ -149,7 +149,16 @@ export async function login(
   });
 
   if (error) {
-    return { success: false, message: "登录服务暂时不可用，请稍后重试" };
+    const errorDetails = [
+      error.message,
+      error.code ? `code: ${error.code}` : null,
+      error.details || null,
+      error.hint ? `hint: ${error.hint}` : null,
+    ].filter(Boolean).join(' | ')
+    return {
+      success: false,
+      message: errorDetails || 'Unknown Supabase login RPC error',
+    };
   }
 
   const user = (data as LoginUserRow[])?.[0];

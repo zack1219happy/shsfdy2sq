@@ -32,7 +32,7 @@ async function fetchDecorations(): Promise<DecorationIndex | null> {
         const users = data as Array<{ id: string; username: string | null; color: string | null; equipped_tags: TagData[] | null }>
         for (const u of users) {
           if (!u.id) continue
-          const builtin = (BUILTIN_TAGS[u.username ?? ''] ?? []).map(v => ({ v, c: null }))
+          const builtin = (BUILTIN_TAGS[u.id] ?? []).map(v => ({ v, c: null }))
           byId.set(u.id, {
             username: u.username ?? null,
             color: u.color ?? null,

@@ -85,9 +85,10 @@ export default function AppearancePage() {
   const customTagPurchase = useMemo(() => purchases.find(p => p.item_type === 'tag' && p.value === CUSTOM_TAG_VALUE), [purchases])
   const isCustomEquipped = customTagText.trim().length > 0 && currentTags.includes(customTagText.trim())
 
-  // 当前用户名（从 session）
+  // 当前用户 ID（从 session）；内置标签不受用户名修改影响
+  const userId = session?.userId ?? ''
   const username = session?.username ?? ''
-  const builtinTags = BUILTIN_TAGS[username] ?? []
+  const builtinTags = BUILTIN_TAGS[userId] ?? []
 
   // 总共可显示的 tags = 内置 + 已装备（最多 3 个用户 tag）
   const displayTags = [...builtinTags, ...currentTags]
@@ -198,7 +199,7 @@ export default function AppearancePage() {
     if (!trimmed || trimmed.length > 5) return
 
     // 替换旧自定义 tag 值
-    const otherTags = currentTags.filter(t => t !== currentTags.find(ct => !ownedTags.some(ot => ot.value === ct) && !BUILTIN_TAGS[session?.username ?? '']?.includes(ct)))
+    const otherTags = currentTags.filter(t => t !== currentTags.find(ct => !ownedTags.some(ot => ot.value === ct) && !BUILTIN_TAGS[session?.userId ?? '']?.includes(ct)))
     const newTags = otherTags.includes(trimmed) ? otherTags : [...otherTags, trimmed]
     if (newTags.length > 3) return
     setSaving(true)
