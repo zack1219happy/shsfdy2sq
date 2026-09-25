@@ -124,14 +124,14 @@ test.describe('摘要与旧内容兼容', () => {
 test.describe('提及 / 表情包通知文案与跳转', () => {
   test('首次提及与编辑后提及文案区分', () => {
     expect(formatNotificationSummary({
-      from_username: 'yjy', page: 'plaza/my-slug', excerpt: '正文片段',
+      from_username: 'sample-user', page: 'plaza/my-slug', excerpt: '正文片段',
       type: 'mention', target_title: '我的文章',
-    })).toBe('yjy在文章《我的文章》里提到了你：正文片段')
+    })).toBe('sample-user在文章《我的文章》里提到了你：正文片段')
 
     expect(formatNotificationSummary({
-      from_username: 'yjy', page: 'forum/00000000-0000-0000-0000-000000000001', excerpt: '正文',
+      from_username: 'sample-user', page: 'forum/00000000-0000-0000-0000-000000000001', excerpt: '正文',
       type: 'mention_edit', target_title: '帖子标题',
-    })).toBe('yjy编辑了帖子《帖子标题》，再次提到了你：正文')
+    })).toBe('sample-user编辑了帖子《帖子标题》，再次提到了你：正文')
   })
 
   test('公告 / 私信 / 表情包通知都能定位到目标', () => {
