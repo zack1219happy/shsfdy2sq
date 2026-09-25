@@ -61,12 +61,11 @@ export interface UserProfile {
     username: string
     name: string
     role: string
-    student_id: string
+    student_id?: string | null
     motto: string
     bio: string
     color: string | null
     equipped_tags: unknown[]
-    total_points: number
     privacy_heatmap: PrivacyLevel
     privacy_stats: PrivacyLevel
     privacy_posts: PrivacyLevel

@@ -15,7 +15,7 @@ export default function NotFound() {
     ) {
       // 把 /home -> / 映射掉，因为首页实际在 / 不在 /home/
       const normalized = window.location.pathname.replace(/^\/home(?=\/|$)/i, '')
-      window.location.href = `${BASE_PATH}${normalized}${window.location.search}${window.location.hash}`
+      window.location.replace(`${BASE_PATH}${normalized}${window.location.search}${window.location.hash}`)
     }
   }, [])
 

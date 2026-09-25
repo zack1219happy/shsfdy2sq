@@ -106,17 +106,23 @@ function UserMypage() {
             })
             setInitials(getPinyinInitials(p.name ?? ''))
 
-            // 2. 拉取统计数据 + 积分 + 关注状态
-            const uid = p.id
-            const [statsRes2, , followRes2] = await Promise.all([
-                supabase.rpc('get_user_stats', { p_user_id: uid }),
-                supabase.rpc('get_user_daily_points_from_tx', { p_user_id: uid, p_days: 14 }),
-                supabase.rpc('get_follow_state', { p_target_username: p.username }),
+            // Check mutual-follow state before requesting privacy-controlled data.
+            const { data: followData } = await supabase.rpc('get_follow_state', { p_target_username: p.username })
+            const viewerFollowState = (followData as { state: FollowState } | null)?.state ?? 'none'
+            if (profileRequestIdRef.current !== requestId) return
+            setFollowState(viewerFollowState)
+
+            const viewerIsSelf = session?.userId === p.id
+            const canView = (level: PrivacyLevel) =>
+                viewerIsSelf || level === 'public' || (level === 'friends' && viewerFollowState === 'mutual')
+            const [statsRes, dailyRes] = await Promise.all([
+                canView(p.privacy_stats) ? supabase.rpc('get_user_stats', { p_user_id: p.id }) : Promise.resolve({ data: null, error: null }),
+                canView(p.privacy_heatmap) ? supabase.rpc('get_user_daily_points_from_tx', { p_user_id: p.id, p_days: 14 }) : Promise.resolve({ data: null, error: null }),
             ])
 
             if (profileRequestIdRef.current !== requestId) return
-            if (statsRes2.data) {
-                const d = statsRes2.data as Record<string, number>
+            if (statsRes.data) {
+                const d = statsRes.data as Record<string, number>
                 setStats({
                     currentPoints: d.total_points ?? 0,
                     postsCount: d.posts_count ?? 0,
@@ -125,19 +131,22 @@ function UserMypage() {
                     pageEditsCount: d.page_edits_count ?? 0,
                     wishesCount: d.wishes_count ?? 0,
                 })
+            } else {
+                setStats(null)
             }
-            // 从 points_transactions 表按日聚合积分（user_points_daily 表可能为空）
-            const { data: txData } = await supabase.rpc('get_user_daily_points_from_tx', { p_user_id: uid, p_days: 14 })
             if (profileRequestIdRef.current !== requestId) return
-            if (txData) setDailyPoints((txData as { date: string; points: number }[]).map(d => ({ date: d.date.slice(5), points: d.points })))
-            if (followRes2.data) setFollowState((followRes2.data as { state: FollowState }).state)
+            if (dailyRes.data) {
+                setDailyPoints((dailyRes.data as { date: string; points: number }[]).map(d => ({ date: d.date.slice(5), points: d.points })))
+            } else {
+                setDailyPoints([])
+            }
 
         } catch (e) {
             if (profileRequestIdRef.current !== requestId) return
             setError(e instanceof Error ? e.message : '加载失败')
         }
         if (profileRequestIdRef.current === requestId) setLoading(false)
-    }, [])
+    }, [session])
 
     // URL 或 session 变化 → 加载数据
     useEffect(() => {
@@ -199,6 +208,16 @@ function UserMypage() {
     const handleTabSelect = useCallback((tab: Tab) => {
         setActiveTab(tab)
         if (!profile) return
+        const viewerIsSelf = session?.userId === profile.id
+        const visibility = tab === 'posts' ? privacy.posts : tab === 'articles' ? privacy.articles : privacy.follows
+        if ((tab === 'posts' || tab === 'articles' || tab === 'follows') &&
+            !(viewerIsSelf || visibility === 'public' || (visibility === 'friends' && followState === 'mutual'))) {
+            setPosts([])
+            setArticles([])
+            setFollowers([])
+            setFollowing([])
+            return
+        }
         const needsLoad =
             (tab === 'posts' && posts.length === 0) ||
             (tab === 'articles' && articles.length === 0) ||
@@ -212,7 +231,7 @@ function UserMypage() {
             return Promise.resolve()
         })()
         p?.finally(() => setTabLoading(false))
-    }, [profile, posts.length, articles.length, following.length, followers.length, loadPosts, loadArticles, loadFollows])
+    }, [profile, session, privacy, followState, posts.length, articles.length, following.length, followers.length, loadPosts, loadArticles, loadFollows])
 
     const togglePrivacy = useCallback(async (section: keyof PrivacySettings) => {
         const cycle: PrivacyLevel[] = ['public', 'friends', 'private']
@@ -270,6 +289,7 @@ function UserMypage() {
                                 <StatsStrip
                                     stats={stats}
                                     isSelf={isSelf}
+                                    isMutual={followState === 'mutual'}
                                     visibility={privacy.stats}
                                     onToggleVisibility={isSelf ? () => togglePrivacy('stats') : undefined}
                                 />
@@ -280,6 +300,7 @@ function UserMypage() {
                     {activeTab === 'home' && (
                         <HomeTab
                             isSelf={isSelf}
+                            isMutual={followState === 'mutual'}
                             profile={profile}
                             dailyPoints={dailyPoints}
                             privacy={privacy}
@@ -293,6 +314,7 @@ function UserMypage() {
                             posts={posts}
                             loading={tabLoading}
                             isSelf={isSelf}
+                            isMutual={followState === 'mutual'}
                             visibility={privacy.posts}
                             onToggleVisibility={isSelf ? () => togglePrivacy('posts') : undefined}
                         />
@@ -302,6 +324,7 @@ function UserMypage() {
                             articles={articles}
                             loading={tabLoading}
                             isSelf={isSelf}
+                            isMutual={followState === 'mutual'}
                             visibility={privacy.articles}
                             onToggleVisibility={isSelf ? () => togglePrivacy('articles') : undefined}
                         />
@@ -315,6 +338,7 @@ function UserMypage() {
                             followers={followers}
                             loading={tabLoading}
                             isSelf={isSelf}
+                            isMutual={followState === 'mutual'}
                             visibility={privacy.follows}
                             onToggleVisibility={isSelf ? () => togglePrivacy('follows') : undefined}
                             activeSubTab={followsSubTab}

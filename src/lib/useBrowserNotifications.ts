@@ -116,7 +116,9 @@ function showNotif(title: string, body: string) {
     const n = new Notification(title, { body, icon, tag: 'wiki-notif' })
     n.onclick = () => {
       window.focus()
-      window.location.href = `${origin}${BASE_PATH}/notice`
+      // Notification callbacks are outside React Router; navigate the static-export URL directly.
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+      window.location.assign(`${origin}${BASE_PATH}/notice`)
       n.close()
     }
   } catch {

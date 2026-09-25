@@ -8,20 +8,22 @@ import type { FollowUser, ForumPostItem, PlazaArticleItem, PrivacyLevel } from '
 import { PrivacyToggle } from './StatsStrip'
 import styles from '@/styles/mypage.module.css'
 
+function canView(visibility: PrivacyLevel, isSelf: boolean, isMutual: boolean): boolean {
+    return isSelf || visibility === 'public' || (visibility === 'friends' && isMutual)
+}
+
 /** 帖子列表 tab */
 export function PostsTab({
-    posts, loading, isSelf, visibility, onToggleVisibility,
+    posts, loading, isSelf, isMutual, visibility, onToggleVisibility,
 }: {
     posts: ForumPostItem[]
     loading?: boolean
     isSelf: boolean
+    isMutual: boolean
     visibility: PrivacyLevel
     onToggleVisibility?: () => void
 }) {
-    // 非自己且非公开 → 检查互关
-    const canView = isSelf || visibility === 'public'
-
-    if (!canView) {
+    if (!canView(visibility, isSelf, isMutual)) {
         return (
             <div className={styles.tabContent}>
                 <div className={styles.placeholderTab}>
@@ -85,14 +87,26 @@ export function PostsTab({
 
 /** 文章列表 tab */
 export function ArticlesTab({
-    articles, loading, isSelf, visibility, onToggleVisibility,
+    articles, loading, isSelf, isMutual, visibility, onToggleVisibility,
 }: {
     articles: PlazaArticleItem[]
     loading?: boolean
     isSelf: boolean
+    isMutual: boolean
     visibility: PrivacyLevel
     onToggleVisibility?: () => void
 }) {
+    if (!canView(visibility, isSelf, isMutual)) {
+        return (
+            <div className={styles.tabContent}>
+                <div className={styles.placeholderTab}>
+                    <div className={styles.placeholderIcon}><FaIcon name="key" /></div>
+                    <p className={styles.placeholderText}>对方未公开文章列表</p>
+                </div>
+            </div>
+        )
+    }
+
     // 非本人仅显示公开文章
     const visibleArticles = isSelf ? articles : articles.filter(a => a.is_public)
 
@@ -153,20 +167,19 @@ export function ArticlesTab({
 
 /** 关注/粉丝 tab */
 export function FollowsTab({
-    following, followers, loading, isSelf, visibility, onToggleVisibility, activeSubTab, onSubTabChange,
+    following, followers, loading, isSelf, isMutual, visibility, onToggleVisibility, activeSubTab, onSubTabChange,
 }: {
     following: FollowUser[]
     followers: FollowUser[]
     loading?: boolean
     isSelf: boolean
+    isMutual: boolean
     visibility: PrivacyLevel
     onToggleVisibility?: () => void
     activeSubTab: 'following' | 'followers'
     onSubTabChange: (t: 'following' | 'followers') => void
 }) {
-    const canView = isSelf || visibility === 'public'
-
-    if (!canView) {
+    if (!canView(visibility, isSelf, isMutual)) {
         return (
             <div className={styles.tabContent}>
                 <div className={styles.placeholderTab}>

@@ -25,7 +25,6 @@ function main() {
   }
 
   const cssFiles = fs.readdirSync(cssDir).filter(f => f.endsWith('.css'))
-  let stripped = 0
 
   for (const cssFile of cssFiles) {
     const cssPath = path.join(cssDir, cssFile)
@@ -41,7 +40,6 @@ function main() {
     )
 
     fs.writeFileSync(cssPath, newContent)
-    stripped++
     console.log(`  ✔ 清除字体格式引用: ${cssFile}`)
   }
 
