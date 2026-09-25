@@ -104,7 +104,7 @@ const mentionSource: CompletionSource = async (cx): Promise<CompletionResult | n
 
 /* ---------- 表情候选 ---------- */
 
-function emojiCompletion(e: EmojiItem, pack: string | null): Completion {
+function emojiCompletion(e: EmojiItem): Completion {
   return {
     label: e.name,
     // 一行一个：只显示表情名
@@ -146,7 +146,7 @@ const emojiSource: CompletionSource = async (cx): Promise<CompletionResult | nul
     if (!target) return null
     const options = target.emojis
       .filter((e) => !e.banned && e.name.toLowerCase().includes(query.toLowerCase()))
-      .map((e) => emojiCompletion(e, packName))
+      .map((e) => emojiCompletion(e))
     if (options.length === 0) return null
     return { from: cx.pos - query.length, options, validFor: /^[^{}\s:]*$/ }
   }
@@ -160,7 +160,7 @@ const emojiSource: CompletionSource = async (cx): Promise<CompletionResult | nul
       .map((p) => packCompletion(p.name)),
     ...lib.emojis
       .filter((e) => !e.banned && e.name.toLowerCase().includes(lower))
-      .map((e) => emojiCompletion(e, null)),
+      .map((e) => emojiCompletion(e)),
   ]
   if (options.length === 0) return null
   return { from: cx.pos - query.length, options, validFor: /^[^{}:\s]*$/ }

@@ -17,9 +17,10 @@ const MarkdownEditor = dynamic(
 
 /** "用户主页" tab 内容 */
 export function HomeTab({
-    isSelf, profile, dailyPoints, privacy, onTogglePrivacy, stats, commentAnchorKey,
+    isSelf, isMutual, profile, dailyPoints, privacy, onTogglePrivacy, stats, commentAnchorKey,
 }: {
     isSelf: boolean
+    isMutual: boolean
     profile: UserProfile
     dailyPoints: DailyPoints[]
     privacy: PrivacySettings
@@ -35,6 +36,7 @@ export function HomeTab({
                     <StatsStrip
                         stats={stats}
                         isSelf={isSelf}
+                        isMutual={isMutual}
                         visibility={privacy.stats}
                         onToggleVisibility={isSelf ? () => onTogglePrivacy('stats') : undefined}
                     />
@@ -43,6 +45,7 @@ export function HomeTab({
             <HeatmapWidget
                 dailyPoints={dailyPoints}
                 isSelf={isSelf}
+                isMutual={isMutual}
                 visibility={privacy.heatmap}
                 onToggleVisibility={isSelf ? () => onTogglePrivacy('heatmap') : undefined}
             />
@@ -63,13 +66,16 @@ export function HomeTab({
 
 /** 最近两周积分热力图 */
 function HeatmapWidget({
-    dailyPoints, isSelf, visibility, onToggleVisibility,
+    dailyPoints, isSelf, isMutual, visibility, onToggleVisibility,
 }: {
     dailyPoints: DailyPoints[]
     isSelf: boolean
+    isMutual: boolean
     visibility: PrivacyLevel
     onToggleVisibility?: () => void
 }) {
+    if (!isSelf && visibility !== 'public' && !(visibility === 'friends' && isMutual)) return null
+
     const totalWeekly = dailyPoints.reduce((sum, d) => sum + d.points, 0)
 
     return (

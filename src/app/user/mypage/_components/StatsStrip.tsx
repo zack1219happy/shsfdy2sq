@@ -6,13 +6,16 @@ import styles from '@/styles/mypage.module.css'
 
 /** tab 栏同行的统计条 */
 export function StatsStrip({
-    stats, isSelf, visibility, onToggleVisibility,
+    stats, isSelf, isMutual, visibility, onToggleVisibility,
 }: {
     stats: UserStats
     isSelf: boolean
+    isMutual: boolean
     visibility: PrivacyLevel
     onToggleVisibility?: () => void
 }) {
+    if (!isSelf && visibility !== 'public' && !(visibility === 'friends' && isMutual)) return null
+
     const items: { label: string; value: number }[] = [
         { label: '累计积分', value: stats.currentPoints },
         { label: '累计发帖', value: stats.postsCount },

@@ -58,11 +58,6 @@ export function clearSession(): void {
   void supabase.auth.signOut().catch(() => {});
 }
 
-export function isRpcFallbackSession(): boolean {
-  if (typeof window === "undefined") return false;
-  return localStorage.getItem(RPC_FALLBACK_SESSION_KEY) === "1";
-}
-
 /**
  * 判断当前用户是否有权限删除指定用户的评论
  */
@@ -83,7 +78,7 @@ export interface LoginResult {
   bannedUntil?: string | null; // ISO 时间戳，非空 = 被封禁
 }
 
-type LoginStatus = 'success' | 'banned' | 'ip_required';
+type LoginStatus = 'success' | 'banned' | 'ip_required' | 'rate_limited' | 'password_setup_required';
 
 /** login RPC 返回的用户行 */
 interface LoginUserRow {
@@ -113,19 +108,58 @@ export function clearStoredSession(): void {
   for (const key of AUTH_STORAGE_KEYS) localStorage.removeItem(key);
 }
 
-function clearAuthStorage(): void {
-  if (typeof window === "undefined") return;
-  for (const key of AUTH_STORAGE_KEYS) localStorage.removeItem(key);
-}
-
-function clearAuthOnlySession(): void {
-  clearAuthStorage();
-  void supabase.auth.signOut({ scope: 'local' }).catch(() => {});
-}
-
 function clearLocalAuthSession(): void {
   clearStoredSession();
   void supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+}
+
+function normalizeIp(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const ip = value.trim();
+  const ipv4 = /^(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/;
+  if (ipv4.test(ip)) return ip;
+  try {
+    const hostname = new URL(`http://[${ip}]/`).hostname;
+    return hostname.startsWith('[') && hostname.endsWith(']') ? hostname.slice(1, -1) : null;
+  } catch {
+    return null;
+  }
+}
+
+async function getClientIp(): Promise<string | null> {
+  const deadline = Date.now() + 4500;
+  const lookups: Array<(signal: AbortSignal) => Promise<unknown>> = [
+    async (signal) => {
+      const response = await fetch('https://api.ipify.org?format=json', { signal });
+      if (!response.ok) throw new Error('IP lookup failed');
+      return (await response.json())?.ip;
+    },
+    async (signal) => {
+      const response = await fetch('https://ip.czl.net/api/query', { signal });
+      if (!response.ok) throw new Error('IP lookup failed');
+      const result = await response.json();
+      return result?.code === 200 ? result?.data?.ip : null;
+    },
+    async (signal) => {
+      const response = await fetch('https://api.ip.sb/ip', { signal });
+      if (!response.ok) throw new Error('IP lookup failed');
+      return response.text();
+    },
+  ];
+
+  for (const lookup of lookups) {
+    const timeout = Math.min(1500, deadline - Date.now());
+    if (timeout <= 0) break;
+    try {
+      const rawIp = await lookup(AbortSignal.timeout(timeout));
+      const ip = normalizeIp(rawIp);
+      if (ip) return ip;
+    } catch {
+      // Continue with the next public IP service. If all fail, the existing
+      // database behavior receives NULL and skips the IP association check.
+    }
+  }
+  return null;
 }
 
 export async function login(
@@ -134,13 +168,8 @@ export async function login(
 ): Promise<LoginResult> {
   const trimmed = nameOrUsername.trim();
 
-  // 获取客户端公网 IP（通过免费 IP 服务）
-  let clientIp: string | null = null;
-  try {
-    const res = await fetch('https://api.ipify.org?format=json', { signal: AbortSignal.timeout(2000) });
-    const data = await res.json();
-    if (typeof data?.ip === 'string' && data.ip.trim()) clientIp = data.ip.trim();
-  } catch { /* 没有白名单时继续登录；白名单启用时由 RPC 负责拒绝缺失 IP */ }
+  // Try the primary service, then one China-focused and one international fallback.
+  const clientIp = await getClientIp();
 
   const { data, error } = await supabase.rpc("login", {
     p_name_or_username: trimmed,
@@ -170,6 +199,14 @@ export async function login(
     return { success: false, message: "当前网络无法完成安全验证，请稍后重试" };
   }
 
+  if (user.login_status === 'rate_limited') {
+    return { success: false, message: "登录尝试过多，请稍后重试" };
+  }
+
+  if (user.login_status === 'password_setup_required') {
+    return { success: false, message: "此账号需要先重置密码，请联系管理员" };
+  }
+
   // 封禁检查
   if (user.login_status === 'banned' || user.banned_until) {
     const bannedUntil = user.banned_until;
@@ -191,6 +228,11 @@ export async function login(
 
   if (!user.id || !user.student_id) {
     return { success: false, message: "登录服务返回了无效账号信息，请稍后重试" };
+  }
+
+  if (user.has_password !== true) {
+    clearLocalAuthSession();
+    return { success: false, message: "账号尚未设置密码，请联系管理员重置密码" };
   }
 
   const username = user.username || user.username_out;
@@ -232,16 +274,13 @@ export async function login(
         return { success: false, message: "密码认证未同步完成，请稍后重试" };
       }
     }
-  } else if (!authSession && !user.has_password) {
-    authSession = await signIn(user.student_id);
   }
 
   if (!authSession) {
-    localStorage.setItem(RPC_FALLBACK_SESSION_KEY, "1");
-    clearAuthOnlySession();
-  } else {
-    localStorage.removeItem(RPC_FALLBACK_SESSION_KEY);
+    clearLocalAuthSession();
+    return { success: false, message: "无法建立 Supabase 登录会话，请检查网络后重试" };
   }
+  localStorage.removeItem(RPC_FALLBACK_SESSION_KEY);
 
   const session: UserSession = {
     userId: user.id,
@@ -256,11 +295,6 @@ export async function login(
 }
 
 export async function tryRestoreSessionFromAuth(): Promise<void> {
-  if (isRpcFallbackSession()) {
-    getSession();
-    return;
-  }
-
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) {
     clearLocalAuthSession();
@@ -282,6 +316,7 @@ export async function tryRestoreSessionFromAuth(): Promise<void> {
     role: current.role,
     loginTime: new Date().toISOString(),
   };
+  localStorage.removeItem(RPC_FALLBACK_SESSION_KEY);
   localStorage.setItem(SESSION_KEY, JSON.stringify(restored));
 }
 

@@ -15,7 +15,7 @@ try {
   console.log('[notify] node-notifier 未安装，自动安装…');
   try {
     execSync(
-      'npm install node-notifier --no-save --registry=https://registry.npmmirror.com',
+      'npm install node-notifier@10.0.1 --no-save --registry=https://registry.npmmirror.com',
       { stdio: 'pipe', cwd: __dirname, timeout: 120000 },
     );
     notifier = require('node-notifier');
