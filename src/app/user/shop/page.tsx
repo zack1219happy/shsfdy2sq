@@ -60,6 +60,17 @@ export default function ShopPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  useEffect(() => {
+    if (pageState !== 'ready') return
+    const submissionId = new URLSearchParams(window.location.search).get('submission')
+    if (!submissionId || !pendingSubs.some((submission) => submission.id === submissionId)) return
+
+    document.getElementById(`tag-submission-${submissionId}`)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+    })
+  }, [pageState, pendingSubs])
+
   const handleBuy = useCallback(async (itemId: string) => {
     setBuyingId(itemId)
     try {
@@ -322,7 +333,7 @@ function PendingSubCard({
   onReject: () => void
 }) {
   return (
-    <div className={styles.shopCard} data-pending-sub>
+    <div id={`tag-submission-${sub.id}`} className={styles.shopCard} data-pending-sub>
       {/* 预览区 */}
       <div className={styles.shopPreview}>
         <TagPreview value={sub.value} color={sub.tag_color} custom={false} />
