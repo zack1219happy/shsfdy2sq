@@ -37,6 +37,7 @@ import type { PersonRegistry } from './people'
 import { createEmojiResolver } from './emoji/resolve'
 import { getLibrarySync } from './emoji/store'
 import { isKnownUser } from './mention/store'
+import { BASE_PATH } from './constants'
 
 // ============================================================
 // 类型
@@ -180,12 +181,33 @@ export function renderMarkdown(
   options?: MarkdownOptions,
   sanitize = true,
 ): string {
-  const md = createMarkdown(options)
-  const raw = addImageModalSupport(md.render(content))
-  if (sanitize && typeof window !== 'undefined') {
-    return DOMPurify.sanitize(raw)
-  }
-  return raw
+    const md = createMarkdown(options)
+    const raw = addBasePathToInternalLinks(addImageModalSupport(md.render(content)))
+    if (sanitize && typeof window !== 'undefined') {
+        return DOMPurify.sanitize(raw)
+    }
+    return raw
+}
+
+/** 给 HTML 中的站内根路径链接添加部署前缀，保留已带前缀的路径。 */
+export function addBasePathToInternalLinks(html: string, basePath = BASE_PATH): string {
+    const prefix = basePath.replace(/\/+$/, '')
+    if (!prefix) return html
+
+    return html.replace(/<a\b[^>]*>/gi, (tag) =>
+        tag.replace(/(\s)href\s*=\s*(["'])(.*?)\2/i, (attribute, spacing, quote, href: string) => {
+            if (!href.startsWith('/') || href.startsWith('//')) return attribute
+
+            const isAlreadyPrefixed =
+                href === prefix ||
+                href.startsWith(`${prefix}/`) ||
+                href.startsWith(`${prefix}?`) ||
+                href.startsWith(`${prefix}#`)
+            if (isAlreadyPrefixed) return attribute
+
+            return `${spacing}href=${quote}${prefix}${href}${quote}`
+        }),
+    )
 }
 
 /** 渲染 Markdown（同时启用 person 引用插件） */
