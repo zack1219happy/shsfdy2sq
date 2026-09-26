@@ -1,11 +1,24 @@
 import { test, expect, type Page } from '@playwright/test'
 
-// ── 真实测试账户（通过 UI 登录表单建立真实 Supabase auth session，RPC 的 auth.uid() 生效）──
-const TEST_USER = { username: 'test', pwd: '123456' }
-const ADMIN_USER = { username: 'Irade-tqy', pwd: 'Tong20111030' }
+// Live-auth credentials are read from the ignored .env.local file.
+type E2ECredentials = { username: string; pwd: string }
+
+function readCredentials(prefix: 'E2E_TEST' | 'E2E_ADMIN'): E2ECredentials | null {
+  const username = process.env[`${prefix}_USERNAME`]
+  const pwd = process.env[`${prefix}_PASSWORD`]
+  return username && pwd ? { username, pwd } : null
+}
+
+const TEST_USER = readCredentials('E2E_TEST')
+const ADMIN_USER = readCredentials('E2E_ADMIN')
 
 /** 通过 UI 登录表单真实登录 */
-async function loginAs(page: Page, { username, pwd }: { username: string; pwd: string }) {
+async function loginAs(page: Page, user: E2ECredentials | null, prefix: 'E2E_TEST' | 'E2E_ADMIN') {
+  if (!user) {
+    test.skip(true, `Set ${prefix}_USERNAME and ${prefix}_PASSWORD in .env.local to run this live-auth test`)
+    return
+  }
+  const { username, pwd } = user
   await page.goto('/')
   await page.locator('#auth-name').fill(username)
   await page.locator('#auth-cred').fill(pwd)
@@ -16,7 +29,7 @@ async function loginAs(page: Page, { username, pwd }: { username: string; pwd: s
 
 test.describe('#0031 标签投稿（积分商城内投稿 + 审核）', () => {
   test('商城页底部有投稿入口，打开 modal 后正常提交校验', async ({ page }) => {
-    await loginAs(page, TEST_USER)
+    await loginAs(page, TEST_USER, 'E2E_TEST')
     await page.goto('/user/shop')
     await page.waitForLoadState('networkidle')
 
@@ -56,7 +69,7 @@ test.describe('#0031 标签投稿（积分商城内投稿 + 审核）', () => {
   })
 
   test('普通用户看不到待审核投稿（商城内无同意/驳回按钮）', async ({ page }) => {
-    await loginAs(page, TEST_USER)
+    await loginAs(page, TEST_USER, 'E2E_TEST')
     await page.goto('/user/shop')
     await page.waitForLoadState('networkidle')
     await expect(page.getByRole('button', { name: /驳回/ })).toHaveCount(0)
@@ -69,7 +82,7 @@ test.describe('#0031 标签投稿（积分商城内投稿 + 审核）', () => {
     const tagText = 'e2e验证' + (Date.now() % 100000)
 
     // ── test 提交投稿 ──
-    await loginAs(page, TEST_USER)
+    await loginAs(page, TEST_USER, 'E2E_TEST')
     await page.goto('/user/shop')
     await page.waitForLoadState('networkidle')
     await page.getByRole('button', { name: /没有想要的标签？投稿一个/ }).click()
@@ -80,7 +93,7 @@ test.describe('#0031 标签投稿（积分商城内投稿 + 审核）', () => {
     await page.getByRole('button', { name: '完成' }).click()
 
     // ── 管理员登录商城，看到该待审核商品卡片（样式同普通商品，按钮为同意/驳回）──
-    await loginAs(page, ADMIN_USER)
+    await loginAs(page, ADMIN_USER, 'E2E_ADMIN')
     await page.goto('/user/shop')
     await page.waitForLoadState('networkidle')
     const card = page.locator('[data-pending-sub]', { hasText: tagText })
@@ -98,7 +111,7 @@ test.describe('#0031 标签投稿（积分商城内投稿 + 审核）', () => {
 
 test.describe('#0035 bug2 论坛列表去点踩', () => {
   test('论坛置顶帖正常渲染且列表无点踩图标', async ({ page }) => {
-    await loginAs(page, TEST_USER)
+    await loginAs(page, TEST_USER, 'E2E_TEST')
     await page.goto('/forum')
     await page.waitForLoadState('networkidle')
 
@@ -113,7 +126,7 @@ test.describe('#0035 bug2 论坛列表去点踩', () => {
 
 test.describe('#0035 bug1 渐变名字兜底', () => {
   test('个人主页名字正常渲染', async ({ page }) => {
-    await loginAs(page, TEST_USER)
+    await loginAs(page, TEST_USER, 'E2E_TEST')
     await page.goto('/user/mypage?user=zyj')
     await page.waitForLoadState('networkidle')
     // 页面加载成功，渲染出用户名
@@ -123,7 +136,7 @@ test.describe('#0035 bug1 渐变名字兜底', () => {
 
 test.describe('#0035 bug3 沙箱安全模式', () => {
   test('sandbox 代码块在安全模式正常显示源码（阅读原文）', async ({ page }) => {
-    await loginAs(page, TEST_USER)
+    await loginAs(page, TEST_USER, 'E2E_TEST')
     await page.goto('/plaza/post?slug=' + encodeURIComponent('关于贪吃蛇-msg8iops'))
     await page.waitForLoadState('networkidle')
 
@@ -138,7 +151,7 @@ test.describe('#0035 bug3 沙箱安全模式', () => {
 
 test.describe('#0036 洛谷折叠框', () => {
   test('编辑器工具栏有折叠框按钮', async ({ page }) => {
-    await loginAs(page, TEST_USER)
+    await loginAs(page, TEST_USER, 'E2E_TEST')
     await page.goto('/forum/new')
     await page.waitForLoadState('networkidle')
     const collapseBtn = page.getByTitle('插入折叠框')
@@ -146,7 +159,7 @@ test.describe('#0036 洛谷折叠框', () => {
   })
 
   test('点击折叠框按钮弹出模板选择，选洛谷后插入洛谷模板', async ({ page }) => {
-    await loginAs(page, TEST_USER)
+    await loginAs(page, TEST_USER, 'E2E_TEST')
     await page.goto('/forum/new')
     await page.waitForLoadState('networkidle')
 

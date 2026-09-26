@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import FaIcon from '@/components/FaIcon'
 import { getSession } from '@/lib/auth'
+import { fetchUserBuiltinTags } from '@/lib/api/users'
 import { equipColor, equipTags, fetchUserEquipped, fetchUserExclusiveTags, fetchUserPurchases } from '@/lib/api/shop'
 import type { UserPurchase, TagData } from '@/types/gist'
-import { BUILTIN_TAGS, CUSTOM_TAG_VALUE } from '@/types/gist'
+import { CUSTOM_TAG_VALUE } from '@/types/gist'
 import styles from '@/styles/points.module.css'
 
 type PageState = 'loading' | 'ready' | 'error'
@@ -28,6 +29,7 @@ export default function AppearancePage() {
   const [currentColor, setCurrentColor] = useState<string | null>(null)
   const [currentColorId, setCurrentColorId] = useState<string | null>(null)
   const [currentTags, setCurrentTags] = useState<string[]>([])
+  const [builtinTags, setBuiltinTags] = useState<string[]>([])
 
   // 自定义 tag 输入
   const [customTagText, setCustomTagText] = useState('')
@@ -37,15 +39,18 @@ export default function AppearancePage() {
   const [saving, setSaving] = useState(false)
 
   const loadData = useCallback(async () => {
+    if (!session) return
     await Promise.all([
       fetchUserPurchases(),
       fetchUserEquipped(),
       fetchUserExclusiveTags(),
-    ]).then(([purchasesData, equipped, exclusive]) => {
+      fetchUserBuiltinTags(session.userId),
+    ]).then(([purchasesData, equipped, exclusive, builtin]) => {
       setPurchases(purchasesData)
       setExclusiveTags(exclusive)
       setCurrentColor(equipped.color)
       setCurrentTags(equipped.tags.map(t => t.v))
+      setBuiltinTags(builtin)
 
       // 找出当前颜色对应的 item_id
       if (equipped.color) {
@@ -64,7 +69,7 @@ export default function AppearancePage() {
       setErrorMsg(e instanceof Error ? e.message : '加载失败')
       setPageState('error')
     })
-  }, [])
+  }, [session])
 
   const handleRetry = useCallback(() => {
     setPageState('loading')
@@ -86,9 +91,7 @@ export default function AppearancePage() {
   const isCustomEquipped = customTagText.trim().length > 0 && currentTags.includes(customTagText.trim())
 
   // 当前用户 ID（从 session）；内置标签不受用户名修改影响
-  const userId = session?.userId ?? ''
   const username = session?.username ?? ''
-  const builtinTags = BUILTIN_TAGS[userId] ?? []
 
   // 总共可显示的 tags = 内置 + 已装备（最多 3 个用户 tag）
   const displayTags = [...builtinTags, ...currentTags]
@@ -199,7 +202,7 @@ export default function AppearancePage() {
     if (!trimmed || trimmed.length > 5) return
 
     // 替换旧自定义 tag 值
-    const otherTags = currentTags.filter(t => t !== currentTags.find(ct => !ownedTags.some(ot => ot.value === ct) && !BUILTIN_TAGS[session?.userId ?? '']?.includes(ct)))
+    const otherTags = currentTags.filter(t => t !== currentTags.find(ct => !ownedTags.some(ot => ot.value === ct) && !builtinTags.includes(ct)))
     const newTags = otherTags.includes(trimmed) ? otherTags : [...otherTags, trimmed]
     if (newTags.length > 3) return
     setSaving(true)
@@ -209,7 +212,7 @@ export default function AppearancePage() {
       if (!r.success) setCurrentTags(currentTags)
     } catch { setCurrentTags(currentTags) }
     finally { setSaving(false) }
-  }, [customTagText, currentTags, ownedTags, tagColorMap, customGrayColor, session])
+  }, [customTagText, currentTags, ownedTags, tagColorMap, customGrayColor, builtinTags])
 
   if (!session) return null
 

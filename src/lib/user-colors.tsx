@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { supabase } from './supabase'
-import { BUILTIN_TAGS, type TagData } from '@/types/gist'
+import type { TagData } from '@/types/gist'
 
 // ---- 用户装饰数据结构 ----
 export interface UserDecoration {
@@ -23,28 +23,29 @@ let _fetchPromise: Promise<DecorationIndex | null> | null = null
 
 async function fetchDecorations(): Promise<DecorationIndex | null> {
   if (_fetchPromise) return _fetchPromise
-  _fetchPromise = Promise.resolve(
-    supabase.rpc('get_all_users').then(
-      ({ data }) => {
-        if (!data) return null as unknown as DecorationIndex | null
-        const byId = new Map<string, UserDecoration>()
-        const byUsername = new Map<string, string>()
-        const users = data as Array<{ id: string; username: string | null; color: string | null; equipped_tags: TagData[] | null }>
-        for (const u of users) {
-          if (!u.id) continue
-          const builtin = (BUILTIN_TAGS[u.id] ?? []).map(v => ({ v, c: null }))
-          byId.set(u.id, {
-            username: u.username ?? null,
-            color: u.color ?? null,
-            tags: [...builtin, ...(u.equipped_tags ?? [])],
-          })
-          if (u.username) byUsername.set(u.username, u.id)
-        }
-        return { byId, byUsername }
-      },
-      () => null as unknown as DecorationIndex | null,
-    ),
-  )
+  _fetchPromise = Promise.all([
+    supabase.rpc('get_all_users'),
+    supabase.rpc('get_public_user_builtin_tags'),
+  ]).then(([usersResult, builtinResult]) => {
+    if (!usersResult.data) return null
+    const byId = new Map<string, UserDecoration>()
+    const byUsername = new Map<string, string>()
+    const builtinById = new Map<string, string[]>()
+    const builtinRows = (builtinResult.data ?? []) as Array<{ user_id: string; tags: string[] }>
+    for (const row of builtinRows) builtinById.set(row.user_id, row.tags ?? [])
+    const users = usersResult.data as Array<{ id: string; username: string | null; color: string | null; equipped_tags: TagData[] | null }>
+    for (const u of users) {
+      if (!u.id) continue
+      const builtin = (builtinById.get(u.id) ?? []).map(v => ({ v, c: null }))
+      byId.set(u.id, {
+        username: u.username ?? null,
+        color: u.color ?? null,
+        tags: [...builtin, ...(u.equipped_tags ?? [])],
+      })
+      if (u.username) byUsername.set(u.username, u.id)
+    }
+    return { byId, byUsername }
+  }, () => null)
   return _fetchPromise
 }
 
