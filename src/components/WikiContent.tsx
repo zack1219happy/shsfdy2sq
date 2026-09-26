@@ -2,7 +2,11 @@
 
 import { useMemo, useRef, useEffect, useLayoutEffect, useState } from 'react'
 import DOMPurify from 'dompurify'
-import { renderMarkdownWithRegistry, replaceWikiLinks } from '@/lib/markdown'
+import {
+    addBasePathToInternalLinks,
+    renderMarkdownWithRegistry,
+    replaceWikiLinks,
+} from '@/lib/markdown'
 import { registry, titleSlugMap as defaultTitleSlugMap } from '@/data/person-registry'
 import { BASE_PATH } from '@/lib/constants'
 import { fetchPageAssets } from '@/lib/wiki-api'
@@ -94,7 +98,10 @@ export default function WikiContent({ content, format = 'markdown', className, t
                 : (typeof window !== 'undefined' && shouldSanitize ? DOMPurify.sanitize(content) : content)
 
         // 替换 Wiki 链接
-        const withLinks = replaceWikiLinks(rawHtml, effectiveMap, basePath)
+        const withLinks = addBasePathToInternalLinks(
+            replaceWikiLinks(rawHtml, effectiveMap, basePath),
+            basePath,
+        )
         // 替换 _assets/ 图片为 DB base64 data URL
         const withAssets = replaceAssetSrcs(withLinks, assetMap)
         return withAssets

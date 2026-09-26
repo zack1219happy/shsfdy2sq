@@ -6,7 +6,12 @@ import { getSession } from '@/lib/auth'
 import { clearAllNotifications, deleteNotifications, fetchNotifications, markNotificationRead } from '@/lib/api/notifications'
 import { registry } from '@/data/person-registry'
 import { BASE_PATH } from '@/lib/constants'
-import { formatNotificationSummary, getNotificationTarget } from '@/lib/notification-text'
+import {
+  formatNotificationSummary,
+  getModerationNotificationHref,
+  getNotificationTarget,
+  isModerationNotificationType,
+} from '@/lib/notification-text'
 import FaIcon from '@/components/FaIcon'
 import type { Notification } from '@/lib/api/notifications'
 import styles from '@/styles/auth.module.css'
@@ -34,6 +39,10 @@ export default function NoticePage() {
         plaza_tip: '投币',
         wish_reply: '工单回复',
         wish_status_update: '工单动态',
+        wish_new: '新许愿',
+        wiki_revision_pending: '页面编辑审核',
+        wiki_page_request_pending: '新建页面审核',
+        tag_submission_pending: '标签审核',
         user_message: '主页留言',
         mention: '提到你',
         mention_edit: '提到你',
@@ -137,7 +146,11 @@ export default function NoticePage() {
             const wikiSlug = target?.kind === 'wiki' ? target.key : pageKey
             const commentQuery = n.comment_id ? '&comment=' + encodeURIComponent(n.comment_id) : ''
             const cacheQuery = `&_=${cacheBust}`
-            const href = isEmoji
+            const moderationNotification = isModerationNotificationType(n.type)
+            const moderationHref = moderationNotification
+              ? getModerationNotificationHref(n.type, pageKey, basePath, cacheBust)
+              : undefined
+            const regularHref = isEmoji
               ? `${basePath}/user/emoji${cacheQuery}`
               : isDm && target
                 ? `${basePath}/dm?conv=${encodeURIComponent(target.key)}${cacheQuery}`
@@ -154,6 +167,7 @@ export default function NoticePage() {
                     : wikiSlug
                       ? `${basePath}/wiki/page?slug=${encodeURIComponent(wikiSlug)}${commentQuery}${cacheQuery}`
                       : undefined
+            const href = moderationNotification ? moderationHref : regularHref
 
             let label = '评论'
             if (isForum) {
@@ -179,6 +193,10 @@ export default function NoticePage() {
             } else if (isUser) {
               label = '主页留言'
             }
+            if (n.type === 'wiki_revision_pending') label = '页面编辑审核'
+            else if (n.type === 'wiki_page_request_pending') label = '新建页面审核'
+            else if (n.type === 'tag_submission_pending') label = '标签审核'
+            else if (n.type === 'wish_new') label = '新许愿'
             // 提及标签统一覆盖，避免落到「文章通知」这类兜底文案
             if (n.type === 'mention') label = '提到你'
             else if (n.type === 'mention_edit') label = '编辑后提到你'
