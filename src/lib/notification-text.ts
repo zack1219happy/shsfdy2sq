@@ -16,6 +16,12 @@ export interface NotificationTarget {
   canonicalPage: string
 }
 
+const MODERATION_ROUTE_PATTERNS: Partial<Record<NotificationType, RegExp>> = {
+    wiki_revision_pending: /^admin\/revisions\?id=([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i,
+    wiki_page_request_pending: /^admin\/revisions\?tab=requests&rid=([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i,
+    tag_submission_pending: /^user\/shop\?submission=([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i,
+}
+
 function clean(value: string | null | undefined): string {
   return (value ?? '').replace(/\s+/g, ' ').trim()
 }
@@ -26,6 +32,27 @@ function decode(value: string): string {
   } catch {
     return value
   }
+}
+
+export function isModerationNotificationType(type: NotificationType): boolean {
+    return type === 'wiki_revision_pending' ||
+        type === 'wiki_page_request_pending' ||
+        type === 'tag_submission_pending'
+}
+
+/** Build a same-site link for the supported review-notification destinations. */
+export function getModerationNotificationHref(
+    type: NotificationType,
+    page: string | null | undefined,
+    basePath: string,
+    cacheBust: number,
+): string | undefined {
+    const route = clean(page)
+    const routePattern = MODERATION_ROUTE_PATTERNS[type]
+    if (!route || !routePattern?.test(route)) return undefined
+
+    const prefix = basePath.replace(/\/+$/, '')
+    return `${prefix}/${route}&_=${cacheBust}`
 }
 
 /** 将新旧两种通知页面格式统一成详情页所需的目标。 */
@@ -125,6 +152,14 @@ export function formatNotificationSummary(notification: NotificationSummaryInput
   const titledTarget = title ? `${noun}《${title}》` : `你的${noun}`
 
   switch (notification.type) {
+    case 'wiki_revision_pending':
+      return `${actor}提交了页面编辑待审核：${message}`
+    case 'wiki_page_request_pending':
+      return `${actor}申请新建页面待审核：${message}`
+    case 'tag_submission_pending':
+      return `${actor}申请创建标签：${message}`
+    case 'wish_new':
+      return `${actor}提交了新的许愿：${title || message}`
     case 'comment_reply':
       return `${actor}${title ? `在${titledTarget}下` : ''}回复了你：${message}`
     case 'page_owner':
