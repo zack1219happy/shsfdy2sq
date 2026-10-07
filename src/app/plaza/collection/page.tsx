@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import FaIcon from '@/components/FaIcon'
+import { getSession } from '@/lib/auth'
 import { fetchPlazaCollection } from '@/lib/api/plaza'
 import { formatDate } from '@/lib/forum'
 import { renderMarkdown } from '@/lib/markdown'
@@ -88,6 +89,8 @@ export default function PlazaCollectionPage() {
 
 function CollectionArticleCard({ article, onClick }: { article: PlazaArticleListResult; onClick: () => void }) {
   const score = (article.like_count ?? 0) - (article.downvote_count ?? 0)
+  const session = getSession()
+  const isAdmin = session && ['admin', 'super_admin'].includes(session.role)
 
   return (
     <div
@@ -98,7 +101,14 @@ function CollectionArticleCard({ article, onClick }: { article: PlazaArticleList
       tabIndex={0}
       onKeyDown={(e) => { if (e.key === 'Enter') onClick() }}
     >
-      <div className={styles.postTitle} dangerouslySetInnerHTML={{ __html: renderMarkdown(article.title) }} />
+      <div className={styles.postTitle} style={{ position: 'relative' }}>
+        <span dangerouslySetInnerHTML={{ __html: renderMarkdown(article.title) }} />
+        {isAdmin && article.is_awarded && (
+          <span style={{ position: 'absolute', top: 0, right: 0, fontSize: '0.72rem', opacity: 0.45, lineHeight: 1 }}>
+            🏅
+          </span>
+        )}
+      </div>
       <div className={styles.postMeta}>
         <UserName username={article.author_username} userId={article.author_id} className={styles.postAuthor} />
         <span>发布于 {formatDate(article.created_at)}</span>
