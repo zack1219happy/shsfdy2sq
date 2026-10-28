@@ -583,3 +583,9 @@ p.md-emoji-line .md-emoji-img {
 .md-mention [role="link"]:hover {
   text-decoration: underline;
 }
+
+
+.file-link-expired,
+.file-link-expired:visited {
+  color: #7f1d1d !important;
+}

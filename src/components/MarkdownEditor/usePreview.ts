@@ -9,6 +9,7 @@ import { renderMarkdownWithRegistry, replaceWikiLinks } from '@/lib/markdown'
 import { registry, titleSlugMap as defaultTitleSlugMap } from '@/data/person-registry'
 import { BASE_PATH } from '@/lib/constants'
 import { getPreviewLineAtTop } from './scrollSync'
+import { hydrateFileLinks } from '@/lib/file-links'
 
 interface UsePreviewOptions {
   content: string
@@ -87,6 +88,12 @@ export function usePreview({
     }
     return withAssets
   }, [content, effectiveMap, basePath, noSanitize, assetsMap, contextUserId])
+
+  useEffect(() => {
+    const root = previewRef.current
+    if (!root) return
+    void hydrateFileLinks(root)
+  }, [previewHtml])
 
   // 滚动事件监听（scroll sync）
   useEffect(() => {

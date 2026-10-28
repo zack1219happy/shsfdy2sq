@@ -15,6 +15,7 @@ import { useMentionHydration } from '@/components/MentionHydrator'
 import { useEmojiLibrary, useContentContextVersion } from '@/lib/emoji/use-emoji-context'
 import { useEmojiContextMenu } from '@/lib/emoji/use-emoji-context-menu'
 import SandboxBox from './SandboxBox'
+import { hydrateFileLinks } from '@/lib/file-links'
 
 interface Props {
     /** 原始内容（markdown 或 HTML） */
@@ -111,6 +112,12 @@ export default function WikiContent({ content, format = 'markdown', className, t
 
     // 分割 HTML，将 .js-sandbox 占位分离为独立片段
     const segments: Segment[] = useMemo(() => splitHtml(html), [html])
+
+    useEffect(() => {
+        const root = ref.current
+        if (!root) return
+        void hydrateFileLinks(root)
+    }, [html])
 
     // ---- callout details open state persistence ----
     const detailsStateRef = useRef<Record<string, boolean>>({})

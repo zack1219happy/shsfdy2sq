@@ -17,6 +17,7 @@ import {
   faExpandArrowsAlt,
   faLock,
   faChevronDown,
+  faUpload,
 } from '@fortawesome/free-solid-svg-icons'
 
 import React from 'react'
@@ -45,6 +46,7 @@ const labels: Record<string, string> = {
   ul: '无序列表',
   ol: '有序列表',
   img: '插入图片',
+  file: '上传文件',
   link: '插入链接',
   code: '插入代码',
   table: '插入表格',
@@ -62,6 +64,7 @@ const labels: Record<string, string> = {
   enableScrollSync: '启用滚动同步',
   // 对话框
   dialogImgTitle: '插入图片',
+  dialogFileTitle: '上传文件',
   dialogImgUrl: '图片地址',
   dialogImgAlt: '图片描述',
   dialogLinkTitle: '插入链接',
@@ -242,6 +245,30 @@ const imgBtn: ToolbarBtn = {
   },
 }
 
+const fileBtn: ToolbarBtn = {
+  name: 'file',
+  icon: faUpload,
+  title: t('file'),
+  action: {
+    type: 'function',
+    fn: ({ openDialog }) => {
+      import('./FileUploadDialog').then((mod) => {
+        const FileUploadDlg = mod.default
+        openDialog({
+          type: 'component',
+          title: t('dialogFileTitle'),
+          fn: (data) => {
+            const name = String(data.name || '文件').replace(/[\[\]]/g, '\\$&')
+            return `[${name}](${data.url || ''})`
+          },
+          render: ({ onFinish, onClose }) =>
+            React.createElement(FileUploadDlg, { onFinish, onClose }),
+        })
+      })
+    },
+  },
+}
+
 const linkBtn: ToolbarBtn = {
   name: 'link',
   icon: faLink,
@@ -367,7 +394,7 @@ export const defaultBtns: ToolbarBtn[] = [
   divider,
   ulBtn, olBtn,
   divider,
-  imgBtn, linkBtn, codeBtn, tableBtn, collapseBtn,
+  imgBtn, fileBtn, linkBtn, codeBtn, tableBtn, collapseBtn,
   divider,
   hideBtn, fullScreenBtn, scrollSyncBtn,
 ]
@@ -378,7 +405,7 @@ export const simpleBtns: ToolbarBtn[] = [
   header1Btn, header2Btn, header3Btn,
   ulBtn, olBtn,
   divider,
-  imgBtn, linkBtn, tableBtn, collapseBtn,
+  imgBtn, fileBtn, linkBtn, tableBtn, collapseBtn,
   divider,
   hideBtn, fullScreenBtn,
 ]
