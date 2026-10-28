@@ -9,7 +9,6 @@ const admin = createClient(supabaseUrl, serviceRoleKey, {
 })
 
 const MAX_FILE_SIZE = 200 * 1024 * 1024
-const EXPIRING_FILE_THRESHOLD = 20 * 1024 * 1024
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
