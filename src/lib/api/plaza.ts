@@ -12,6 +12,12 @@ import type {
   SendPointsResult,
 } from '@/types/plaza'
 
+export type PlazaFeedSort =
+  | 'created_at:desc' | 'created_at:asc'
+  | 'updated_at:desc' | 'updated_at:asc'
+  | 'latest_comment:desc' | 'latest_comment:asc'
+  | 'likes:desc' | 'likes:asc'
+
 /* =============================================================
    Plaza API — 文章广场
    - 分类从 plaza_categories 表动态读取，不再硬编码
@@ -107,7 +113,10 @@ export async function fetchPlazaFeed(
   offset = 0,
   my?: boolean,
   liked?: boolean,
+  sort: PlazaFeedSort = 'created_at:desc',
+  expandCollections = false,
 ): Promise<PlazaFeedItem[]> {
+  const [sortBy, sortOrder] = sort.split(':')
   const params: Record<string, string | number | boolean | null> = {
     p_category_id: categoryId || null,
     p_search: search || null,
@@ -115,8 +124,11 @@ export async function fetchPlazaFeed(
     p_offset: offset,
     p_my: my === true,
     p_liked: liked === true,
+    p_sort_by: sortBy,
+    p_sort_order: sortOrder,
+    p_expand_collections: expandCollections,
   }
-  const { data, error } = await supabase.rpc('get_plaza_feed', params)
+  const { data, error } = await supabase.rpc('get_plaza_feed_options', params)
   if (error) throw new Error('获取文章广场失败: ' + error.message)
 
   return ((data ?? []) as PlazaFeedRow[]).map((row): PlazaFeedItem => {

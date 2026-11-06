@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import FaIcon from '@/components/FaIcon'
 import { renderMarkdown } from '@/lib/markdown'
 import { getSession } from '@/lib/auth'
-import { fetchPlazaCategories, fetchPlazaFeed } from '@/lib/api/plaza'
+import { fetchPlazaCategories, fetchPlazaFeed, type PlazaFeedSort } from '@/lib/api/plaza'
 import { formatDate } from '@/lib/forum'
 import type { PlazaArticleFeedItem, PlazaArticleListResult, PlazaCategory, PlazaCollectionFeedItem, PlazaFeedItem } from '@/types/plaza'
 import { UserName } from '@/components/UserName'
@@ -25,6 +25,8 @@ export default function PlazaListPage() {
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
+  const [sort, setSort] = useState<PlazaFeedSort>('created_at:desc')
+  const [expandCollections, setExpandCollections] = useState(false)
   const [categories, setCategories] = useState<PlazaCategory[]>([])
 
   const categoryId = searchParams.get('category_id') || null
@@ -53,10 +55,12 @@ export default function PlazaListPage() {
       fetchPlazaFeed(
         categoryId || undefined,
         searchQuery.trim() || undefined,
-        100,
+        200,
         0,
         tab === 'my' ? true : undefined,
         tab === 'liked' ? true : undefined,
+        sort,
+        expandCollections,
       )
         .then((data) => {
           if (cancelled) return
@@ -66,7 +70,7 @@ export default function PlazaListPage() {
         .finally(() => { if (!cancelled) setLoading(false) })
     }, 300)
     return () => { cancelled = true; clearTimeout(timer) }
-  }, [categoryId, tab, searchQuery])
+  }, [categoryId, tab, searchQuery, sort, expandCollections])
 
   const displayItems = items
 
@@ -95,6 +99,29 @@ export default function PlazaListPage() {
       <div className={styles.header}>
         <h2><FaIcon name="newspaper" /> {headerTitle}</h2>
         <div className={styles.headerActions}>
+          <select
+            className={`${styles.btn} ${styles.btnOutline}`}
+            aria-label="文章排序方式"
+            value={sort}
+            onChange={(e) => setSort(e.target.value as PlazaFeedSort)}
+            style={{ minWidth: 0, maxWidth: 230 }}
+          >
+            <option value="created_at:desc">发布时间：新到旧</option>
+            <option value="created_at:asc">发布时间：旧到新</option>
+            <option value="updated_at:desc">编辑时间：新到旧</option>
+            <option value="updated_at:asc">编辑时间：旧到新</option>
+            <option value="latest_comment:desc">最新评论：新到旧</option>
+            <option value="latest_comment:asc">最新评论：旧到新</option>
+            <option value="likes:desc">点赞量：高到低</option>
+            <option value="likes:asc">点赞量：低到高</option>
+          </select>
+          <button
+            className={`${styles.btn} ${styles.btnOutline}`}
+            onClick={() => setExpandCollections((expanded) => !expanded)}
+            aria-pressed={expandCollections}
+          >
+            {expandCollections ? '折叠成集锦' : '全部展开'}
+          </button>
           <button
             className={`${styles.searchToggle} ${showSearch ? styles.searchToggleActive : ''}`}
             onClick={() => { setSearchOpen(!showSearch); if (showSearch) setSearchQuery(''); }}
