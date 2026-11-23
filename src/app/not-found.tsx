@@ -23,8 +23,9 @@ export default function NotFound() {
     <div className="not-found-page page-content">
       <h2>404</h2>
       <p>页面不存在</p>
-      <Link href={`${BASE_PATH}/wiki/`}>返回 wiki</Link>
-      <Link href={`${BASE_PATH}/`} style={{ marginLeft: 16 }}>返回首页</Link>
+      {/* Link 会自动补 basePath，这里不能再手工拼 BASE_PATH，否则 GitHub Pages 上会变成 /shsfdy2sq/shsfdy2sq/... */}
+      <Link href="/wiki/">返回 wiki</Link>
+      <Link href="/" style={{ marginLeft: 16 }}>返回首页</Link>
     </div>
   )
 }

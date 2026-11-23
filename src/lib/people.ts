@@ -89,7 +89,7 @@ export function resolvePerson(
     const entry = matched[0]
     const displayText = entry.initials
     const href = isTeacher
-      ? `${basePath}/wiki/people/teachers#${entry.initials}`
+      ? `${basePath}/wiki/page?slug=people/teachers#${entry.initials}`
       : `${basePath}/wiki/page?slug=${(entry as PersonEntry).newSlug}`
     return { displayText, href, entry }
   }
