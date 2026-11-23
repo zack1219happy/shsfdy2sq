@@ -4,9 +4,11 @@ import { useCallback, useMemo, useRef } from 'react'
 import { UserName } from '@/components/UserName'
 import { useMentionHydration } from '@/components/MentionHydrator'
 import type { DmMessage } from '@/lib/api/dm'
-import { renderMarkdownWithRegistry, replaceWikiLinks } from '@/lib/markdown'
+import { enhancePersonLinks, renderMarkdownWithRegistry, replaceWikiLinks } from '@/lib/markdown'
 import { useContentContextVersion, useEmojiLibrary } from '@/lib/emoji/use-emoji-context'
-import { registry, titleSlugMap } from '@/data/person-registry'
+import { titleSlugMap as defaultTitleSlugMap } from '@/data/person-registry'
+import { useWikiLinkSource } from '@/lib/wiki-link-source'
+import { usePersonRegistry } from '@/lib/person-registry-source'
 import { BASE_PATH } from '@/lib/constants'
 import styles from '@/styles/dm.module.css'
 
@@ -30,16 +32,18 @@ export default function MessageBubble({ msg, failed, onContextMenu }: {
     // 私信有作者身份 → 表情按发送者的库解析
     useEmojiLibrary(msg.sender_id)
     const ctxVersion = useContentContextVersion()
+    const liveTitleSlugMap = useWikiLinkSource(defaultTitleSlugMap)
+    const liveRegistry = usePersonRegistry()
     // ctxVersion 参与计算：表情库 / 用户名白名单就绪后重新渲染
     const html = useMemo(
         () => {
             void ctxVersion
-            return replaceWikiLinks(
-                renderMarkdownWithRegistry(msg.content, registry, { emojiContextUserId: msg.sender_id }),
-                titleSlugMap, BASE_PATH,
-            ).replace(/\n+$/, '')
+            return enhancePersonLinks(replaceWikiLinks(
+                renderMarkdownWithRegistry(msg.content, liveRegistry, { emojiContextUserId: msg.sender_id }),
+                liveTitleSlugMap, BASE_PATH,
+            ), liveTitleSlugMap, BASE_PATH).replace(/\n+$/, '')
         },
-        [msg.content, msg.sender_id, ctxVersion],
+        [msg.content, msg.sender_id, ctxVersion, liveTitleSlugMap, liveRegistry],
     )
     const mentionPortals = useMentionHydration(contentRef, html)
 

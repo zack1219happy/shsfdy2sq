@@ -264,35 +264,12 @@ export function extractHeadingsFromHtml(html: string): Heading[] {
 
 /**
  * 替换 [[Wiki 链接]] 为 <a> 标签（跳过 code/pre 内部文本）。
- * titleSlugMap 支持 Record 或 Map（duck-typing .get）。
+ *
+ * 目标解析优先级见 lib/wiki-links.ts：
+ * 面包屑路径（people/tqy） > 英文标识（tqy） > 页面标题（校园）。
+ * 实现在 wiki-links.ts（纯函数、无依赖，可单独测试），这里保留同名导出。
  */
-export function replaceWikiLinks(
-  html: string,
-  titleSlugMap?: Record<string, string> | Map<string, string>,
-  basePath?: string,
-): string {
-  if (!titleSlugMap) return html
-  const bp = basePath || ''
-  const lookup = (title: string) =>
-    titleSlugMap instanceof Map ? titleSlugMap.get(title) : titleSlugMap[title]
-
-  // 按 <code>/<pre> 分割，只处理纯文本段
-  const parts = html.split(/(<code[^>]*>[\s\S]*?<\/code>|<pre[^>]*>[\s\S]*?<\/pre>)/gi)
-  return parts
-    .map((part, i) => {
-      if (i % 2 === 1) return part
-      return part.replace(
-        /\[\[([^\]|]+?)(?:\|([^\]|]+?))?\]\]/g,
-        (match, title, label) => {
-          const slug = lookup(title.trim())
-          if (!slug) return match
-          const href = slug === 'home' ? `${bp}/wiki/` : `${bp}/wiki/page?slug=${slug}`
-          return `<a href="${href}" class="wiki-link">${(label || title).trim()}</a>`
-        },
-      )
-    })
-    .join('')
-}
+export { replaceWikiLinks, relinkTeacherAnchors, enhancePersonLinks } from './wiki-links'
 
 /**
  * 渲染行内标题（支持 [stu:xxx] / [tch:xxx] 等 markdown 语法）

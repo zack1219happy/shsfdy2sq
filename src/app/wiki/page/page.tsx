@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { fetchWikiPage } from '@/lib/wiki-api'
 import { renderMarkdown, renderAttributesFromFrontmatter } from '@/lib/markdown'
 import { resolveTextHtml } from '@/lib/people'
-import { registry as personRegistry } from '@/data/person-registry'
+import { usePersonRegistry } from '@/lib/person-registry-source'
 import { BASE_PATH } from '@/lib/constants'
 import WikiContent from '@/components/WikiContent'
 import Breadcrumb from '@/components/Breadcrumb'
@@ -91,6 +91,8 @@ function WikiPageBySlug() {
   const searchParams = useSearchParams()
   const slug = searchParams.get('slug') || ''
   const [page, setPage] = useState<WikiPage | null | 'loading'>('loading')
+  // 注册表运行时刷新：标题里的 [stu:x] 按最新数据解析
+  const liveRegistry = usePersonRegistry()
 
   // 渲染期重置加载态（slug 变化时切回加载态，避免在 effect 中同步 setState）
   const [prevSlug, setPrevSlug] = useState(slug)
@@ -124,7 +126,7 @@ function WikiPageBySlug() {
   const frontmatter = (page.frontmatter ?? {}) as Record<string, unknown>
   const attributes = renderAttributesFromFrontmatter(frontmatter)
   const crumbs = buildBreadcrumbs(slug)
-  const resolvedTitle = resolveTextHtml(page.title, personRegistry, BASE_PATH)
+  const resolvedTitle = resolveTextHtml(page.title, liveRegistry, BASE_PATH)
 
   return (
     <div className="page-content" style={{ display: 'flex', gap: '24px' }}>

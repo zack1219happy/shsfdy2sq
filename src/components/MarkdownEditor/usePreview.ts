@@ -5,8 +5,10 @@
 'use client'
 
 import { useRef, useMemo, useEffect } from 'react'
-import { renderMarkdownWithRegistry, replaceWikiLinks } from '@/lib/markdown'
-import { registry, titleSlugMap as defaultTitleSlugMap } from '@/data/person-registry'
+import { enhancePersonLinks, renderMarkdownWithRegistry, replaceWikiLinks } from '@/lib/markdown'
+import { titleSlugMap as defaultTitleSlugMap } from '@/data/person-registry'
+import { useWikiLinkSource } from '@/lib/wiki-link-source'
+import { usePersonRegistry } from '@/lib/person-registry-source'
 import { BASE_PATH } from '@/lib/constants'
 import { getPreviewLineAtTop } from './scrollSync'
 import { hydrateFileLinks } from '@/lib/file-links'
@@ -50,16 +52,18 @@ export function usePreview({
   const previewRef = useRef<HTMLDivElement | null>(null)
   const basePath = BASE_PATH
   // 合并默认映射 + 传入的覆盖
+  const liveMap = useWikiLinkSource(defaultTitleSlugMap)
+  const liveRegistry = usePersonRegistry()
   const effectiveMap = useMemo(
-    () => propMap ? { ...defaultTitleSlugMap, ...propMap } : defaultTitleSlugMap,
-    [propMap],
+    () => propMap ? { ...liveMap, ...propMap } : liveMap,
+    [propMap, liveMap],
   )
 
   // 通过 render-client 统一渲染（开启 highlight + texmath + injectLn）
   const previewHtml = useMemo(() => {
-    const raw = renderMarkdownWithRegistry(content, registry, { highlight: true, texmath: true, injectLn: true, emojiContextUserId: contextUserId ?? null }, !noSanitize)
+    const raw = renderMarkdownWithRegistry(content, liveRegistry, { highlight: true, texmath: true, injectLn: true, emojiContextUserId: contextUserId ?? null }, !noSanitize)
     // 渲染 [[Wiki 链接]]
-    const withLinks = replaceWikiLinks(raw, effectiveMap, basePath)
+    const withLinks = enhancePersonLinks(replaceWikiLinks(raw, effectiveMap, basePath), effectiveMap, basePath)
     // 处理 ```sandbox 块
     const SANDBOX_RE = /<div class="js-sandbox"[^>]*data-payload="([^"]*)"[^>]*><\/div>/g
     const withSandbox = withLinks.replace(SANDBOX_RE, (_match: string, payload: string) => {
@@ -87,7 +91,7 @@ export function usePreview({
       })
     }
     return withAssets
-  }, [content, effectiveMap, basePath, noSanitize, assetsMap, contextUserId])
+  }, [content, effectiveMap, basePath, noSanitize, assetsMap, contextUserId, liveRegistry])
 
   useEffect(() => {
     const root = previewRef.current

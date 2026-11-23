@@ -4,10 +4,13 @@ import { useMemo, useRef, useEffect, useLayoutEffect, useState } from 'react'
 import DOMPurify from 'dompurify'
 import {
     addBasePathToInternalLinks,
+    enhancePersonLinks,
     renderMarkdownWithRegistry,
     replaceWikiLinks,
 } from '@/lib/markdown'
-import { registry, titleSlugMap as defaultTitleSlugMap } from '@/data/person-registry'
+import { titleSlugMap as defaultTitleSlugMap } from '@/data/person-registry'
+import { usePersonRegistry } from '@/lib/person-registry-source'
+import { useWikiLinkSource } from '@/lib/wiki-link-source'
 import { BASE_PATH } from '@/lib/constants'
 import { fetchPageAssets } from '@/lib/wiki-api'
 import { useCodeCopy } from '@/lib/useCodeCopy'
@@ -87,20 +90,25 @@ export default function WikiContent({ content, format = 'markdown', className, t
         return () => { cancelled = true }
     }, [slug])
 
+    // 运行时刷新：数据库里新增的页面也能立刻被 [[...]] 解析到
+    const liveTitleSlugMap = useWikiLinkSource(defaultTitleSlugMap)
+    // 运行时刷新：注册表里新增/改名的人名引用不用重新构建
+    const liveRegistry = usePersonRegistry()
+
     // 优先使用传入的映射，否则使用自动生成的默认映射
-    const effectiveMap = propMap ?? defaultTitleSlugMap
+    const effectiveMap = propMap ?? liveTitleSlugMap
 
     // 完整 HTML（不含 sandbox 替换），用于 details 状态追踪依赖
     const html = useMemo(() => {
         const shouldSanitize = !noSanitize
         const rawHtml =
             format === 'markdown' || (format !== 'html' && !looksLikeHtml(content))
-                ? renderMarkdownWithRegistry(content, registry, { highlight: true, texmath: true, anchor: true, emojiContextUserId: contextUserId ?? null }, shouldSanitize)
+                ? renderMarkdownWithRegistry(content, liveRegistry, { highlight: true, texmath: true, anchor: true, emojiContextUserId: contextUserId ?? null }, shouldSanitize)
                 : (typeof window !== 'undefined' && shouldSanitize ? DOMPurify.sanitize(content) : content)
 
         // 替换 Wiki 链接
         const withLinks = addBasePathToInternalLinks(
-            replaceWikiLinks(rawHtml, effectiveMap, basePath),
+            enhancePersonLinks(replaceWikiLinks(rawHtml, effectiveMap, basePath), effectiveMap, basePath),
             basePath,
         )
         // 替换 _assets/ 图片为 DB base64 data URL
@@ -108,7 +116,7 @@ export default function WikiContent({ content, format = 'markdown', className, t
         return withAssets
     // ctxVersion：表情库或用户名白名单到位后需要重渲染
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [content, format, effectiveMap, basePath, assetMap, noSanitize, contextUserId, ctxVersion])
+    }, [content, format, effectiveMap, basePath, assetMap, noSanitize, contextUserId, ctxVersion, liveRegistry])
 
     // 分割 HTML，将 .js-sandbox 占位分离为独立片段
     const segments: Segment[] = useMemo(() => splitHtml(html), [html])
