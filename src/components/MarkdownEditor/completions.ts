@@ -4,7 +4,7 @@
    敲 @  → 用户名候选（一行一个，只显示用户名）
    敲 {  → 我的表情包 + 我的散表情
    敲 {包名: → 该包内的表情
-   代码块 / 行内代码里一律不弹。
+   代码块 / 行内代码 / LaTeX 公式里一律不弹。
    ============================================ */
 'use client'
 
@@ -14,6 +14,7 @@ import { supabase } from '@/lib/supabase'
 import { loadLibrary, currentUserId } from '@/lib/emoji/store'
 import { loadMentionUsers } from '@/lib/mention/store'
 import type { EmojiItem } from '@/lib/emoji/types'
+import { insideMath } from './math-context'
 
 /**
  * 光标是否在代码语境里：
@@ -27,6 +28,11 @@ export function insideCode(doc: string, pos: number): boolean {
   if (fences && fences.length % 2 === 1) return true
   const ticks = (line.match(/`/g) || []).length
   return ticks % 2 === 1
+}
+
+/** 代码或 LaTeX 公式里都不弹补全（公式里的 \frac{ 和 @ 会干扰写作） */
+function insideLiteralRegion(doc: string, pos: number): boolean {
+  return insideCode(doc, pos) || insideMath(doc, pos)
 }
 
 /* ---------- 用户名候选 ---------- */
@@ -186,7 +192,7 @@ export interface EditorCompletionOptions {
 export function editorCompletionExtensions(options: EditorCompletionOptions = {}): Extension {
   const source: CompletionSource = async (cx) => {
     const doc = cx.state.sliceDoc()
-    if (insideCode(doc, cx.pos)) return null
+    if (insideLiteralRegion(doc, cx.pos)) return null
 
     const before = doc.slice(0, cx.pos)
     if (/@[A-Za-z0-9_-]{0,32}$/.test(before)) return mentionSource(cx)
