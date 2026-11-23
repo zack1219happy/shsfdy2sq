@@ -1,0 +1,225 @@
+/* 犇犇 — 首页底部的碎碎念 */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* ═══ 发射区 ═══ */
+
+.composer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 编辑器默认 min-height:300px，这里按首页的紧凑尺寸覆盖（与评论区同一套做法） */
+.editorWrap {
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.editorWrap .editorInner {
+  border: none !important;
+  border-radius: 0 !important;
+  height: 200px;
+}
+
+.editorLoading {
+  padding: 40px 16px;
+  text-align: center;
+  color: var(--color-text-light);
+  font-size: 0.85rem;
+}
+
+.composerBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hint {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.78rem;
+  color: var(--color-text-light);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.counter {
+  font-size: 0.78rem;
+  color: var(--color-text-light);
+  font-variant-numeric: tabular-nums;
+}
+
+.counterOver {
+  color: #dc2626;
+}
+
+.submit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--border-radius);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s, box-shadow 0.15s, transform 0.15s, color 0.15s;
+}
+
+.submit:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.submit:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ═══ 列表 ═══ */
+
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.post {
+  padding: 14px 16px;
+  background: #fff;
+  border-radius: var(--border-radius);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+.postMeta {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.time {
+  font-size: 0.76rem;
+  color: var(--color-text-light);
+}
+
+/* 正文：沿用 wiki-body 的排版，只收一点字号行高 */
+.body :global(.wiki-body) {
+  font-size: 0.94rem;
+  line-height: 1.7;
+  color: #2c2f36;
+}
+
+.body :global(.wiki-body) > :first-child {
+  margin-top: 0;
+}
+
+.body :global(.wiki-body) > :last-child {
+  margin-bottom: 0;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: none;
+  border-radius: var(--border-radius);
+  background: none;
+  color: var(--color-text-light);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s, transform 0.15s;
+}
+
+.action:hover {
+  background: var(--color-hover-bg);
+  color: var(--color-text-secondary);
+}
+
+.action:active {
+  transform: scale(0.96);
+}
+
+.actionOn,
+.actionOn:hover {
+  color: var(--color-primary);
+}
+
+.danger {
+  margin-left: auto;
+  padding: 6px 8px;
+  border: none;
+  border-radius: var(--border-radius);
+  background: none;
+  color: var(--color-text-light);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.danger:hover {
+  background: var(--color-hover-bg);
+  color: #dc2626;
+}
+
+.status {
+  margin: 0;
+  padding: 8px 0;
+  font-size: 0.82rem;
+  color: var(--color-text-light);
+}
+
+.retry {
+  margin-left: 8px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.retry:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 767px) {
+  .editorWrap .editorInner {
+    height: 260px;
+  }
+
+  .hint {
+    display: none;
+  }
+}

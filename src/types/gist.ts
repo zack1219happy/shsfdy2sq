@@ -105,7 +105,7 @@ export interface TodayProgress {
 export interface PointsTransaction {
   id: string
   amount: number
-  reason: 'checkin' | 'comment' | 'forum_comment' | 'forum_post' | 'plaza_article' | 'wish_done' | 'purchase' | 'wish_payment' | 'admin_adjust'
+  reason: 'checkin' | 'comment' | 'forum_comment' | 'forum_post' | 'plaza_article' | 'wish_done' | 'purchase' | 'wish_payment' | 'admin_adjust' | 'tip' | 'tag_royalty' | 'benben'
   reference_id: string | null
   created_at: string
 }
@@ -121,6 +121,9 @@ export const POINTS_REASON_LABEL: Record<string, string> = {
   wish_done: '许愿完成',
   purchase: '商城消费',
   wish_payment: '许愿消费',
+  tip: '文章打赏',
+  tag_royalty: '标签分红',
+  benben: '发射犇犇',
 }
 
 /* ========== Shop Types — 积分商城 ========== */

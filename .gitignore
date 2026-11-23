@@ -58,3 +58,5 @@ release/
 # local agent session state
 .opencode/
 .letta/
+
+supabase/.temp/
