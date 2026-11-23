@@ -6,6 +6,7 @@ import FaIcon from '@/components/FaIcon'
 import { UserName } from '@/components/UserName'
 import WikiContent from '@/components/WikiContent'
 import FortuneCard from '@/components/FortuneCard'
+import BenbenSection from '@/components/BenbenSection'
 import { fetchForumPosts } from '@/lib/api/forum'
 import { fetchAgreementPage } from '@/lib/agreement-api'
 import type { ForumPost } from '@/types/gist'
@@ -152,6 +153,9 @@ export default function HomePage() {
           </div>
         </section>
       </div>
+
+      {/* ═══ 第四行：犇犇（碎碎念） ═══ */}
+      <BenbenSection />
     </div>
   )
 }
