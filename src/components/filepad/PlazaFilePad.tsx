@@ -27,6 +27,7 @@ import {
   faPen,
   faStar,
   faPlus,
+  faGamepad,
 } from '@fortawesome/free-solid-svg-icons'
 import { fetchPlazaCategories } from '@/lib/api/plaza'
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons'
@@ -44,6 +45,7 @@ const categoryIcons: Record<string, IconDefinition> = {
   '经验分享': faLightbulb,
   '创作展示': faPalette,
   '小说': faBook,
+  '互动游戏': faGamepad,
 }
 
 interface PlazaNavNode {
