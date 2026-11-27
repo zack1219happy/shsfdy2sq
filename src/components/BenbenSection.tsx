@@ -171,7 +171,7 @@ export default function BenbenSection() {
                 <button className={styles.action} onClick={() => handleReply(post)} title="回复">
                   <FaIcon name="reply" /> 回复
                 </button>
-                {post.is_mine && (
+                {post.can_delete && (
                   <button className={styles.danger} onClick={() => void handleDelete(post)}>
                     删除
                   </button>

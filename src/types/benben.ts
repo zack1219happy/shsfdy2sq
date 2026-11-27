@@ -11,5 +11,8 @@ export interface BenbenPost {
   created_at: string
   like_count: number
   liked_by_me: boolean
+  /** 是不是自己发的 */
   is_mine: boolean
+  /** 能不能删（作者本人，或 admin / super_admin） */
+  can_delete: boolean
 }
